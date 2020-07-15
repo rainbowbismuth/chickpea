@@ -4,4 +4,6 @@
 #include "chickpea/common.h"
 #include "chickpea/platform.h"
 
+void game_main(void);
+
 #endif //CHICKPEA_H

@@ -4,14 +4,11 @@ project(chickpea_c C)
 
 set(CMAKE_C_STANDARD 99)
 
-set(CMAKE_C_FLAGS_DEBUG "-O1")
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
-set(SRC_FILES src/main.c)
+set(SRC_FILES src/main.c src/common.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h include/chickpea/platform.h)
 
 if (BUILD_GBA)
-
     set(DEVKITARM /opt/devkitpro/devkitARM/bin)
     set(DEVKITPRO /opt/devkitpro/tools/bin)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
@@ -40,12 +37,14 @@ if (BUILD_GBA)
             COMMAND ${DEVKITPRO}/gbafix chickpea_c.gba
             BYPRODUCTS chickpea_c.gba
     )
-
 else ()
     set(SRC_FILES ${SRC_FILES} src/emulated.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
     add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES})
-
+    set_target_properties(chickpea_c
+            PROPERTIES
+            COMPILE_FLAGS "-I/usr/local/include/SDL2 -D_THREAD_SAFE"
+            LINK_FLAGS "-L/usr/local/lib -lSDL2")
 endif ()
 
 

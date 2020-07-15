@@ -3,7 +3,6 @@
 
 #include "chickpea.h"
 
-
 void our_irq_handler(void)
 {
 	;
@@ -27,10 +26,6 @@ void wait_for_horizontal_blank()
 	REG_IME = 0;
 }
 
-struct character_4bpp {
-	uint32_t lines[8];
-};
-
 static const struct character_4bpp
 	demo_tile = { .lines = {
 			      0b00010001000100010001000100010001u,
@@ -43,20 +38,21 @@ static const struct character_4bpp
 			      0b00010001000100010001000100010001u,
 		      } };
 
-void write_4bpp(const struct character_4bpp *character, volatile uint32_t *vram)
+void write_4bpp(const struct character_4bpp *src,
+		volatile struct character_4bpp *dst)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(character->lines); ++i) {
-		*vram++ = character->lines[i];
+	for (size_t i = 0; i < ARRAY_SIZE(src->lines); ++i) {
+		dst->lines[i] = src->lines[i];
 	}
 }
 
-int main()
+void game_main(void)
 {
 	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_SCREEN_DISPLAY_BG0;
-	BG_PALETTE_RAM[0] = color(10, 5, 31);
+	bg_palette(0)->color[0] = color(10, 5, 31);
 
 	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 1);
-	write_4bpp(&demo_tile, &character_block_begin(0)[8]);
+	write_4bpp(&demo_tile, &character_block_begin(0)[1]);
 
 	volatile uint16_t *screen_block = screen_block_begin(1);
 	for (size_t i = 0; i < 16 * 32; ++i) {
@@ -69,15 +65,16 @@ int main()
 	uint32_t frame = 0;
 	while (1) {
 		wait_for_horizontal_blank();
-		BG_PALETTE_RAM[0] = color(10, 5, ((REG_VCOUNT >> 2) & 0b1111));
+		bg_palette(0)->color[0] =
+			color(((REG_VCOUNT >> 2) & 0b1111), 5, 10);
 
 		if (REG_VCOUNT == 160) {
 			frame++;
 			uint32_t c = (frame >> 2) & 0x1F;
-			BG_PALETTE_RAM[1] = color(22, c, 15);
-			BG_PALETTE_RAM[1 + 16] = color(c, 22, 15);
-			BG_PALETTE_RAM[1 + 32] = color(15, 22, c);
-			BG_PALETTE_RAM[1 + 48] = color(c, c, c);
+			bg_palette(0)->color[1] = color(22, c, 15);
+			bg_palette(1)->color[1] = color(c, 22, 15);
+			bg_palette(2)->color[1] = color(15, 22, c);
+			bg_palette(3)->color[1] = color(c, c, c);
 
 			uint32_t v = (frame >> 1) % 512;
 
@@ -85,6 +82,4 @@ int main()
 			*reg_bg_scroll_y(BG0) = v;
 		}
 	}
-
-	return 0;
 }

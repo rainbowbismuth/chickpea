@@ -61,17 +61,20 @@
  */
 #define PREP(mask, val) ((val << MASK_OFFSET(CONSTANT(mask))) & mask)
 
-
+#define GBA_WIDTH  240
+#define GBA_HEIGHT 160
 
 #define DISPCNT_FORCED_BLANK	   BIT(7)
 #define DISPCNT_SCREEN_DISPLAY_BG0 BIT(8)
 
+#define DISPSTAT_VERTICAL_BLANK		      BIT(0)
+#define DISPSTAT_HORIZONTAL_BLANK	      BIT(1)
 #define DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED   BIT(3)
 #define DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED BIT(4)
 
-#define COL_RED	  FIELD(10, 5)
+#define COL_BLUE  FIELD(10, 5)
 #define COL_GREEN FIELD(5, 5)
-#define COL_BLUE  FIELD(0, 5)
+#define COL_RED	  FIELD(0, 5)
 
 #define TILE_CHAR	     FIELD(0, 9)
 #define TILE_HORIZONTAL_FLIP BIT(10)
@@ -90,7 +93,24 @@
 
 enum background { BG0 = 0, BG1, BG2, BG3 };
 
+struct character_4bpp {
+	uint32_t lines[8];
+};
+
+struct palette {
+	uint16_t color[16];
+};
+
+volatile struct character_4bpp *character_block_begin(uint32_t char_block);
+volatile struct palette *bg_palette(uint32_t palette_idx);
+volatile uint16_t *screen_block_begin(uint32_t screen_block);
+volatile uint16_t *reg_bg_control(enum background bg);
+volatile uint16_t *reg_bg_scroll_x(enum background bg);
+volatile uint16_t *reg_bg_scroll_y(enum background bg);
 void halt(void);
 
+uint32_t reverse_nibbles(uint32_t n);
+
+extern void (*irq_handler)(void);
 
 #endif //CHICKPEA_COMMON_H
