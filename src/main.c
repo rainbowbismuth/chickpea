@@ -3,7 +3,6 @@
 
 #include "chickpea.h"
 
-#define BG_PALETTE_RAM ((volatile uint16_t *)0x05000000)
 
 void our_irq_handler(void)
 {
@@ -16,11 +15,6 @@ uint16_t color(uint32_t red, uint32_t green, uint32_t blue)
 {
 	return PREP(COL_RED, red) | PREP(COL_GREEN, green) |
 	       PREP(COL_BLUE, blue);
-}
-
-void halt()
-{
-	__asm__ volatile("swi 0x2");
 }
 
 void wait_for_horizontal_blank()

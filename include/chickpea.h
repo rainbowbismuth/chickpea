@@ -2,6 +2,6 @@
 #define CHICKPEA_H
 
 #include "chickpea/common.h"
-#include "chickpea/gba.h"
+#include "chickpea/platform.h"
 
 #endif //CHICKPEA_H

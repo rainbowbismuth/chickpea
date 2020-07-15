@@ -1,6 +1,9 @@
 #ifndef CHICKPEA_COMMON_H
 #define CHICKPEA_COMMON_H
 
+#include "stdint.h"
+#include "stddef.h"
+
 /*
  * Assert that condition is true at compile time, and evaluates to zero if
  * compilation succeeds.
@@ -57,5 +60,37 @@
  * Masks & offsets val so that it is ready to be bitwise or'd with other fields
  */
 #define PREP(mask, val) ((val << MASK_OFFSET(CONSTANT(mask))) & mask)
+
+
+
+#define DISPCNT_FORCED_BLANK	   BIT(7)
+#define DISPCNT_SCREEN_DISPLAY_BG0 BIT(8)
+
+#define DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED   BIT(3)
+#define DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED BIT(4)
+
+#define COL_RED	  FIELD(10, 5)
+#define COL_GREEN FIELD(5, 5)
+#define COL_BLUE  FIELD(0, 5)
+
+#define TILE_CHAR	     FIELD(0, 9)
+#define TILE_HORIZONTAL_FLIP BIT(10)
+#define TILE_VERTICAL_FLIP   BIT(11)
+#define TILE_PALETTE	     FIELD(12, 4)
+
+#define INT_VERTICAL_BLANK   BIT(0)
+#define INT_HORIZONTAL_BLANK BIT(1)
+
+#define BGCNT_PRIORITY	   FIELD(0, 2)
+#define BGCNT_CHAR_BLOCK   FIELD(2, 2)
+#define BGCNT_MOSAIC	   BIT(6)
+#define BGCNT_256_COLORS   BIT(7)
+#define BGCNT_SCREEN_BLOCK FIELD(8, 5)
+#define BGCNT_SCREEN_SIZE  FIELD(14, 2)
+
+enum background { BG0 = 0, BG1, BG2, BG3 };
+
+void halt(void);
+
 
 #endif //CHICKPEA_COMMON_H
