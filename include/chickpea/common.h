@@ -14,9 +14,9 @@
  * The size of the passed in array, with a test to fail compilation if `arr`
  * is a pointer.
  */
-#define ARRAY_SIZE(arr)                                                        \
-	(sizeof(arr) / sizeof((arr)[0]) +                                      \
-	 BUILD_CHECK(                                                          \
+#define ARRAY_SIZE(arr)                   \
+	(sizeof(arr) / sizeof((arr)[0]) + \
+	 BUILD_CHECK(                     \
 		 __builtin_types_compatible_p(typeof(arr), typeof(&arr[0]))))
 
 /*
@@ -34,7 +34,7 @@
 /*
  * Defines a bit mask for a field with multiple bits
  */
-#define FIELD(offset, width)                                                   \
+#define FIELD(offset, width) \
 	(((1 << CONSTANT_GTZ(width)) - 1) << CONSTANT(offset))
 
 /*
