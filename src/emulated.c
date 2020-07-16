@@ -77,7 +77,7 @@ void draw_pixel(uint32_t x, uint32_t y, uint16_t color, uint16_t priority)
 void draw_line(uint32_t x, uint32_t y, uint32_t line,
 	       volatile struct palette *palette, uint16_t priority)
 {
-	if (line == 0) {
+	if (line == 0 || (x >= GBA_WIDTH && x < UINT32_MAX - GBA_WIDTH)) {
 		return;
 	}
 	for (size_t i = 0; i < 8; ++i) {
