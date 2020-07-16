@@ -25,8 +25,11 @@
 #define REG_DISPCNT  (*((volatile uint16_t *)0x04000000))
 #define REG_DISPSTAT (*((volatile uint16_t *)0x04000004))
 #define REG_VCOUNT   (*((volatile uint16_t *)0x04000006))
-#define REG_IME	     (*((volatile uint32_t *)0x04000208))
+#define REG_BLDCNT   (*((volatile uint16_t *)0x04000050))
+#define REG_BLDALPHA (*((volatile uint16_t *)0x04000052))
+#define REG_BLDY     (*((volatile uint16_t *)0x04000054))
 #define REG_IE	     (*((volatile uint16_t *)0x04000200))
 #define REG_IF	     (*((volatile uint16_t *)0x04000202))
+#define REG_IME	     (*((volatile uint32_t *)0x04000208))
 
 #endif //CHICKPEA_GBA_H

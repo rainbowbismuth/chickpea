@@ -3,12 +3,18 @@
 #include "SDL.h"
 #include "SDL_timer.h"
 
+#define PRIORITY_LAYER FIELD(0, 6)
+#define PRIORITY_UPPER FIELD(6, 3)
+
 uint16_t reg_dispcnt = 0;
 uint16_t reg_dispstat = 0;
 uint16_t reg_vcount = 0;
-uint32_t reg_ime = 0;
+uint16_t reg_bldcnt = 0;
+uint16_t reg_bldalpha = 0;
+uint16_t reg_bldy = 0;
 uint16_t reg_ie = 0;
 uint16_t reg_if = 0;
+uint32_t reg_ime = 0;
 
 uint16_t reg_bg_controls[4] = { 0 };
 uint16_t reg_bg_scrolls_x[4] = { 0 };
@@ -64,7 +70,8 @@ void clear_line(uint16_t bg_color, uint16_t y)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(screen_color[0]); ++i) {
 		screen_color[y][i] = bg_color;
-		screen_priority[y][i] = 0xFFFF;
+		screen_priority[y][i] = PREP(PRIORITY_UPPER, 0x3) |
+					PREP(PRIORITY_LAYER, 1 << 5);
 	}
 }
 
@@ -76,22 +83,77 @@ void draw_pixel(uint32_t x, uint32_t y, uint16_t color, uint16_t priority)
 	}
 }
 
+struct blend_alpha_params {
+	uint16_t target_mask;
+	uint16_t src_weight;
+	uint16_t dst_weight;
+};
+
+void draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
+			    uint16_t priority,
+			    const struct blend_alpha_params *params)
+{
+	uint16_t target_priority = screen_priority[y][x];
+	if (priority < target_priority) {
+		screen_priority[y][x] = priority;
+		uint32_t target_layer = GET(PRIORITY_LAYER, target_priority);
+		if ((target_layer & params->target_mask) != 0) {
+			screen_color[y][x] = additive_blend(color,
+							    params->src_weight,
+							    screen_color[y][x],
+							    params->dst_weight);
+		} else {
+			screen_color[y][x] = color;
+		}
+	}
+}
+
 void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
 	       uint16_t priority)
 {
 	if (line == 0 || (x >= GBA_WIDTH && x < UINT32_MAX - GBA_WIDTH)) {
 		return;
 	}
-	for (size_t i = 0; i < 8; ++i) {
-		size_t col_index = (line >> (i * 4)) & 0xF;
-		assert(col_index < ARRAY_SIZE(palette->color));
-		if (col_index == 0) {
-			continue;
+	uint16_t blend_control = REG_BLDCNT;
+
+	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA &&
+	    (GET(PRIORITY_LAYER, priority) &
+	     GET(BLDCNT_1ST_TARGET, blend_control)) != 0) {
+		struct blend_alpha_params params = {
+			.target_mask = GET(BLDCNT_2ND_TARGET, blend_control),
+			.src_weight = GET(BLDALPHA_1ST_WEIGHT, REG_BLDALPHA),
+			.dst_weight = GET(BLDALPHA_2ND_WEIGHT, REG_BLDALPHA)
+		};
+
+		for (size_t i = 0; i < 8; ++i) {
+			size_t col_index = (line >> (i * 4)) & 0xF;
+			assert(col_index < ARRAY_SIZE(palette->color));
+			if (col_index == 0) {
+				continue;
+			}
+			uint16_t color = palette->color[col_index];
+			draw_pixel_blend_alpha(x + i + 8, y, color, priority,
+					       &params);
 		}
-		uint16_t color = palette->color[col_index];
-		draw_pixel(x + i + 8, y, color, priority);
+	} else {
+		assert(GET(BLDCNT_EFFECT, blend_control) !=
+			       BLEND_BRIGHTNESS_DECREASE &&
+		       "effect not implemented");
+		assert(GET(BLDCNT_EFFECT, blend_control) !=
+			       BLEND_BRIGHTNESS_INCREASE &&
+		       "effect not implemented");
+
+		for (size_t i = 0; i < 8; ++i) {
+			size_t col_index = (line >> (i * 4)) & 0xF;
+			assert(col_index < ARRAY_SIZE(palette->color));
+			if (col_index == 0) {
+				continue;
+			}
+			uint16_t color = palette->color[col_index];
+			draw_pixel(x + i + 8, y, color, priority);
+		}
 	}
-}
+};
 
 void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {
@@ -150,14 +212,16 @@ void render_entire_line(uint32_t y)
 	if (GET(DISPCNT_SCREEN_DISPLAY_BG0, display_control)) {
 		uint16_t bg_control = *reg_bg_control(BG0);
 		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
-		uint16_t priority = (bg_priority << 2) + BG0;
+		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
+				    (1 << BG0);
 		draw_background(BG0, y, priority);
 	}
 
 	if (GET(DISPCNT_SCREEN_DISPLAY_BG1, display_control)) {
 		uint16_t bg_control = *reg_bg_control(BG1);
 		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
-		uint16_t priority = (bg_priority << 2) + BG1;
+		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
+				    (1 << BG1);
 		draw_background(BG1, y, priority);
 	}
 }

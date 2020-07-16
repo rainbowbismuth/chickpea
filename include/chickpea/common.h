@@ -94,6 +94,34 @@
 #define BGCNT_SCREEN_BLOCK FIELD(8, 5)
 #define BGCNT_SCREEN_SIZE  FIELD(14, 2)
 
+#define BLDCNT_1ST_TARGET     FIELD(0, 6)
+#define BLDCNT_1ST_TARGET_BG0 BIT(0)
+#define BLDCNT_1ST_TARGET_BG1 BIT(1)
+#define BLDCNT_1ST_TARGET_BG2 BIT(2)
+#define BLDCNT_1ST_TARGET_BG3 BIT(3)
+#define BLDCNT_1ST_TARGET_OBJ BIT(4)
+#define BLDCNT_1ST_TARGET_BD  BIT(5)
+#define BLDCNT_EFFECT	      FIELD(6, 2)
+#define BLDCNT_2ND_TARGET     FIELD(8, 6)
+#define BLDCNT_2ND_TARGET_BG0 BIT(8)
+#define BLDCNT_2ND_TARGET_BG1 BIT(9)
+#define BLDCNT_2ND_TARGET_BG2 BIT(10)
+#define BLDCNT_2ND_TARGET_BG3 BIT(11)
+#define BLDCNT_2ND_TARGET_OBJ BIT(12)
+#define BLDCNT_2ND_TARGET_BD  BIT(13)
+
+#define BLDALPHA_1ST_WEIGHT FIELD(0, 4)
+#define BLDALPHA_2ND_WEIGHT FIELD(8, 4)
+
+#define BLDY_BRIGHTNESS FIELD(0, 4)
+
+enum blend_effect {
+	BLEND_NONE = 0,
+	BLEND_ALPHA = 1,
+	BLEND_BRIGHTNESS_INCREASE = 2,
+	BLEND_BRIGHTNESS_DECREASE = 3
+};
+
 enum background { BG0 = 0, BG1, BG2, BG3 };
 
 struct character_4bpp {
@@ -118,6 +146,9 @@ void write_4bpp(const struct character_4bpp *src,
 void write_palette(const struct palette *src, volatile struct palette *dst);
 
 void debug_putchar(char c);
+
+uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
+			uint16_t dst_color, uint16_t dst_weight);
 
 extern void (*volatile irq_handler)(void);
 

@@ -48,7 +48,7 @@ void game_main(void)
 
 	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 1) |
 			       PREP(BGCNT_PRIORITY, 1);
-	
+
 	write_4bpp(&demo_tile, &character_block_begin(0)[1]);
 
 	*reg_bg_control(BG1) = PREP(BGCNT_CHAR_BLOCK, 2) |
@@ -60,6 +60,11 @@ void game_main(void)
 	}
 
 	write_debug_msg(&default_debug_font, 2, 2, 4, 3, 3, "Hello, world!");
+
+	REG_BLDCNT = BLDCNT_1ST_TARGET_BG1 | BLDCNT_2ND_TARGET_BG0 |
+		     BLDCNT_2ND_TARGET_BD | PREP(BLDCNT_EFFECT, BLEND_ALPHA);
+	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
+		       PREP(BLDALPHA_2ND_WEIGHT, 8);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
