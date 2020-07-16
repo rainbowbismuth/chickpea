@@ -27,7 +27,7 @@ volatile uint16_t *screen_block_begin(uint32_t screen_block)
 
 volatile uint16_t *reg_bg_control(enum background bg)
 {
-	return (volatile uint16_t *)(size_t)(0x04000008 + (bg << 2));
+	return (volatile uint16_t *)(size_t)(0x04000008 + (bg << 1));
 }
 
 volatile uint16_t *reg_bg_scroll_x(enum background bg)

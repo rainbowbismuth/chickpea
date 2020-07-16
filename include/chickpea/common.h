@@ -54,18 +54,21 @@
  *
  *	GET(mask, PREP(mask, val)) == val
  */
-#define GET(mask, val) ((val & CONSTANT(mask)) >> MASK_OFFSET(mask))
+#define GET(mask, val) (((val)&CONSTANT(mask)) >> MASK_OFFSET(mask))
 
 /*
  * Masks & offsets val so that it is ready to be bitwise or'd with other fields
  */
-#define PREP(mask, val) ((val << MASK_OFFSET(CONSTANT(mask))) & mask)
+#define PREP(mask, val) (((val) << MASK_OFFSET(CONSTANT(mask))) & (mask))
 
 #define GBA_WIDTH  240
 #define GBA_HEIGHT 160
 
 #define DISPCNT_FORCED_BLANK	   BIT(7)
 #define DISPCNT_SCREEN_DISPLAY_BG0 BIT(8)
+#define DISPCNT_SCREEN_DISPLAY_BG1 BIT(9)
+#define DISPCNT_SCREEN_DISPLAY_BG2 BIT(10)
+#define DISPCNT_SCREEN_DISPLAY_BG3 BIT(11)
 
 #define DISPSTAT_VERTICAL_BLANK		      BIT(0)
 #define DISPSTAT_HORIZONTAL_BLANK	      BIT(1)
@@ -110,6 +113,9 @@ volatile uint16_t *reg_bg_scroll_y(enum background bg);
 void halt(void);
 
 uint32_t reverse_nibbles(uint32_t n);
+void write_4bpp(const struct character_4bpp *src,
+		volatile struct character_4bpp *dst);
+void write_palette(const struct palette *src, volatile struct palette *dst);
 
 extern void (*volatile irq_handler)(void);
 

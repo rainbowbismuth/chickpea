@@ -141,12 +141,21 @@ void render_entire_line(uint32_t y)
 	uint16_t bg_color = bg_palette(0)->color[0];
 	clear_line(bg_color, y);
 
+	// TODO: Need to sort backgrounds based on priority.
+
 	uint16_t display_control = REG_DISPCNT;
 	if (GET(DISPCNT_SCREEN_DISPLAY_BG0, display_control)) {
 		uint16_t bg_control = *reg_bg_control(BG0);
 		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
 		uint16_t priority = (bg_priority << 2) + BG0;
 		draw_background(BG0, y, priority);
+	}
+
+	if (GET(DISPCNT_SCREEN_DISPLAY_BG1, display_control)) {
+		uint16_t bg_control = *reg_bg_control(BG1);
+		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
+		uint16_t priority = (bg_priority << 2) + BG1;
+		draw_background(BG1, y, priority);
 	}
 }
 

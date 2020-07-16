@@ -2,6 +2,7 @@
 #include "stddef.h"
 
 #include "chickpea.h"
+#include "chickpea/debug_font.h"
 
 void our_irq_handler(void)
 {
@@ -38,27 +39,27 @@ static const struct character_4bpp
 			      0b00010001000100010001000100010001u,
 		      } };
 
-void write_4bpp(const struct character_4bpp *src,
-		volatile struct character_4bpp *dst)
-{
-	for (size_t i = 0; i < ARRAY_SIZE(src->lines); ++i) {
-		dst->lines[i] = src->lines[i];
-	}
-}
-
 void game_main(void)
 {
-	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_SCREEN_DISPLAY_BG0;
+	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_SCREEN_DISPLAY_BG0 |
+		      DISPCNT_SCREEN_DISPLAY_BG1;
+
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
-	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 1);
+	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 1) |
+			       PREP(BGCNT_PRIORITY, 1);
+	
 	write_4bpp(&demo_tile, &character_block_begin(0)[1]);
 
-	volatile uint16_t *screen_block = screen_block_begin(1);
+	*reg_bg_control(BG1) = PREP(BGCNT_CHAR_BLOCK, 2) |
+			       PREP(BGCNT_SCREEN_BLOCK, 2);
+
+	volatile uint16_t *tiles = screen_block_begin(1);
 	for (size_t i = 0; i < 16 * 32; ++i) {
-		screen_block[i << 1] = PREP(TILE_CHAR, 1) |
-				       PREP(TILE_PALETTE, i % 4);
+		tiles[i << 1] = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, i % 4);
 	}
+
+	write_debug_msg(&default_debug_font, 2, 2, 4, 3, 3, "Hello, world!");
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
