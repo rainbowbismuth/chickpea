@@ -111,6 +111,6 @@ void halt(void);
 
 uint32_t reverse_nibbles(uint32_t n);
 
-extern void (*irq_handler)(void);
+extern void (*volatile irq_handler)(void);
 
 #endif //CHICKPEA_COMMON_H

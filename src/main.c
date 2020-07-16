@@ -8,7 +8,7 @@ void our_irq_handler(void)
 	;
 }
 
-void (*irq_handler)(void) = our_irq_handler;
+void (*volatile irq_handler)(void) = our_irq_handler;
 
 uint16_t color(uint32_t red, uint32_t green, uint32_t blue)
 {
