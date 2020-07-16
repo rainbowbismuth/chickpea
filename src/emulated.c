@@ -127,7 +127,6 @@ void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
 
 		for (size_t i = 0; i < 8; ++i) {
 			size_t col_index = (line >> (i * 4)) & 0xF;
-			assert(col_index < ARRAY_SIZE(palette->color));
 			if (col_index == 0) {
 				continue;
 			}
@@ -145,7 +144,6 @@ void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
 
 		for (size_t i = 0; i < 8; ++i) {
 			size_t col_index = (line >> (i * 4)) & 0xF;
-			assert(col_index < ARRAY_SIZE(palette->color));
 			if (col_index == 0) {
 				continue;
 			}
