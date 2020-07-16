@@ -37,6 +37,7 @@ uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 int main(void)
 {
 	SDL_Init(SDL_INIT_VIDEO);
+	atexit(SDL_Quit);
 	window = SDL_CreateWindow("chickpea-c", SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED, real_win_width,
 				  real_win_height, SDL_WINDOW_ALLOW_HIGHDPI);
@@ -149,7 +150,6 @@ void render_entire_line(uint32_t y)
 
 void quit(void)
 {
-	SDL_Quit();
 	exit(0);
 }
 
