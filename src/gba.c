@@ -40,7 +40,38 @@ volatile uint16_t *reg_bg_scroll_y(enum background bg)
 	return (volatile uint16_t *)(size_t)(0x04000012 + (bg << 2));
 }
 
+#define MGBA_DEBUG_ENABLE	((volatile uint16_t *)0x04fff780)
+#define MGBA_DEBUG_OUTPUT_BEGIN ((volatile char *)0x04fff600)
+#define MGBA_DEBUG_OUTPUT_END	((volatile char *)0x04fff700)
+#define MGBA_DEBUG_SEND		((volatile uint16_t *)0x04fff700)
+
+volatile char *mgba_debug_output = MGBA_DEBUG_OUTPUT_BEGIN;
+
+void debug_putchar(char c)
+{
+	if (mgba_debug_output >= MGBA_DEBUG_OUTPUT_END) {
+		mgba_debug_output = MGBA_DEBUG_OUTPUT_BEGIN;
+		*MGBA_DEBUG_SEND = 0x104;
+	}
+	if (c == '\0' || c == '\n') {
+		mgba_debug_output = MGBA_DEBUG_OUTPUT_BEGIN;
+		*MGBA_DEBUG_SEND = 0x104;
+		return;
+	}
+	*mgba_debug_output++ = c;
+}
+
+void debug_putstr(const char *str)
+{
+	do {
+		debug_putchar(*str);
+	} while (*str++ != '\0');
+	debug_putchar('\0');
+}
+
 int main(void)
 {
+	*MGBA_DEBUG_ENABLE = 0xc0de;
+	debug_putstr("Hello, mGBA!");
 	game_main();
 }

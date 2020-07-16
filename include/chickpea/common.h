@@ -117,6 +117,8 @@ void write_4bpp(const struct character_4bpp *src,
 		volatile struct character_4bpp *dst);
 void write_palette(const struct palette *src, volatile struct palette *dst);
 
+void debug_putchar(char c);
+
 extern void (*volatile irq_handler)(void);
 
 #endif //CHICKPEA_COMMON_H

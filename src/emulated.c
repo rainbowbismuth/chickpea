@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "chickpea.h"
 #include "SDL.h"
 #include "SDL_timer.h"
@@ -314,4 +315,9 @@ void halt()
 	}
 
 	assert(steps_left && "halted for a long time, probably a bug?");
+}
+
+void debug_putchar(char c)
+{
+	putchar(c);
 }
