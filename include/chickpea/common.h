@@ -1,8 +1,8 @@
 #ifndef CHICKPEA_COMMON_H
 #define CHICKPEA_COMMON_H
 
-#include "stdint.h"
-#include "stddef.h"
+#include <stdint.h>
+#include <stddef.h>
 
 /*
  * Assert that condition is true at compile time, and evaluates to zero if
