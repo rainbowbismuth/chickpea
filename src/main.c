@@ -42,7 +42,7 @@ static const struct character_4bpp
 void game_main(void)
 {
 	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_SCREEN_DISPLAY_BG0 |
-		      DISPCNT_SCREEN_DISPLAY_BG1;
+		      DISPCNT_SCREEN_DISPLAY_BG1 | DISPCNT_SCREEN_DISPLAY_BG2;
 
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
@@ -54,8 +54,18 @@ void game_main(void)
 	*reg_bg_control(BG1) = PREP(BGCNT_CHAR_BLOCK, 2) |
 			       PREP(BGCNT_SCREEN_BLOCK, 2);
 
+	*reg_bg_control(BG2) = PREP(BGCNT_CHAR_BLOCK, 2) |
+			       PREP(BGCNT_SCREEN_BLOCK, 2) |
+			       PREP(BGCNT_PRIORITY, 1);
+
+	*reg_bg_scroll_x(BG2) = -20;
+	*reg_bg_scroll_y(BG2) = -20;
+
 	volatile uint16_t *tiles = screen_block_begin(1);
 	for (size_t i = 0; i < 16 * 32; ++i) {
+		if (i % 7 == 0) {
+			continue;
+		}
 		tiles[i << 1] = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, i % 4);
 	}
 

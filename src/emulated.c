@@ -215,28 +215,53 @@ void draw_background(enum background bg, uint32_t y, uint16_t priority)
 	}
 }
 
+struct background_array {
+	enum background bgs[4];
+};
+
+void sort_backgrounds_by_priority(struct background_array *arr)
+{
+	/*
+	 * Standard insertion sort. Higher priority values first.
+	 */
+	size_t i = 1;
+	while (i < ARRAY_SIZE(arr->bgs)) {
+		size_t j = i;
+		uint16_t j_m1_priority =
+			GET(BGCNT_PRIORITY, *reg_bg_control(arr->bgs[j - 1]));
+		uint16_t j_priority =
+			GET(BGCNT_PRIORITY, *reg_bg_control(arr->bgs[j]));
+		while (j > 0 && j_priority > j_m1_priority) {
+			enum background tmp = arr->bgs[j - 1];
+			arr->bgs[j - 1] = arr->bgs[j];
+			arr->bgs[j] = tmp;
+			j--;
+		}
+		i++;
+	}
+}
+
 void render_entire_line(uint32_t y)
 {
 	uint16_t bg_color = bg_palette(0)->color[0];
 	clear_line(bg_color, y);
 
-	// TODO: Need to sort backgrounds based on priority.
+	struct background_array arr = { .bgs = { BG0, BG1, BG2, BG3 } };
+	sort_backgrounds_by_priority(&arr);
 
 	uint16_t display_control = REG_DISPCNT;
-	if (GET(DISPCNT_SCREEN_DISPLAY_BG0, display_control)) {
-		uint16_t bg_control = *reg_bg_control(BG0);
-		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
-		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
-				    (1 << BG0);
-		draw_background(BG0, y, priority);
-	}
 
-	if (GET(DISPCNT_SCREEN_DISPLAY_BG1, display_control)) {
-		uint16_t bg_control = *reg_bg_control(BG1);
+	for (size_t i = 0; i < ARRAY_SIZE(arr.bgs); ++i) {
+		enum background bg = arr.bgs[i];
+		if ((GET(DISPCNT_SCREEN_BG_ENABLED, display_control) &
+		     (1 << bg)) == 0) {
+			continue;
+		}
+		uint16_t bg_control = *reg_bg_control(bg);
 		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
 		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
-				    (1 << BG1);
-		draw_background(BG1, y, priority);
+				    (1 << bg);
+		draw_background(bg, y, priority);
 	}
 }
 
