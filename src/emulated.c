@@ -42,7 +42,9 @@ int main(void)
 				  real_win_height, SDL_WINDOW_ALLOW_HIGHDPI);
 	assert(window != NULL);
 
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1,
+				      SDL_RENDERER_ACCELERATED |
+					      SDL_RENDERER_PRESENTVSYNC);
 	assert(renderer != NULL);
 
 	surface = SDL_CreateRGBSurfaceWithFormat(0, GBA_WIDTH, GBA_HEIGHT, 16,
