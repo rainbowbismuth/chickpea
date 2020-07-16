@@ -255,17 +255,20 @@ void step_emulated_hardware(void)
 
 volatile struct palette *bg_palette(uint32_t palette_idx)
 {
+	assert(palette_idx < ARRAY_SIZE(bg_pallete_ram));
 	return (volatile struct palette *)(&bg_pallete_ram[palette_idx]);
 }
 
 volatile struct character_4bpp *character_block_begin(uint32_t char_block)
 {
+	assert(char_block < 4);
 	return (volatile struct character_4bpp
 			*)(&video_ram[char_block * 0x4000]);
 }
 
 volatile uint16_t *screen_block_begin(uint32_t screen_block)
 {
+	assert(screen_block < 32);
 	return (volatile uint16_t *)(&video_ram[screen_block * 0x800]);
 }
 
