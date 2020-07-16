@@ -14,4 +14,4 @@ void write_debug_msg(const struct debug_font *font, uint32_t char_block,
 
 extern const struct debug_font default_debug_font;
 
-#endif //CHICKPEA_C_DEBUG_FONT_H
+#endif //CHICKPEA_DEBUG_FONT_H
