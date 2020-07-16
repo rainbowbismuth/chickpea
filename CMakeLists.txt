@@ -7,6 +7,7 @@ set(CMAKE_C_STANDARD 99)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SRC_FILES src/main.c src/common.c src/debug_font.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h include/chickpea/platform.h include/chickpea/debug_font.h)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
     set(DEVKITARM /opt/devkitpro/devkitARM/bin)
@@ -24,7 +25,6 @@ add_custom_command(
 )
 
 if (BUILD_GBA)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
     set(CMAKE_C_LINK_EXECUTABLE "${DEVKITARM}/arm-none-eabi-ld <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T${CMAKE_SOURCE_DIR}/src/linker.ld")
 

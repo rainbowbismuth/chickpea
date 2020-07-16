@@ -65,14 +65,14 @@ int main(void)
 				    GBA_HEIGHT);
 	assert(texture != NULL);
 
-	for (size_t i = 0; i < SDL_NumJoysticks(); ++i) {
+	for (int i = 0; i < SDL_NumJoysticks(); ++i) {
 		if (SDL_IsGameController(i)) {
 			controller = SDL_GameControllerOpen(i);
 			if (controller) {
 				break;
 			} else {
 				fprintf(stderr,
-					"Couldn't open controller %zu: %s\n", i,
+					"Couldn't open controller %i: %s\n", i,
 					SDL_GetError());
 			}
 		}
