@@ -12,6 +12,7 @@ uint16_t reg_vcount = 0;
 uint16_t reg_bldcnt = 0;
 uint16_t reg_bldalpha = 0;
 uint16_t reg_bldy = 0;
+uint16_t reg_keyinput = 0;
 uint16_t reg_ie = 0;
 uint16_t reg_if = 0;
 uint32_t reg_ime = 0;
@@ -29,6 +30,7 @@ SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 SDL_Surface *surface = NULL;
 SDL_Texture *texture = NULL;
+SDL_GameController *controller = NULL;
 
 uint32_t ticks_previous = 0;
 uint32_t ticks_lag = 0;
@@ -42,7 +44,7 @@ uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 
 int main(void)
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 	atexit(SDL_Quit);
 	window = SDL_CreateWindow("chickpea-c", SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED, real_win_width,
@@ -62,6 +64,20 @@ int main(void)
 				    SDL_TEXTUREACCESS_STREAMING, GBA_WIDTH,
 				    GBA_HEIGHT);
 	assert(texture != NULL);
+
+	for (size_t i = 0; i < SDL_NumJoysticks(); ++i) {
+		if (SDL_IsGameController(i)) {
+			controller = SDL_GameControllerOpen(i);
+			if (controller) {
+				break;
+			} else {
+				fprintf(stderr,
+					"Couldn't open controller %zu: %s\n", i,
+					SDL_GetError());
+			}
+		}
+	}
+	assert(controller != NULL);
 
 	game_main();
 }
@@ -257,6 +273,52 @@ void update_surface_from_screen(void)
 	}
 }
 
+void update_game_controller(void)
+{
+	/*
+	 * The SDL buttons are as on X-BOX like controller, so the A/B X/Y are
+	 * flipped here to match a SNES like controller.
+	 */
+	uint16_t input = 0;
+	input |= PREP(KEYINPUT_BUTTON_A,
+		      SDL_GameControllerGetButton(controller,
+						  SDL_CONTROLLER_BUTTON_B));
+	input |= PREP(KEYINPUT_BUTTON_B,
+		      SDL_GameControllerGetButton(controller,
+						  SDL_CONTROLLER_BUTTON_A));
+	input |= PREP(KEYINPUT_SELECT,
+		      SDL_GameControllerGetButton(controller,
+						  SDL_CONTROLLER_BUTTON_BACK));
+	input |= PREP(KEYINPUT_START,
+		      SDL_GameControllerGetButton(controller,
+						  SDL_CONTROLLER_BUTTON_START));
+	input |= PREP(KEYINPUT_RIGHT,
+		      SDL_GameControllerGetButton(
+			      controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT));
+	input |= PREP(KEYINPUT_LEFT,
+		      SDL_GameControllerGetButton(
+			      controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT));
+	input |= PREP(KEYINPUT_UP,
+		      SDL_GameControllerGetButton(
+			      controller, SDL_CONTROLLER_BUTTON_DPAD_UP));
+	input |= PREP(KEYINPUT_DOWN,
+		      SDL_GameControllerGetButton(
+			      controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN));
+	input |= PREP(KEYINPUT_BUTTON_L,
+		      SDL_GameControllerGetButton(
+			      controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER));
+	input |= PREP(KEYINPUT_BUTTON_R,
+		      SDL_GameControllerGetButton(
+			      controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER));
+	input |= PREP(KEYINPUT_BUTTON_X,
+		      SDL_GameControllerGetButton(controller,
+						  SDL_CONTROLLER_BUTTON_Y));
+	input |= PREP(KEYINPUT_BUTTON_Y,
+		      SDL_GameControllerGetButton(controller,
+						  SDL_CONTROLLER_BUTTON_X));
+	REG_KEYINPUT = ~input;
+}
+
 void present_frame_and_handle_events(void)
 {
 	uint32_t now = SDL_GetTicks();
@@ -269,6 +331,7 @@ void present_frame_and_handle_events(void)
 	while (SDL_PollEvent(&event)) {
 		handle_sdl_event(&event);
 	}
+	update_game_controller();
 
 	update_surface_from_screen();
 	SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);

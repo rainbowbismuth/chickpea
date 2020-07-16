@@ -9,6 +9,7 @@ extern uint16_t reg_vcount;
 extern uint16_t reg_bldcnt;
 extern uint16_t reg_bldalpha;
 extern uint16_t reg_bldy;
+extern uint16_t reg_keyinput;
 extern uint16_t reg_ie;
 extern uint16_t reg_if;
 extern uint32_t reg_ime;
@@ -28,6 +29,7 @@ extern struct palette obj_pallete_ram[16];
 #define REG_BLDCNT   (reg_bldcnt)
 #define REG_BLDALPHA (reg_bldalpha)
 #define REG_BLDY     (reg_bldy)
+#define REG_KEYINPUT (reg_keyinput)
 #define REG_IE	     (reg_ie)
 #define REG_IF	     (reg_if)
 #define REG_IME	     (reg_ime)

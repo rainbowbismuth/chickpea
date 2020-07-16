@@ -69,6 +69,8 @@ void game_main(void)
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
 	uint32_t frame = 0;
+	uint16_t bg1_scroll_x = 0;
+	uint16_t bg1_scroll_y = 0;
 	while (1) {
 		wait_for_horizontal_blank();
 		bg_palette(0)->color[0] =
@@ -86,6 +88,20 @@ void game_main(void)
 
 			*reg_bg_scroll_x(BG0) = v;
 			*reg_bg_scroll_y(BG0) = v;
+
+			uint16_t keyinput = ~REG_KEYINPUT;
+			if (GET(KEYINPUT_UP, keyinput) != 0) {
+				*reg_bg_scroll_y(BG1) = bg1_scroll_y++;
+			}
+			if (GET(KEYINPUT_DOWN, keyinput) != 0) {
+				*reg_bg_scroll_y(BG1) = bg1_scroll_y--;
+			}
+			if (GET(KEYINPUT_LEFT, keyinput) != 0) {
+				*reg_bg_scroll_x(BG1) = bg1_scroll_x++;
+			}
+			if (GET(KEYINPUT_RIGHT, keyinput) != 0) {
+				*reg_bg_scroll_x(BG1) = bg1_scroll_x--;
+			}
 		}
 	}
 }

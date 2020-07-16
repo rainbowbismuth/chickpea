@@ -115,6 +115,25 @@
 
 #define BLDY_BRIGHTNESS FIELD(0, 4)
 
+#define KEYINPUT_BUTTON_A BIT(0)
+#define KEYINPUT_BUTTON_B BIT(1)
+#define KEYINPUT_SELECT	  BIT(2)
+#define KEYINPUT_START	  BIT(3)
+#define KEYINPUT_RIGHT	  BIT(4)
+#define KEYINPUT_LEFT	  BIT(5)
+#define KEYINPUT_UP	  BIT(6)
+#define KEYINPUT_DOWN	  BIT(7)
+#define KEYINPUT_BUTTON_R BIT(8)
+#define KEYINPUT_BUTTON_L BIT(9)
+
+/*
+ * The GBA doesn't have X or Y buttons, but these bits are unused, so they
+ * will be implemented for non-GBA platforms, particularly for debug
+ * functionality.
+ */
+#define KEYINPUT_BUTTON_X BIT(10)
+#define KEYINPUT_BUTTON_Y BIT(11)
+
 enum blend_effect {
 	BLEND_NONE = 0,
 	BLEND_ALPHA = 1,
