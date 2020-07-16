@@ -38,7 +38,7 @@ if (BUILD_GBA)
             BYPRODUCTS chickpea_c.gba
     )
 else ()
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fsanitize=undefined")
 
     set(SRC_FILES ${SRC_FILES} src/emulated.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
