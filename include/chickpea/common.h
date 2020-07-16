@@ -167,6 +167,7 @@ void write_palette(const struct palette *src, volatile struct palette *dst);
 
 void debug_putchar(char c);
 
+uint16_t color(uint32_t red, uint32_t green, uint32_t blue);
 uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 			uint16_t dst_color, uint16_t dst_weight);
 

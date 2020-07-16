@@ -11,12 +11,6 @@ void our_irq_handler(void)
 
 void (*volatile irq_handler)(void) = our_irq_handler;
 
-uint16_t color(uint32_t red, uint32_t green, uint32_t blue)
-{
-	return PREP(COL_RED, red) | PREP(COL_GREEN, green) |
-	       PREP(COL_BLUE, blue);
-}
-
 void wait_for_horizontal_blank()
 {
 	REG_IME = 0;

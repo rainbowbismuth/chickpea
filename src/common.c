@@ -23,6 +23,13 @@ void write_palette(const struct palette *src, volatile struct palette *dst)
 	}
 }
 
+
+uint16_t color(uint32_t red, uint32_t green, uint32_t blue)
+{
+	return PREP(COL_RED, red) | PREP(COL_GREEN, green) |
+	       PREP(COL_BLUE, blue);
+}
+
 uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 			uint16_t dst_color, uint16_t dst_weight)
 {
