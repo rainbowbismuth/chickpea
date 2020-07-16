@@ -74,8 +74,8 @@ void draw_pixel(uint32_t x, uint32_t y, uint16_t color, uint16_t priority)
 	}
 }
 
-void draw_line(uint32_t x, uint32_t y, uint32_t line,
-	       volatile struct palette *palette, uint16_t priority)
+void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
+	       uint16_t priority)
 {
 	if (line == 0 || (x >= GBA_WIDTH && x < UINT32_MAX - GBA_WIDTH)) {
 		return;
@@ -103,10 +103,12 @@ void draw_background(enum background bg, uint32_t y, uint16_t priority)
 
 	uint16_t bg_control = *reg_bg_control(bg);
 
-	volatile uint16_t *screen_block =
-		screen_block_begin(GET(BGCNT_SCREEN_BLOCK, bg_control));
-	volatile struct character_4bpp *char_block =
-		character_block_begin(GET(BGCNT_CHAR_BLOCK, bg_control));
+	uint16_t *screen_block = (uint16_t *)screen_block_begin(
+		GET(BGCNT_SCREEN_BLOCK, bg_control));
+
+	struct character_4bpp *char_block =
+		(struct character_4bpp *)character_block_begin(
+			GET(BGCNT_CHAR_BLOCK, bg_control));
 
 	for (size_t tile_x = tile_x_min; tile_x < tile_x_min + 32; ++tile_x) {
 		uint32_t wrapped_tile_x = tile_x % 32;
@@ -118,8 +120,9 @@ void draw_background(enum background bg, uint32_t y, uint16_t priority)
 			tile_line = 7 - tile_line;
 		}
 
-		volatile struct character_4bpp *character =
-			&char_block[GET(TILE_CHAR, tile)];
+		struct character_4bpp *character =
+			(struct character_4bpp
+				 *)&char_block[GET(TILE_CHAR, tile)];
 
 		uint32_t line = character->lines[tile_line];
 
@@ -127,8 +130,8 @@ void draw_background(enum background bg, uint32_t y, uint16_t priority)
 			line = reverse_nibbles(line);
 		}
 
-		volatile struct palette *palette =
-			bg_palette(GET(TILE_PALETTE, tile));
+		struct palette *palette =
+			(struct palette *)bg_palette(GET(TILE_PALETTE, tile));
 
 		draw_line(screen_x, y, line, palette, priority);
 	}
