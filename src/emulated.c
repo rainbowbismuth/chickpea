@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include "chickpea.h"
 #include "SDL.h"
 #include "SDL_timer.h"
