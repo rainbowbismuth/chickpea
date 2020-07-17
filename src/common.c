@@ -51,7 +51,7 @@ uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 	       PREP(COL_BLUE, blue);
 }
 
-void test_reverse_nibbles(struct nano_unit_case *test)
+static void test_reverse_nibbles(struct nano_unit_case *test)
 {
 	uint32_t x = 0x2d8fa90a;
 	NANO_ASSERT(test, x == reverse_nibbles(reverse_nibbles(x)), exit);
@@ -59,7 +59,7 @@ exit:
 	return;
 }
 
-void test_additive_blend(struct nano_unit_case *test)
+static void test_additive_blend(struct nano_unit_case *test)
 {
 	uint16_t red = color(30, 0, 0);
 	uint16_t blue = color(0, 0, 30);
