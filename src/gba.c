@@ -30,14 +30,14 @@ volatile uint16_t *reg_bg_control(enum background bg)
 	return (volatile uint16_t *)(size_t)(0x04000008 + (bg << 1));
 }
 
-volatile uint16_t *reg_bg_scroll_x(enum background bg)
+void set_bg_scroll_x(enum background bg, uint16_t scroll_x)
 {
-	return (volatile uint16_t *)(size_t)(0x04000010 + (bg << 2));
+	*(volatile uint16_t *)(size_t)(0x04000010 + (bg << 2)) = scroll_x;
 }
 
-volatile uint16_t *reg_bg_scroll_y(enum background bg)
+void set_bg_scroll_y(enum background bg, uint16_t scroll_y)
 {
-	return (volatile uint16_t *)(size_t)(0x04000012 + (bg << 2));
+	*(volatile uint16_t *)(size_t)(0x04000012 + (bg << 2)) = scroll_y;
 }
 
 #define MGBA_DEBUG_ENABLE	((volatile uint16_t *)0x04fff780)

@@ -156,8 +156,8 @@ volatile struct character_4bpp *character_block_begin(uint32_t char_block);
 volatile struct palette *bg_palette(uint32_t palette_idx);
 volatile uint16_t *screen_block_begin(uint32_t screen_block);
 volatile uint16_t *reg_bg_control(enum background bg);
-volatile uint16_t *reg_bg_scroll_x(enum background bg);
-volatile uint16_t *reg_bg_scroll_y(enum background bg);
+void set_bg_scroll_x(enum background bg, uint16_t scroll_x);
+void set_bg_scroll_y(enum background bg, uint16_t scroll_y);
 void halt(void);
 
 uint32_t reverse_nibbles(uint32_t n);

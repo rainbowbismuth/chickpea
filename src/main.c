@@ -52,8 +52,8 @@ void game_main(void)
 			       PREP(BGCNT_SCREEN_BLOCK, 2) |
 			       PREP(BGCNT_PRIORITY, 1);
 
-	*reg_bg_scroll_x(BG2) = -20;
-	*reg_bg_scroll_y(BG2) = -20;
+	set_bg_scroll_x(BG2, -20);
+	set_bg_scroll_y(BG2, -20);
 
 	volatile uint16_t *tiles = screen_block_begin(1);
 	for (size_t i = 0; i < 16 * 32; ++i) {
@@ -90,21 +90,21 @@ void game_main(void)
 
 			uint32_t v = (frame >> 1) % 512;
 
-			*reg_bg_scroll_x(BG0) = v;
-			*reg_bg_scroll_y(BG0) = v;
+			set_bg_scroll_x(BG0, v);
+			set_bg_scroll_y(BG0, v);
 
 			uint16_t keyinput = ~REG_KEYINPUT;
 			if (GET(KEYINPUT_UP, keyinput) != 0) {
-				*reg_bg_scroll_y(BG1) = bg1_scroll_y++;
+				set_bg_scroll_y(BG1, bg1_scroll_y++);
 			}
 			if (GET(KEYINPUT_DOWN, keyinput) != 0) {
-				*reg_bg_scroll_y(BG1) = bg1_scroll_y--;
+				set_bg_scroll_y(BG1, bg1_scroll_y--);
 			}
 			if (GET(KEYINPUT_LEFT, keyinput) != 0) {
-				*reg_bg_scroll_x(BG1) = bg1_scroll_x++;
+				set_bg_scroll_x(BG1, bg1_scroll_x++);
 			}
 			if (GET(KEYINPUT_RIGHT, keyinput) != 0) {
-				*reg_bg_scroll_x(BG1) = bg1_scroll_x--;
+				set_bg_scroll_x(BG1, bg1_scroll_x--);
 			}
 		}
 	}

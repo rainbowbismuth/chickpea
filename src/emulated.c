@@ -171,8 +171,8 @@ void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
 
 void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {
-	uint32_t scroll_x = *reg_bg_scroll_x(bg);
-	uint32_t scroll_y = 0xFFFF - *reg_bg_scroll_y(bg);
+	uint32_t scroll_x = reg_bg_scrolls_x[bg];
+	uint32_t scroll_y = 0xFFFF - reg_bg_scrolls_y[bg];
 
 	uint32_t bg_y = y - scroll_y;
 	uint32_t tile_y = (bg_y / 8) % 32;
@@ -430,14 +430,14 @@ volatile uint16_t *reg_bg_control(enum background bg)
 	return (volatile uint16_t *)&reg_bg_controls[bg];
 }
 
-volatile uint16_t *reg_bg_scroll_x(enum background bg)
+void set_bg_scroll_x(enum background bg, uint16_t scroll_x)
 {
-	return (volatile uint16_t *)&reg_bg_scrolls_x[bg];
+	reg_bg_scrolls_x[bg] = scroll_x;
 }
 
-volatile uint16_t *reg_bg_scroll_y(enum background bg)
+void set_bg_scroll_y(enum background bg, uint16_t scroll_y)
 {
-	return (volatile uint16_t *)&reg_bg_scrolls_y[bg];
+	reg_bg_scrolls_y[bg] = scroll_y;
 }
 
 void halt()
