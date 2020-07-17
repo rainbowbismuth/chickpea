@@ -1,4 +1,5 @@
 #include "chickpea.h"
+#include "chickpea/nano_unit.h"
 
 void halt()
 {
@@ -47,7 +48,7 @@ void set_bg_scroll_y(enum background bg, uint16_t scroll_y)
 
 volatile char *mgba_debug_output = MGBA_DEBUG_OUTPUT_BEGIN;
 
-void debug_putchar(char c)
+void debug_put_char(char c)
 {
 	if (mgba_debug_output >= MGBA_DEBUG_OUTPUT_END) {
 		mgba_debug_output = MGBA_DEBUG_OUTPUT_BEGIN;
@@ -61,17 +62,20 @@ void debug_putchar(char c)
 	*mgba_debug_output++ = c;
 }
 
-void debug_putstr(const char *str)
+void debug_put_str(const char *str)
 {
 	do {
-		debug_putchar(*str);
-	} while (*str++ != '\0');
-	debug_putchar('\0');
+		debug_put_char(*str);
+	} while (*++str != '\0');
 }
+
+extern struct nano_unit_suite test_suites[];
 
 int main(void)
 {
 	*MGBA_DEBUG_ENABLE = 0xc0de;
-	debug_putstr("Hello, mGBA!");
+	debug_put_str("Hello, mGBA!\n");
+	nano_unit_run_suites(test_suites);
+
 	game_main();
 }

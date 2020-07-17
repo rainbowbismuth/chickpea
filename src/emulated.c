@@ -472,7 +472,12 @@ void halt()
 	assert(steps_left && "halted for a long time, probably a bug?");
 }
 
-void debug_putchar(char c)
+void debug_put_char(char c)
 {
-	putchar(c);
+	fputc(c, stdout);
+}
+
+void debug_put_str(const char *str)
+{
+	fputs(str, stdout);
 }

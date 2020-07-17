@@ -165,7 +165,9 @@ void write_4bpp(const struct character_4bpp *src,
 		volatile struct character_4bpp *dst);
 void write_palette(const struct palette *src, volatile struct palette *dst);
 
-void debug_putchar(char c);
+void debug_put_char(char c);
+void debug_put_str(const char *str);
+void debug_put_u32(uint32_t n);
 
 uint16_t color(uint32_t red, uint32_t green, uint32_t blue);
 uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,

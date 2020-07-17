@@ -5,13 +5,16 @@ project(chickpea_c C)
 set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-set(SRC_FILES src/main.c src/common.c src/debug_font.c)
-set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h include/chickpea/platform.h include/chickpea/debug_font.h
+set(SRC_FILES src/main.c src/common.c src/debug_font.c src/test_suites.c
+        src/nano_unit.c)
+set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
+        include/chickpea/platform.h include/chickpea/debug_font.h
         include/chickpea/nano_unit.h)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
     set(DEVKITARM /opt/devkitpro/devkitARM/bin)
+    set(DEVKITARM_LIB /opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/10.1.0/)
     set(DEVKITPRO /opt/devkitpro/tools/bin)
     set(CHICKPEA_AS ${DEVKITARM}/arm-none-eabi-as)
 else ()
@@ -22,12 +25,15 @@ add_custom_command(
         OUTPUT embedded_data.o
         DEPENDS ${CMAKE_SOURCE_DIR}/src/embedded_data.s
         BYPRODUCTS embedded_data.o
-        COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/embedded_data.s -o embedded_data.o
+        COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/embedded_data.s
+            -o embedded_data.o
 )
 
 if (BUILD_GBA)
-    set(CMAKE_C_LINK_EXECUTABLE "${DEVKITARM}/arm-none-eabi-ld <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T${CMAKE_SOURCE_DIR}/src/linker.ld")
+    set(CMAKE_C_LINK_EXECUTABLE "${DEVKITARM}/arm-none-eabi-ld <LINK_FLAGS>\
+        <OBJECTS> -o <TARGET> -L${DEVKITARM_LIB} -lgcc <LINK_LIBRARIES>")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}\
+        -T${CMAKE_SOURCE_DIR}/src/linker.ld")
 
     set(SRC_FILES ${SRC_FILES} src/gba.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h)
@@ -38,24 +44,28 @@ if (BUILD_GBA)
             BYPRODUCTS crt0.o
             COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/crt0.s -o crt0.o
     )
-    add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o embedded_data.o)
+    add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o
+            embedded_data.o)
     set_target_properties(chickpea_c.elf
             PROPERTIES
-            COMPILE_FLAGS "-Wall -Wextra -nostdlib -target arm-none-eabi -mcpu=arm7tdmi -mthumb"
+            COMPILE_FLAGS "-Wall -Wextra -nostdlib -target arm-none-eabi\
+                -mcpu=arm7tdmi -mthumb"
             COMPILE_DEFINITIONS BUILD_GBA=1
             )
 
     add_custom_target(
             chickpea_c.gba ALL
             DEPENDS chickpea_c.elf
-            COMMAND ${DEVKITARM}/arm-none-eabi-objcopy -O binary chickpea_c.elf chickpea_c.gba
+            COMMAND ${DEVKITARM}/arm-none-eabi-objcopy -O binary chickpea_c.elf
+                chickpea_c.gba
             COMMAND ${DEVKITPRO}/gbafix chickpea_c.gba
             BYPRODUCTS chickpea_c.gba
     )
 else ()
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address -fsanitize=undefined")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address\
+        -fsanitize=undefined")
 
-    set(SRC_FILES ${SRC_FILES} src/emulated.c src/test_suites.c src/nano_unit.c)
+    set(SRC_FILES ${SRC_FILES} src/emulated.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
     add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES} embedded_data.o)
     set_target_properties(chickpea_c

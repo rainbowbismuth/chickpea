@@ -51,6 +51,18 @@ uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 	       PREP(COL_BLUE, blue);
 }
 
+void debug_put_u32(uint32_t n)
+{
+	char digits[12] = { 0 };
+	size_t i;
+	for (i = 10; i != 0 && n >= 10; i--) {
+		digits[i] = '0' + (n % 10);
+		n /= 10;
+	}
+	digits[i] = '0' + (n % 10);
+	debug_put_str(&digits[i]);
+}
+
 static void test_reverse_nibbles(struct nano_unit_case *test)
 {
 	uint32_t x = 0x2d8fa90a;
