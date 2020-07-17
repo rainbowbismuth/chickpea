@@ -6,7 +6,8 @@ set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SRC_FILES src/main.c src/common.c src/debug_font.c)
-set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h include/chickpea/platform.h include/chickpea/debug_font.h)
+set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h include/chickpea/platform.h include/chickpea/debug_font.h
+        include/chickpea/nano_unit.h)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
@@ -54,7 +55,7 @@ if (BUILD_GBA)
 else ()
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address -fsanitize=undefined")
 
-    set(SRC_FILES ${SRC_FILES} src/emulated.c)
+    set(SRC_FILES ${SRC_FILES} src/emulated.c  src/nano_unit.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
     add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES} embedded_data.o)
     set_target_properties(chickpea_c

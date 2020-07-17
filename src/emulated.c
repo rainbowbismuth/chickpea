@@ -42,8 +42,18 @@ uint32_t real_win_height = GBA_HEIGHT * 2;
 uint16_t screen_color[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 
+#include "chickpea/nano_unit.h"
+extern struct nano_unit_case common_test_suite[];
+
+struct nano_unit_suite test_suites[] = {
+	NANO_UNIT_SUITE(common_test_suite),
+	{}
+};
+
 int main(void)
 {
+	nano_unit_run_suites(test_suites);
+
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 	atexit(SDL_Quit);
 	window = SDL_CreateWindow("chickpea-c", SDL_WINDOWPOS_CENTERED,
