@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "chickpea.h"
+#include "chickpea/nano_unit.h"
 #include "SDL.h"
 #include "SDL_timer.h"
 
@@ -42,13 +43,7 @@ uint32_t real_win_height = GBA_HEIGHT * 2;
 uint16_t screen_color[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 
-#include "chickpea/nano_unit.h"
-extern struct nano_unit_case common_test_suite[];
-
-struct nano_unit_suite test_suites[] = {
-	NANO_UNIT_SUITE(common_test_suite),
-	{}
-};
+extern struct nano_unit_suite test_suites[];
 
 int main(void)
 {

@@ -55,7 +55,7 @@ if (BUILD_GBA)
 else ()
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address -fsanitize=undefined")
 
-    set(SRC_FILES ${SRC_FILES} src/emulated.c  src/nano_unit.c)
+    set(SRC_FILES ${SRC_FILES} src/emulated.c src/test_suites.c src/nano_unit.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
     add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES} embedded_data.o)
     set_target_properties(chickpea_c
