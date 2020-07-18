@@ -8,7 +8,11 @@
 #define MAP_HEIGHT 32
 
 struct map_bit_vec {
-	uint8_t bits[MAP_HEIGHT][MAP_HEIGHT / 8];
+	uint8_t bits[MAP_HEIGHT][MAP_WIDTH / 8];
+};
+
+struct map_byte_vec {
+	uint8_t bytes[MAP_HEIGHT][MAP_WIDTH];
 };
 
 struct tile_highlight_gfx {
@@ -35,7 +39,8 @@ struct map_render_params {
  * @param highlights The currently highlighted tiles.
  */
 void demo_render_tile_highlights(struct map_render_params *nonnull params,
-				 struct map_bit_vec *nonnull highlights);
+				 struct map_bit_vec *nonnull highlights,
+				 struct map_byte_vec *nonnull height_map);
 void demo_rotate_highlight_palette(uint32_t offset);
 
 #endif //CHICKPEA_MAP_H

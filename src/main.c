@@ -35,6 +35,7 @@ static const struct character_4bpp
 		      } };
 
 static struct map_bit_vec highlights = {};
+static struct map_byte_vec height_map = {};
 
 void game_main(void)
 {
@@ -79,7 +80,9 @@ void game_main(void)
 	*reg_bg_control(BG3) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
 		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block);
-	demo_render_tile_highlights(&map_render_params, &highlights);
+
+	demo_render_tile_highlights(&map_render_params, &highlights,
+				    &height_map);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 

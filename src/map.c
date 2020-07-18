@@ -43,10 +43,9 @@ size_t tile_to_screen(struct vec2 pos)
 	return (pos.x % MAP_WIDTH) + (pos.y % MAP_HEIGHT) * MAP_HEIGHT;
 }
 
-void demo_render_one_highlight(volatile uint16_t *screen, struct vec2 pos)
+void demo_render_one_highlight(volatile uint16_t *screen,
+			       struct vec2 tile_0_pos)
 {
-	struct vec2 tile_0_pos = to_tile_coord(pos);
-
 	size_t tile_0_idx = tile_to_screen(tile_0_pos);
 	size_t tile_1_idx = tile_to_screen(v2_add_x(tile_0_pos, 1));
 	uint16_t tile_0 = screen[tile_0_idx];
@@ -96,13 +95,18 @@ void demo_render_one_highlight(volatile uint16_t *screen, struct vec2 pos)
 }
 
 void demo_render_tile_highlights(struct map_render_params *nonnull params,
-				 struct map_bit_vec *nonnull highlights)
+				 struct map_bit_vec *nonnull highlights,
+				 struct map_byte_vec *nonnull height_map)
 {
 	for (size_t y = 4; y < 8; ++y) {
 		for (size_t x = 4; x < 8; ++x) {
 			struct vec2 pos = { .x = x, .y = y };
 			map_bit_vec_set(highlights, pos);
 		}
+	}
+	for (size_t y = 7; y >= 4; --y) {
+		height_map->bytes[y][4] = 7 - y;
+		height_map->bytes[y][5] = 7 - y;
 	}
 
 	volatile uint16_t *screen = screen_block_begin(params->screen_block);
@@ -126,7 +130,9 @@ void demo_render_tile_highlights(struct map_render_params *nonnull params,
 			if (!map_bit_vec_test(highlights, pos)) {
 				continue;
 			}
-			demo_render_one_highlight(screen, pos);
+			struct vec2 tile_0_pos = to_tile_coord(pos);
+			tile_0_pos.y -= height_map->bytes[y][x];
+			demo_render_one_highlight(screen, tile_0_pos);
 		}
 	}
 }
