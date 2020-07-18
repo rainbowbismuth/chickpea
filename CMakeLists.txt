@@ -6,10 +6,10 @@ set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SRC_FILES src/main.c src/common.c src/debug_font.c src/test_suites.c
-        src/nano_unit.c)
+        src/nano_unit.c src/bit_vec.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/chickpea/debug_font.h
-        include/chickpea/nano_unit.h)
+        include/chickpea/nano_unit.h include/chickpea/bit_vec.h)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
