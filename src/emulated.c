@@ -70,20 +70,6 @@ int main(void)
 				    GBA_HEIGHT);
 	assert(texture != NULL);
 
-	for (int i = 0; i < SDL_NumJoysticks(); ++i) {
-		if (SDL_IsGameController(i)) {
-			controller = SDL_GameControllerOpen(i);
-			if (controller) {
-				break;
-			} else {
-				fprintf(stderr,
-					"Couldn't open controller %i: %s\n", i,
-					SDL_GetError());
-			}
-		}
-	}
-	assert(controller != NULL);
-
 	game_main();
 }
 
@@ -303,8 +289,38 @@ void update_surface_from_screen(void)
 	}
 }
 
+void find_game_controller_if_none(void)
+{
+	if (controller) {
+		if (SDL_GameControllerGetAttached(controller)) {
+			return;
+		} else {
+			SDL_GameControllerClose(controller);
+			controller = NULL;
+		}
+	}
+
+	for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+		if (SDL_IsGameController(i)) {
+			controller = SDL_GameControllerOpen(i);
+			if (controller) {
+				break;
+			} else {
+				fprintf(stderr,
+					"Couldn't open controller %i: %s\n", i,
+					SDL_GetError());
+			}
+		}
+	}
+}
+
 void update_game_controller(void)
 {
+	find_game_controller_if_none();
+	if (!controller) {
+		REG_KEYINPUT = ~0;
+		return;
+	}
 	/*
 	 * The SDL buttons are as on X-BOX like controller, so the A/B X/Y are
 	 * flipped here to match a SNES like controller.
