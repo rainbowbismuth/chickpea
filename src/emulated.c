@@ -201,15 +201,16 @@ static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 		uint32_t tile_idx = wrapped_tile_x + tile_y * 32;
 		uint16_t tile = screen_block[tile_idx];
 
+		uint32_t line_idx = tile_line;
 		if (GET(TILE_VERTICAL_FLIP, tile)) {
-			tile_line = 7 - tile_line;
+			line_idx = 7 - tile_line;
 		}
 
 		struct character_4bpp *character =
 			(struct character_4bpp
 				 *)&char_block[GET(TILE_CHAR, tile)];
 
-		uint32_t line = character->lines[tile_line];
+		uint32_t line = character->lines[line_idx];
 
 		if (GET(TILE_HORIZONTAL_FLIP, tile)) {
 			line = reverse_nibbles(line);

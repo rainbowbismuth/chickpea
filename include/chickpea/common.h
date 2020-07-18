@@ -68,6 +68,11 @@
  */
 #define PREP(mask, val) (((val) << MASK_OFFSET(CONSTANT(mask))) & (mask))
 
+/*
+ * Replace the field with a new value
+ */
+#define REPLACE(mask, val, new_val) ((val & ~mask) | PREP(mask, new_val))
+
 #define GBA_WIDTH  240
 #define GBA_HEIGHT 160
 

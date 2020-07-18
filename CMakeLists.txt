@@ -6,10 +6,10 @@ set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SRC_FILES src/main.c src/common.c src/debug_font.c src/test_suites.c
-        src/nano_unit.c src/bit_vec.c)
+        src/nano_unit.c src/bit_vec.c src/map.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/chickpea/debug_font.h
-        include/chickpea/nano_unit.h include/chickpea/bit_vec.h)
+        include/chickpea/nano_unit.h include/chickpea/bit_vec.h include/chickpea/map.h include/chickpea/vec2.h)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
@@ -34,6 +34,7 @@ if (BUILD_GBA)
         <OBJECTS> -o <TARGET> -L${DEVKITARM_LIB} -lgcc <LINK_LIBRARIES>")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}\
         -T${CMAKE_SOURCE_DIR}/src/linker.ld")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1")
 
     set(SRC_FILES ${SRC_FILES} src/gba.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h)
@@ -62,7 +63,7 @@ if (BUILD_GBA)
             BYPRODUCTS chickpea_c.gba
     )
 else ()
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address\
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address \
         -fsanitize=undefined")
 
     set(SRC_FILES ${SRC_FILES} src/emulated.c)

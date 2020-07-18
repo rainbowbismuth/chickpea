@@ -3,6 +3,7 @@
 
 #include "chickpea.h"
 #include "chickpea/debug_font.h"
+#include "chickpea/map.h"
 
 void our_irq_handler(void)
 {
@@ -33,10 +34,13 @@ static const struct character_4bpp
 			      0b00010001000100010001000100010001u,
 		      } };
 
+static struct map_bit_vec highlights = {};
+
 void game_main(void)
 {
 	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_SCREEN_DISPLAY_BG0 |
-		      DISPCNT_SCREEN_DISPLAY_BG1 | DISPCNT_SCREEN_DISPLAY_BG2;
+		      DISPCNT_SCREEN_DISPLAY_BG1 | DISPCNT_SCREEN_DISPLAY_BG2 |
+		      DISPCNT_SCREEN_DISPLAY_BG3;
 
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
@@ -70,6 +74,13 @@ void game_main(void)
 	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
 		       PREP(BLDALPHA_2ND_WEIGHT, 8);
 
+	struct map_render_params map_render_params = { .char_block = 3,
+						       .screen_block = 3 };
+	*reg_bg_control(BG3) =
+		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
+		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block);
+	demo_render_tile_highlights(&map_render_params, &highlights);
+
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
 	uint32_t frame = 0;
@@ -87,6 +98,8 @@ void game_main(void)
 			bg_palette(1)->color[1] = color(c, 22, 15);
 			bg_palette(2)->color[1] = color(15, 22, c);
 			bg_palette(3)->color[1] = color(c, c, c);
+
+			demo_rotate_highlight_palette(frame);
 
 			uint32_t v = (frame >> 1) % 512;
 
