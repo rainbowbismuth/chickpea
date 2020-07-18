@@ -64,9 +64,9 @@ void debug_put_char(char c)
 
 void debug_put_str(const char *str)
 {
-	do {
-		debug_put_char(*str);
-	} while (*++str != '\0');
+	while (*str != '\0') {
+		debug_put_char(*str++);
+	}
 }
 
 extern struct nano_unit_suite test_suites[];
