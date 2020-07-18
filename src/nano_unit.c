@@ -1,7 +1,7 @@
 #include "chickpea/common.h"
 #include "chickpea/nano_unit.h"
 
-static uint32_t count_tests_in_suites(struct nano_unit_suite *suites)
+static uint32_t count_tests_in_suites(struct nano_unit_suite *nonnull suites)
 {
 	uint32_t tests = 0;
 	for (struct nano_unit_suite *suite = suites; suite->cases; suite++) {
@@ -13,7 +13,8 @@ static uint32_t count_tests_in_suites(struct nano_unit_suite *suites)
 	return tests;
 }
 
-static void run_tests_in_suite(struct nano_unit_suite *suite, uint32_t *count)
+static void run_tests_in_suite(struct nano_unit_suite *nonnull suite,
+			       uint32_t *nonnull count)
 {
 	for (struct nano_unit_case *test_case = suite->cases; test_case->run;
 	     test_case++) {
@@ -38,7 +39,7 @@ static void run_tests_in_suite(struct nano_unit_suite *suite, uint32_t *count)
 	}
 }
 
-void nano_unit_run_suites(struct nano_unit_suite *suites)
+void nano_unit_run_suites(struct nano_unit_suite *nonnull suites)
 {
 	uint32_t num_tests = count_tests_in_suites(suites);
 	debug_put_str("1..");

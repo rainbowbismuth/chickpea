@@ -9,15 +9,16 @@ uint32_t reverse_nibbles(uint32_t n)
 	return n;
 }
 
-void write_4bpp(const struct character_4bpp *src,
-		volatile struct character_4bpp *dst)
+void write_4bpp(const struct character_4bpp *restrict nonnull src,
+		volatile struct character_4bpp *restrict nonnull dst)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(src->lines); ++i) {
 		dst->lines[i] = src->lines[i];
 	}
 }
 
-void write_palette(const struct palette *src, volatile struct palette *dst)
+void write_palette(const struct palette *restrict nonnull src,
+		   volatile struct palette *restrict nonnull dst)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(src->color); ++i) {
 		dst->color[i] = src->color[i];
@@ -63,7 +64,7 @@ void debug_put_u32(uint32_t n)
 	debug_put_str(&digits[i]);
 }
 
-static void test_reverse_nibbles(struct nano_unit_case *test)
+static void test_reverse_nibbles(struct nano_unit_case *nonnull test)
 {
 	uint32_t x = 0x2d8fa90a;
 	NANO_ASSERT(test, x == reverse_nibbles(reverse_nibbles(x)), exit);
@@ -71,7 +72,7 @@ exit:
 	return;
 }
 
-static void test_additive_blend(struct nano_unit_case *test)
+static void test_additive_blend(struct nano_unit_case *nonnull test)
 {
 	uint16_t red = color(30, 0, 0);
 	uint16_t blue = color(0, 0, 30);

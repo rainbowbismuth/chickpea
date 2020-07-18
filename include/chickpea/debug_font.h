@@ -8,9 +8,9 @@ struct debug_font {
 	struct character_4bpp characters[256];
 };
 
-void write_debug_msg(const struct debug_font *font, uint32_t char_block,
+void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 		     uint32_t screen_block, uint32_t palette, uint32_t tile_x,
-		     uint32_t tile_y, const char *msg);
+		     uint32_t tile_y, const char *nonnull msg);
 
 extern const struct debug_font default_debug_font;
 

@@ -5,6 +5,12 @@
 #include <stddef.h>
 
 /*
+ * Attributes for pointers that declare if they're nullable or not.
+ */
+#define nonnull	 _Nonnull
+#define nullable _Nullable
+
+/*
  * Assert that condition is true at compile time, and evaluates to zero if
  * compilation succeeds.
  */
@@ -152,27 +158,40 @@ struct palette {
 	uint16_t color[16];
 };
 
-volatile struct character_4bpp *character_block_begin(uint32_t char_block);
-volatile struct palette *bg_palette(uint32_t palette_idx);
-volatile uint16_t *screen_block_begin(uint32_t screen_block);
-volatile uint16_t *reg_bg_control(enum background bg);
+volatile struct character_4bpp *nonnull
+character_block_begin(uint32_t char_block);
+
+volatile struct palette *nonnull bg_palette(uint32_t palette_idx);
+
+volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block);
+
+volatile uint16_t *nonnull reg_bg_control(enum background bg);
+
 void set_bg_scroll_x(enum background bg, uint16_t scroll_x);
+
 void set_bg_scroll_y(enum background bg, uint16_t scroll_y);
+
 void halt(void);
 
 uint32_t reverse_nibbles(uint32_t n);
-void write_4bpp(const struct character_4bpp *src,
-		volatile struct character_4bpp *dst);
-void write_palette(const struct palette *src, volatile struct palette *dst);
+
+void write_4bpp(const struct character_4bpp *restrict nonnull src,
+		volatile struct character_4bpp *restrict nonnull dst);
+
+void write_palette(const struct palette *restrict nonnull src,
+		   volatile struct palette *restrict nonnull dst);
 
 void debug_put_char(char c);
-void debug_put_str(const char *str);
+
+void debug_put_str(const char *nonnull str);
+
 void debug_put_u32(uint32_t n);
 
 uint16_t color(uint32_t red, uint32_t green, uint32_t blue);
+
 uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 			uint16_t dst_color, uint16_t dst_weight);
 
-extern void (*volatile irq_handler)(void);
+extern void (*nonnull volatile irq_handler)(void);
 
 #endif //CHICKPEA_COMMON_H

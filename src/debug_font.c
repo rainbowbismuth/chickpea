@@ -1,9 +1,9 @@
 #include "chickpea.h"
 #include "chickpea/debug_font.h"
 
-void write_debug_msg(const struct debug_font *font, uint32_t char_block,
+void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 		     uint32_t screen_block, uint32_t palette, uint32_t tile_x,
-		     uint32_t tile_y, const char *msg)
+		     uint32_t tile_y, const char *nonnull msg)
 {
 	volatile struct character_4bpp *character =
 		character_block_begin(char_block);

@@ -31,7 +31,7 @@ SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 SDL_Surface *surface = NULL;
 SDL_Texture *texture = NULL;
-SDL_GameController *controller = NULL;
+SDL_GameController *nullable controller = NULL;
 
 uint32_t ticks_previous = 0;
 uint32_t ticks_lag = 0;
@@ -73,7 +73,7 @@ int main(void)
 	game_main();
 }
 
-void clear_line(uint16_t bg_color, uint16_t y)
+static void clear_line(uint16_t bg_color, uint16_t y)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(screen_color[0]); ++i) {
 		screen_color[y][i] = bg_color;
@@ -82,7 +82,8 @@ void clear_line(uint16_t bg_color, uint16_t y)
 	}
 }
 
-void draw_pixel(uint32_t x, uint32_t y, uint16_t color, uint16_t priority)
+static void draw_pixel(uint32_t x, uint32_t y, uint16_t color,
+		       uint16_t priority)
 {
 	if (priority < screen_priority[y][x]) {
 		screen_priority[y][x] = priority;
@@ -96,9 +97,10 @@ struct blend_alpha_params {
 	uint16_t dst_weight;
 };
 
-void draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
-			    uint16_t priority,
-			    const struct blend_alpha_params *params)
+static void
+draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
+		       uint16_t priority,
+		       const struct blend_alpha_params *nonnull params)
 {
 	uint16_t target_priority = screen_priority[y][x];
 	if (priority < target_priority) {
@@ -115,8 +117,8 @@ void draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
 	}
 }
 
-void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
-	       uint16_t priority)
+static void draw_line(uint32_t x, uint32_t y, uint32_t line,
+		      const struct palette *nonnull palette, uint16_t priority)
 {
 	if (line == 0 || (x >= GBA_WIDTH && x < UINT32_MAX - GBA_WIDTH)) {
 		return;
@@ -160,7 +162,7 @@ void draw_line(uint32_t x, uint32_t y, uint32_t line, struct palette *palette,
 	}
 };
 
-void draw_background(enum background bg, uint32_t y, uint16_t priority)
+static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {
 	uint32_t scroll_x = reg_bg_scrolls_x[bg];
 	uint32_t scroll_y = 0xFFFF - reg_bg_scrolls_y[bg];
@@ -172,10 +174,10 @@ void draw_background(enum background bg, uint32_t y, uint16_t priority)
 
 	uint16_t bg_control = *reg_bg_control(bg);
 
-	uint16_t *screen_block = (uint16_t *)screen_block_begin(
+	const uint16_t *screen_block = (uint16_t *)screen_block_begin(
 		GET(BGCNT_SCREEN_BLOCK, bg_control));
 
-	struct character_4bpp *char_block =
+	const struct character_4bpp *char_block =
 		(struct character_4bpp *)character_block_begin(
 			GET(BGCNT_CHAR_BLOCK, bg_control));
 
@@ -232,7 +234,7 @@ void sort_backgrounds_by_priority(struct background_array *arr)
 	}
 }
 
-void render_entire_line(uint32_t y)
+static void render_entire_line(uint32_t y)
 {
 	uint16_t bg_color = bg_palette(0)->color[0];
 	clear_line(bg_color, y);
@@ -256,12 +258,12 @@ void render_entire_line(uint32_t y)
 	}
 }
 
-void quit(void)
+static void quit(void)
 {
 	exit(0);
 }
 
-void handle_sdl_event(const SDL_Event *event)
+static void handle_sdl_event(const SDL_Event *nonnull event)
 {
 	switch (event->type) {
 	case SDL_QUIT:
@@ -275,7 +277,7 @@ void handle_sdl_event(const SDL_Event *event)
 	}
 }
 
-void update_surface_from_screen(void)
+static void update_surface_from_screen(void)
 {
 	uint16_t *pixels = surface->pixels;
 	for (size_t y = 0; y < GBA_HEIGHT; ++y) {
@@ -289,7 +291,7 @@ void update_surface_from_screen(void)
 	}
 }
 
-void find_game_controller_if_none(void)
+static void find_game_controller_if_none(void)
 {
 	if (controller) {
 		if (SDL_GameControllerGetAttached(controller)) {
@@ -314,7 +316,7 @@ void find_game_controller_if_none(void)
 	}
 }
 
-void update_game_controller(void)
+static void update_game_controller(void)
 {
 	find_game_controller_if_none();
 	if (!controller) {
@@ -365,7 +367,7 @@ void update_game_controller(void)
 	REG_KEYINPUT = ~input;
 }
 
-void present_frame_and_handle_events(void)
+static void present_frame_and_handle_events(void)
 {
 	uint32_t now = SDL_GetTicks();
 	uint32_t elapsed = now - ticks_previous;
@@ -394,7 +396,7 @@ void present_frame_and_handle_events(void)
 	}
 }
 
-void step_emulated_hardware(void)
+static void step_emulated_hardware(void)
 {
 	uint16_t y = REG_VCOUNT;
 	uint16_t horizontal_blank =
@@ -427,26 +429,27 @@ void step_emulated_hardware(void)
 	}
 }
 
-volatile struct palette *bg_palette(uint32_t palette_idx)
+volatile struct palette *nonnull bg_palette(uint32_t palette_idx)
 {
 	assert(palette_idx < ARRAY_SIZE(bg_pallete_ram));
 	return (volatile struct palette *)(&bg_pallete_ram[palette_idx]);
 }
 
-volatile struct character_4bpp *character_block_begin(uint32_t char_block)
+volatile struct character_4bpp *nonnull
+character_block_begin(uint32_t char_block)
 {
 	assert(char_block < 4);
 	return (volatile struct character_4bpp
 			*)(&video_ram[char_block * 0x4000]);
 }
 
-volatile uint16_t *screen_block_begin(uint32_t screen_block)
+volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block)
 {
 	assert(screen_block < 32);
 	return (volatile uint16_t *)(&video_ram[screen_block * 0x800]);
 }
 
-volatile uint16_t *reg_bg_control(enum background bg)
+volatile uint16_t *nonnull reg_bg_control(enum background bg)
 {
 	return (volatile uint16_t *)&reg_bg_controls[bg];
 }
@@ -493,7 +496,7 @@ void debug_put_char(char c)
 	fputc(c, stdout);
 }
 
-void debug_put_str(const char *str)
+void debug_put_str(const char *nonnull str)
 {
 	fputs(str, stdout);
 }

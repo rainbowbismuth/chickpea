@@ -1,6 +1,8 @@
 #ifndef CHICKPEA_NANO_UNIT_H
 #define CHICKPEA_NANO_UNIT_H
 
+#include "chickpea/common.h"
+
 /**
  * A microscopic unit testing framework that should run on actual GBA
  * hardware as well as emulated. Lightly inspired by the Linux kernel's kunit
@@ -37,15 +39,15 @@
 	}
 
 struct nano_unit_case {
-	void (*run)(struct nano_unit_case *test);
-	const char *name;
-	const char *msg;
+	void (*nullable run)(struct nano_unit_case *nonnull test);
+	const char *nullable name;
+	const char *nullable msg;
 	bool success;
 };
 
 struct nano_unit_suite {
-	struct nano_unit_case *cases;
-	const char *name;
+	struct nano_unit_case *nullable cases;
+	const char *nullable name;
 	bool success;
 };
 
@@ -55,7 +57,7 @@ struct nano_unit_suite {
  * @param suites An array of nano_unit_suites that end in an empty
  * nano_unit_suite.
  */
-void nano_unit_run_suites(struct nano_unit_suite *suites);
+void nano_unit_run_suites(struct nano_unit_suite *nonnull suites);
 
 /**
  * Instead of implementing some sort of try catch, or returning implicitly,
