@@ -17,8 +17,6 @@ struct tile_highlight_gfx {
 	struct character_4bpp top_left_together[2];
 };
 
-extern struct tile_highlight_gfx tile_highlight_gfx;
-
 bool inside_map(struct vec2 pos);
 
 struct vec2 to_tile_coord(struct vec2 pos);

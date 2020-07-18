@@ -33,6 +33,7 @@ bool map_bit_vec_test(struct map_bit_vec *nonnull bitset, struct vec2 pos)
 			    ARRAY_SIZE(bitset->bits[pos.y]), pos.x);
 }
 
+extern struct tile_highlight_gfx tile_highlight_gfx;
 static const size_t pal = 9;
 static const size_t top_left[2] = { 1, 2 };
 static const size_t top_left_together[2] = { 3, 4 };
