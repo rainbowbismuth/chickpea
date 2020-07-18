@@ -45,9 +45,23 @@ uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
 
 extern struct nano_unit_suite test_suites[];
 
-int main(void)
+bool flag_present(int argc, const char *nonnull argv[],
+		  const char *nonnull flag)
 {
-	nano_unit_run_suites(test_suites);
+	for (int i = 1; i < argc; ++i) {
+		if (strcmp(argv[i], flag) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int main(int argc, const char *nonnull argv[])
+{
+	bool any_failures = nano_unit_run_suites(test_suites);
+	if (flag_present(argc, argv, "--tests-only")) {
+		return any_failures;
+	}
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 	atexit(SDL_Quit);

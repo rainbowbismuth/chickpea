@@ -16,6 +16,19 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+struct nano_unit_case {
+	void (*nullable run)(struct nano_unit_case *nonnull test);
+	const char *nullable name;
+	const char *nullable msg;
+	bool success;
+};
+
+struct nano_unit_suite {
+	struct nano_unit_case *nullable cases;
+	const char *nullable name;
+	bool success;
+};
+
 /**
  * Define a nano_unit_case based on a test case function.
  *
@@ -38,26 +51,14 @@
 		.cases = test_cases, .name = #test_cases, .success = true \
 	}
 
-struct nano_unit_case {
-	void (*nullable run)(struct nano_unit_case *nonnull test);
-	const char *nullable name;
-	const char *nullable msg;
-	bool success;
-};
-
-struct nano_unit_suite {
-	struct nano_unit_case *nullable cases;
-	const char *nullable name;
-	bool success;
-};
-
 /**
  * Run all test cases in all test suites
  *
  * @param suites An array of nano_unit_suites that end in an empty
  * nano_unit_suite.
+ * @returns If there are any test suite failures.
  */
-void nano_unit_run_suites(struct nano_unit_suite *nonnull suites);
+bool nano_unit_run_suites(struct nano_unit_suite *nonnull suites);
 
 /**
  * Instead of implementing some sort of try catch, or returning implicitly,
@@ -65,7 +66,6 @@ void nano_unit_run_suites(struct nano_unit_suite *nonnull suites);
  * the assertion fails. This will allow you to do anything clean up that will
  * need to happen within the test case itself.
  */
-
 #define NANO_ASSERT(test, expr, exit)          \
 	do {                                   \
 		if (!(expr)) {                 \

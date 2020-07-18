@@ -28,7 +28,7 @@ static void run_tests_in_suite(struct nano_unit_suite *nonnull suite,
 		debug_put_str("::");
 		debug_put_str(test_case->name);
 		if (test_case->msg) {
-			debug_put_str(" (failed on\"");
+			debug_put_str(" (failed on \"");
 			debug_put_str(test_case->msg);
 			debug_put_str("\")\n");
 		} else {
@@ -39,7 +39,7 @@ static void run_tests_in_suite(struct nano_unit_suite *nonnull suite,
 	}
 }
 
-void nano_unit_run_suites(struct nano_unit_suite *nonnull suites)
+bool nano_unit_run_suites(struct nano_unit_suite *nonnull suites)
 {
 	uint32_t num_tests = count_tests_in_suites(suites);
 	debug_put_str("1..");
@@ -47,7 +47,10 @@ void nano_unit_run_suites(struct nano_unit_suite *nonnull suites)
 	debug_put_char('\n');
 
 	uint32_t count = 0;
+	bool any_failures = false;
 	for (struct nano_unit_suite *suite = suites; suite->cases; suite++) {
 		run_tests_in_suite(suite, &count);
+		any_failures = any_failures || !suite->success;
 	}
+	return any_failures;
 }
