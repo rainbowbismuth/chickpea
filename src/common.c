@@ -67,7 +67,7 @@ void debug_put_u32(uint32_t n)
 static void test_reverse_nibbles(struct nano_unit_case *nonnull test)
 {
 	uint32_t x = 0x2d8fa90a;
-	NANO_ASSERT(test, 2 == reverse_nibbles(reverse_nibbles(x)), exit);
+	NANO_ASSERT(test, x == reverse_nibbles(reverse_nibbles(x)), exit);
 exit:
 	return;
 }
