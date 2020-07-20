@@ -6,6 +6,21 @@ void halt()
 	__asm__ volatile("swi 0x2");
 }
 
+/*
+ * TODO: Even though this works with the calling convention right now
+ * 	figure out a way to confirm that src is in r0, dst in r1, etc.
+ */
+void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
+		  size_t word_count)
+{
+	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(word_count % 8 == 0 && "must be multiple of 8 words");
+	__asm__ volatile("swi 0xC"
+			 : /* no output */
+			 : "r"(src), "r"(dst), "r"(word_count));
+}
+
 #define BG_PALETTE_RAM 0x05000000
 #define VRAM_BEGIN     0x06000000
 

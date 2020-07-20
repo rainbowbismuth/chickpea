@@ -12,17 +12,13 @@ uint32_t reverse_nibbles(uint32_t n)
 void write_4bpp(const struct character_4bpp *restrict nonnull src,
 		volatile struct character_4bpp *restrict nonnull dst)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(src->lines); ++i) {
-		dst->lines[i] = src->lines[i];
-	}
+	cpu_fast_set(src, (void *)dst, sizeof(*src) / 4);
 }
 
 void write_palette(const struct palette *restrict nonnull src,
 		   volatile struct palette *restrict nonnull dst)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(src->color); ++i) {
-		dst->color[i] = src->color[i];
-	}
+	cpu_fast_set(src, (void *)dst, sizeof(*src) / 4);
 }
 
 uint16_t color(uint32_t red, uint32_t green, uint32_t blue)

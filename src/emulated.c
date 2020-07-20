@@ -506,6 +506,15 @@ void halt()
 	assert(steps_left && "halted for a long time, probably a bug?");
 }
 
+void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
+		  size_t word_count)
+{
+	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(word_count % 8 == 0 && "must be multiple of 8 words");
+	memcpy(dst, src, word_count * 4);
+}
+
 void debug_put_char(char c)
 {
 	fputc(c, stdout);

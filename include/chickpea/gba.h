@@ -11,12 +11,13 @@
  * infinite loops.
  */
 #ifndef NDEBUG
-#define assert(cond)                \
-	do {                        \
-		if ((cond) == 0) {  \
-			while (1) { \
-			}           \
-		}                   \
+#define assert(cond)                          \
+	do {                                  \
+		if ((cond) == 0) {            \
+			debug_put_str(#cond); \
+			while (1) {           \
+			}                     \
+		}                             \
 	} while (0)
 #else
 #define assert(cond) (0)

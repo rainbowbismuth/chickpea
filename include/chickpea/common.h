@@ -179,6 +179,9 @@ void set_bg_scroll_y(enum background bg, uint16_t scroll_y);
 
 void halt(void);
 
+void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
+		  size_t word_count);
+
 uint32_t reverse_nibbles(uint32_t n);
 
 void write_4bpp(const struct character_4bpp *restrict nonnull src,
