@@ -26,6 +26,7 @@ uint8_t video_ram[0x18000] = { 0 };
 
 struct palette bg_pallete_ram[16] = { { 0 } };
 struct palette obj_pallete_ram[16] = { { 0 } };
+struct object_attribute_mem obj_attr_mem = { 0 };
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -227,7 +228,7 @@ struct background_array {
 	enum background bgs[4];
 };
 
-void sort_backgrounds_by_priority(struct background_array *arr)
+static void sort_backgrounds_by_priority(struct background_array *arr)
 {
 	/*
 	 * Standard insertion sort. Higher priority values first.
@@ -247,6 +248,47 @@ void sort_backgrounds_by_priority(struct background_array *arr)
 		}
 		i++;
 	}
+}
+
+static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
+{
+	if (GET(OBJA0_OBJ_DISABLE, obj->attr_0)) {
+		return;
+	}
+
+	// Only handling 8x8 right now.
+	uint8_t start_y = GET(OBJA0_Y, obj->attr_0);
+	uint8_t end_y = start_y + 8;
+
+	if (y < (start_y < end_y ? start_y : end_y) ||
+	    y >= (end_y > start_y ? end_y : start_y)) {
+		return;
+	}
+
+	uint8_t line_y = y - start_y;
+	if (GET(OBJA1_VERTICAL_FLIP, obj->attr_1)) {
+		line_y = 7 - line_y;
+	}
+
+	// Only handling mode 0
+	struct character_4bpp *char_block =
+		(struct character_4bpp *)character_block_begin(4);
+
+	uint32_t char_name = GET(OBJA2_CHAR, obj->attr_2);
+
+	uint32_t line = char_block[char_name].lines[line_y];
+	if (GET(OBJA1_VERTICAL_FLIP, obj->attr_1)) {
+		line = reverse_nibbles(line);
+	}
+
+	struct palette *palette =
+		(struct palette *)obj_palette(GET(OBJA2_PALETTE, obj->attr_2));
+
+	uint16_t priority =
+		PREP(PRIORITY_LAYER, 0x20) |
+		PREP(PRIORITY_UPPER, GET(OBJA2_PRIORITY, obj->attr_2));
+
+	draw_line(GET(OBJA1_X, obj->attr_1), y, line, palette, priority);
 }
 
 static void render_entire_line(uint32_t y)
@@ -270,6 +312,14 @@ static void render_entire_line(uint32_t y)
 		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
 				    (1 << bg);
 		draw_background(bg, y, priority);
+	}
+
+	if (!GET(DISPCNT_SCREEN_DISPLAY_OBJ, display_control)) {
+		return;
+	}
+
+	for (size_t i = 0; i < ARRAY_SIZE(obj_attr_mem.entries); ++i) {
+		draw_object(y, &obj_attr_mem.entries[i]);
 	}
 }
 
@@ -450,10 +500,16 @@ volatile struct palette *nonnull bg_palette(uint32_t palette_idx)
 	return (volatile struct palette *)(&bg_pallete_ram[palette_idx]);
 }
 
+volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
+{
+	assert(palette_idx < ARRAY_SIZE(obj_pallete_ram));
+	return (volatile struct palette *)(&obj_pallete_ram[palette_idx]);
+}
+
 volatile struct character_4bpp *nonnull
 character_block_begin(uint32_t char_block)
 {
-	assert(char_block < 4);
+	assert(char_block < 5);
 	return (volatile struct character_4bpp
 			*)(&video_ram[char_block * 0x4000]);
 }

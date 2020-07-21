@@ -76,12 +76,14 @@
 #define GBA_WIDTH  240
 #define GBA_HEIGHT 160
 
-#define DISPCNT_FORCED_BLANK	   BIT(7)
-#define DISPCNT_SCREEN_BG_ENABLED  FIELD(8, 4)
-#define DISPCNT_SCREEN_DISPLAY_BG0 BIT(8)
-#define DISPCNT_SCREEN_DISPLAY_BG1 BIT(9)
-#define DISPCNT_SCREEN_DISPLAY_BG2 BIT(10)
-#define DISPCNT_SCREEN_DISPLAY_BG3 BIT(11)
+#define DISPCNT_OBJ_ONE_DIMENSIONAL_MAPPING BIT(6)
+#define DISPCNT_FORCED_BLANK		    BIT(7)
+#define DISPCNT_SCREEN_BG_ENABLED	    FIELD(8, 4)
+#define DISPCNT_SCREEN_DISPLAY_BG0	    BIT(8)
+#define DISPCNT_SCREEN_DISPLAY_BG1	    BIT(9)
+#define DISPCNT_SCREEN_DISPLAY_BG2	    BIT(10)
+#define DISPCNT_SCREEN_DISPLAY_BG3	    BIT(11)
+#define DISPCNT_SCREEN_DISPLAY_OBJ	    BIT(12)
 
 #define DISPSTAT_VERTICAL_BLANK		      BIT(0)
 #define DISPSTAT_HORIZONTAL_BLANK	      BIT(1)
@@ -128,6 +130,25 @@
 
 #define BLDY_BRIGHTNESS FIELD(0, 4)
 
+#define OBJA0_Y		       FIELD(0, 8)
+#define OBJA0_ROTATION_SCALING BIT(8)
+#define OBJA0_OBJ_DOUBLE_SIZE  BIT(9)
+#define OBJA0_OBJ_DISABLE      BIT(9)
+#define OBJA0_MODE	       FIELD(10, 2)
+#define OBJA0_MOSAIC	       BIT(12)
+#define OBJA0_256_COLORS       BIT(13)
+#define OBJA0_SHAPE	       FIELD(14, 2)
+
+#define OBJA1_X		       FIELD(0, 9)
+#define OBJA1_ROT_SCALE_PARAMS FIELD(9, 5)
+#define OBJA1_HORIZONTAL_FLIP  BIT(12)
+#define OBJA1_VERTICAL_FLIP    BIT(13)
+#define OBJA1_SIZE	       FIELD(14, 2)
+
+#define OBJA2_CHAR     FIELD(0, 9)
+#define OBJA2_PRIORITY FIELD(10, 2)
+#define OBJA2_PALETTE  FIELD(12, 4)
+
 #define KEYINPUT_BUTTON_A BIT(0)
 #define KEYINPUT_BUTTON_B BIT(1)
 #define KEYINPUT_SELECT	  BIT(2)
@@ -147,6 +168,25 @@
 #define KEYINPUT_BUTTON_X BIT(10)
 #define KEYINPUT_BUTTON_Y BIT(11)
 
+enum obj_mode {
+	OBJ_MODE_NORMAL = 0,
+	OBJ_MODE_SEMI_TRANSPARENT = 1,
+	OBJ_MODE_WINDOW = 2,
+};
+
+enum obj_shape {
+	OBJ_SHAPE_SQUARE = 0,
+	OBJ_SHAPE_HORIZONTAL = 1,
+	OBJ_SHAPE_VERTICAL = 2
+};
+
+enum obj_size {
+	OBJ_SIZE_8 = 0,
+	OBJ_SIZE_16 = 1,
+	OBJ_SIZE_32 = 2,
+	OBJ_SIZE_64 = 3
+};
+
 enum blend_effect {
 	BLEND_NONE = 0,
 	BLEND_ALPHA = 1,
@@ -164,10 +204,23 @@ struct palette {
 	uint16_t color[16];
 };
 
+struct oam_entry {
+	uint16_t attr_0;
+	uint16_t attr_1;
+	uint16_t attr_2;
+	uint16_t _rotation_scaling_padding;
+};
+
+struct object_attribute_mem {
+	struct oam_entry entries[128];
+};
+
 volatile struct character_4bpp *nonnull
 character_block_begin(uint32_t char_block);
 
 volatile struct palette *nonnull bg_palette(uint32_t palette_idx);
+
+volatile struct palette *nonnull obj_palette(uint32_t palette_idx);
 
 volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block);
 

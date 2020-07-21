@@ -22,6 +22,7 @@ extern uint8_t video_ram[0x18000];
 
 extern struct palette bg_pallete_ram[16];
 extern struct palette obj_pallete_ram[16];
+extern struct object_attribute_mem obj_attr_mem;
 
 #define REG_DISPCNT  (reg_dispcnt)
 #define REG_DISPSTAT (reg_dispstat)
@@ -33,5 +34,7 @@ extern struct palette obj_pallete_ram[16];
 #define REG_IE	     (reg_ie)
 #define REG_IF	     (reg_if)
 #define REG_IME	     (reg_ime)
+
+#define OAM (obj_attr_mem)
 
 #endif //CHICKPEA_EMULATED_H

@@ -21,12 +21,19 @@ void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
 			 : "r"(src_r), "r"(dst_r), "r"(word_count_r));
 }
 
-#define BG_PALETTE_RAM 0x05000000
-#define VRAM_BEGIN     0x06000000
+#define BG_PALETTE_RAM	0x05000000
+#define OBJ_PALETTE_RAM 0x05000200
+#define VRAM_BEGIN	0x06000000
 
 volatile struct palette *nonnull bg_palette(uint32_t palette_idx)
 {
 	return (volatile struct palette *)(size_t)(BG_PALETTE_RAM +
+						   palette_idx * 0x20);
+}
+
+volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
+{
+	return (volatile struct palette *)(size_t)(OBJ_PALETTE_RAM +
 						   palette_idx * 0x20);
 }
 

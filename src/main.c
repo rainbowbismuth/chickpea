@@ -39,9 +39,11 @@ static struct map_byte_vec height_map = {};
 
 void game_main(void)
 {
-	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_SCREEN_DISPLAY_BG0 |
-		      DISPCNT_SCREEN_DISPLAY_BG1 | DISPCNT_SCREEN_DISPLAY_BG2 |
-		      DISPCNT_SCREEN_DISPLAY_BG3;
+	REG_DISPCNT = DISPCNT_FORCED_BLANK |
+		      DISPCNT_OBJ_ONE_DIMENSIONAL_MAPPING |
+		      DISPCNT_SCREEN_DISPLAY_BG0 | DISPCNT_SCREEN_DISPLAY_BG1 |
+		      DISPCNT_SCREEN_DISPLAY_BG2 | DISPCNT_SCREEN_DISPLAY_BG3 |
+		      DISPCNT_SCREEN_DISPLAY_OBJ;
 
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
@@ -49,6 +51,7 @@ void game_main(void)
 			       PREP(BGCNT_PRIORITY, 1);
 
 	write_4bpp(&demo_tile, &character_block_begin(0)[1]);
+	write_4bpp(&demo_tile, &character_block_begin(4)[1]);
 
 	*reg_bg_control(BG1) = PREP(BGCNT_CHAR_BLOCK, 2) |
 			       PREP(BGCNT_SCREEN_BLOCK, 2);
@@ -83,6 +86,12 @@ void game_main(void)
 
 	demo_render_tile_highlights(&map_render_params, &highlights,
 				    &height_map);
+
+	OAM.entries[0].attr_0 = PREP(OBJA0_Y, 0);
+	OAM.entries[0].attr_1 = PREP(OBJA1_X, 16);
+	OAM.entries[0].attr_2 = PREP(OBJA2_CHAR, 1) |
+				PREP(OBJA2_PALETTE, 1);
+	obj_palette(1)->color[1] = color(31, 31, 31);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
@@ -122,6 +131,9 @@ void game_main(void)
 			if (GET(KEYINPUT_RIGHT, keyinput) != 0) {
 				set_bg_scroll_x(BG1, bg1_scroll_x--);
 			}
+
+			OAM.entries[0].attr_0 = PREP(OBJA0_Y, frame);
+			OAM.entries[0].attr_1 = PREP(OBJA1_X, 16);
 		}
 	}
 }
