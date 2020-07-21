@@ -5,11 +5,13 @@ project(chickpea_c C)
 set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c src/test_suites.c
-        src/chickpea/nano_unit.c src/chickpea/bit_vec.c src/game/map.c)
+set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c
+        src/test_suites.c src/chickpea/nano_unit.c src/chickpea/bit_vec.c
+        src/game/map.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/game/debug_font.h
-        include/chickpea/nano_unit.h include/chickpea/bit_vec.h include/game/map.h include/chickpea/vec2.h)
+        include/chickpea/nano_unit.h include/chickpea/bit_vec.h
+        include/game/map.h include/chickpea/vec2.h)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
@@ -26,7 +28,7 @@ add_custom_command(
         DEPENDS ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
         BYPRODUCTS embedded_data.o
         COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
-            -o embedded_data.o
+        -o embedded_data.o
 )
 
 if (BUILD_GBA)
@@ -58,7 +60,7 @@ if (BUILD_GBA)
             chickpea_c.gba ALL
             DEPENDS chickpea_c.elf
             COMMAND ${DEVKITARM}/arm-none-eabi-objcopy -O binary chickpea_c.elf
-                chickpea_c.gba
+            chickpea_c.gba
             COMMAND ${DEVKITPRO}/gbafix chickpea_c.gba
             BYPRODUCTS chickpea_c.gba
     )
