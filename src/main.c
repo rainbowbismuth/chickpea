@@ -2,8 +2,8 @@
 #include "stddef.h"
 
 #include "chickpea.h"
-#include "chickpea/debug_font.h"
-#include "chickpea/map.h"
+#include "game/debug_font.h"
+#include "game/map.h"
 
 void our_irq_handler(void)
 {
@@ -73,8 +73,9 @@ void game_main(void)
 
 	write_debug_msg(&default_debug_font, 2, 2, 4, 3, 3, "Hello, world!");
 
-	REG_BLDCNT = BLDCNT_1ST_TARGET_BG1 | BLDCNT_2ND_TARGET_BG0 |
-		     BLDCNT_2ND_TARGET_BD | PREP(BLDCNT_EFFECT, BLEND_ALPHA);
+	REG_BLDCNT = BLDCNT_1ST_TARGET_BG3 | BLDCNT_1ST_TARGET_BG1 |
+		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BD |
+		     PREP(BLDCNT_EFFECT, BLEND_ALPHA);
 	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
 		       PREP(BLDALPHA_2ND_WEIGHT, 8);
 
@@ -89,8 +90,7 @@ void game_main(void)
 
 	OAM.entries[0].attr_0 = PREP(OBJA0_Y, 0);
 	OAM.entries[0].attr_1 = PREP(OBJA1_X, 16);
-	OAM.entries[0].attr_2 = PREP(OBJA2_CHAR, 1) |
-				PREP(OBJA2_PALETTE, 1);
+	OAM.entries[0].attr_2 = PREP(OBJA2_CHAR, 1) | PREP(OBJA2_PALETTE, 1);
 	obj_palette(1)->color[1] = color(31, 31, 31);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;

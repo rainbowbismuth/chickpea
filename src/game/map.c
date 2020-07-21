@@ -1,4 +1,4 @@
-#include "chickpea/map.h"
+#include "game/map.h"
 #include "chickpea/bit_vec.h"
 
 bool inside_map(struct vec2 pos)

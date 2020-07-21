@@ -5,11 +5,11 @@ project(chickpea_c C)
 set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-set(SRC_FILES src/main.c src/common.c src/debug_font.c src/test_suites.c
-        src/nano_unit.c src/bit_vec.c src/map.c)
+set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c src/test_suites.c
+        src/chickpea/nano_unit.c src/chickpea/bit_vec.c src/game/map.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
-        include/chickpea/platform.h include/chickpea/debug_font.h
-        include/chickpea/nano_unit.h include/chickpea/bit_vec.h include/chickpea/map.h include/chickpea/vec2.h)
+        include/chickpea/platform.h include/game/debug_font.h
+        include/chickpea/nano_unit.h include/chickpea/bit_vec.h include/game/map.h include/chickpea/vec2.h)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
@@ -23,9 +23,9 @@ endif ()
 
 add_custom_command(
         OUTPUT embedded_data.o
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/embedded_data.s
+        DEPENDS ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
         BYPRODUCTS embedded_data.o
-        COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/embedded_data.s
+        COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
             -o embedded_data.o
 )
 
@@ -33,15 +33,15 @@ if (BUILD_GBA)
     set(CMAKE_C_LINK_EXECUTABLE "${DEVKITARM}/arm-none-eabi-ld <LINK_FLAGS>\
         <OBJECTS> -o <TARGET> -L${DEVKITARM_LIB} -lgcc <LINK_LIBRARIES>")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}\
-        -T${CMAKE_SOURCE_DIR}/src/linker.ld")
+        -T${CMAKE_SOURCE_DIR}/src/chickpea/linker.ld")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1")
 
-    set(SRC_FILES ${SRC_FILES} src/gba.c)
+    set(SRC_FILES ${SRC_FILES} src/chickpea/gba.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h)
 
     add_custom_command(
             OUTPUT crt0.o
-            DEPENDS ${CMAKE_SOURCE_DIR}/src/crt0.s
+            DEPENDS ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
             BYPRODUCTS crt0.o
             COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/crt0.s -o crt0.o
     )
@@ -66,7 +66,7 @@ else ()
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address \
         -fsanitize=undefined")
 
-    set(SRC_FILES ${SRC_FILES} src/emulated.c)
+    set(SRC_FILES ${SRC_FILES} src/chickpea/emulated.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
     add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES} embedded_data.o)
     set_target_properties(chickpea_c

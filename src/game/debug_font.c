@@ -1,5 +1,5 @@
 #include "chickpea.h"
-#include "chickpea/debug_font.h"
+#include "game/debug_font.h"
 
 void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 		     uint32_t screen_block, uint32_t palette, uint32_t tile_x,
