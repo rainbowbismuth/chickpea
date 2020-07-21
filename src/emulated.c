@@ -571,6 +571,15 @@ void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
 	memcpy(dst, src, word_count * 4);
 }
 
+void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count)
+{
+	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(word_count % 8 == 0 && "must be multiple of 8 words");
+	for (size_t i = 0; i < word_count; ++i) {
+		((uint32_t *)dst)[i] = src;
+	}
+}
+
 void debug_put_char(char c)
 {
 	fputc(c, stdout);

@@ -84,8 +84,22 @@ exit:
 	return;
 }
 
+static void test_cpu_fast_fill(struct nano_unit_case *nonnull test)
+{
+	uint32_t buffer[8] = { 0 };
+	uint32_t pattern = 0x101FA0AB;
+
+	cpu_fast_fill(pattern, &buffer, ARRAY_SIZE(buffer));
+	for (size_t i = 0; i < ARRAY_SIZE(buffer); ++i) {
+		NANO_ASSERT(test, buffer[i] == pattern, exit);
+	}
+exit:
+	return;
+}
+
 struct nano_unit_case common_test_suite[] = {
 	NANO_UNIT_CASE(test_reverse_nibbles),
 	NANO_UNIT_CASE(test_additive_blend),
+	NANO_UNIT_CASE(test_cpu_fast_fill),
 	{}
 };

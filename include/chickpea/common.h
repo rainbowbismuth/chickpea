@@ -235,6 +235,8 @@ void halt(void);
 void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
 		  size_t word_count);
 
+void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count);
+
 uint32_t reverse_nibbles(uint32_t n);
 
 void write_4bpp(const struct character_4bpp *restrict nonnull src,
