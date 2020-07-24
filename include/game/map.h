@@ -3,6 +3,7 @@
 
 #include "chickpea.h"
 #include "chickpea/vec2.h"
+#include "game/sprite.h"
 
 #define MAP_WIDTH  32
 #define MAP_HEIGHT 32
@@ -38,9 +39,13 @@ struct map_render_params {
  * A temporary function just to try rendering this out
  * @param highlights The currently highlighted tiles.
  */
+void demo_init(void);
+
 void demo_render_tile_highlights(struct map_render_params *nonnull params,
 				 struct map_bit_vec *nonnull highlights,
 				 struct map_byte_vec *nonnull height_map);
 void demo_rotate_highlight_palette(uint32_t offset);
+
+sprite_handle demo_alloc_cursor(void);
 
 #endif //CHICKPEA_MAP_H

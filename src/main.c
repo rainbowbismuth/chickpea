@@ -51,7 +51,6 @@ void game_main(void)
 			       PREP(BGCNT_PRIORITY, 1);
 
 	write_4bpp(&demo_tile, &character_block_begin(0)[1]);
-	write_4bpp(&demo_tile, &character_block_begin(4)[1]);
 
 	*reg_bg_control(BG1) = PREP(BGCNT_CHAR_BLOCK, 2) |
 			       PREP(BGCNT_SCREEN_BLOCK, 2);
@@ -71,6 +70,11 @@ void game_main(void)
 		tiles[i << 1] = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, i % 4);
 	}
 
+	struct debug_font default_debug_font = {
+		.characters = debug_font_4bpp,
+		.palette = &debug_font_pal,
+	};
+
 	write_debug_msg(&default_debug_font, 2, 2, 4, 3, 3, "Hello, world!");
 
 	REG_BLDCNT = BLDCNT_1ST_TARGET_BG3 | BLDCNT_1ST_TARGET_BG1 |
@@ -85,13 +89,14 @@ void game_main(void)
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
 		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block);
 
+	demo_init();
 	demo_render_tile_highlights(&map_render_params, &highlights,
 				    &height_map);
 
-	OAM.entries[0].attr_0 = PREP(OBJA0_Y, 0);
-	OAM.entries[0].attr_1 = PREP(OBJA1_X, 16);
-	OAM.entries[0].attr_2 = PREP(OBJA2_CHAR, 1) | PREP(OBJA2_PALETTE, 1);
-	obj_palette(1)->color[1] = color(31, 31, 31);
+	sprite_handle cursor = demo_alloc_cursor();
+	sprite_ref(cursor)->pos.x = 50;
+	sprite_ref(cursor)->pos.y = 50;
+	sprite_ref(cursor)->enabled = true;
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
@@ -132,8 +137,8 @@ void game_main(void)
 				set_bg_scroll_x(BG1, bg1_scroll_x--);
 			}
 
-			OAM.entries[0].attr_0 = PREP(OBJA0_Y, frame);
-			OAM.entries[0].attr_1 = PREP(OBJA1_X, 16);
+			sprite_build_oam_buffer();
+			sprite_commit_buffer_to_oam();
 		}
 	}
 }

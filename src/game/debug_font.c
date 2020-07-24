@@ -11,7 +11,7 @@ void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 
 	const struct character_4bpp empty = { 0 };
 	write_4bpp(&empty, character);
-	write_palette(&font->palette, bg_palette(palette));
+	write_palette(font->palette, bg_palette(palette));
 	character++;
 	for (size_t i = 0; *msg != '\0'; ++i, ++msg, ++tile_x) {
 		if (tile_x >= 32) {

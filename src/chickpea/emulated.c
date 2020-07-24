@@ -250,6 +250,30 @@ static void sort_backgrounds_by_priority(struct background_array *arr)
 	}
 }
 
+static void draw_obj_char(uint32_t y, struct character_4bpp *nonnull character,
+			  struct palette *nonnull pal, uint16_t priority,
+			  uint32_t start_x, uint32_t start_y,
+			  bool vertical_flip, bool horizontal_flip)
+{
+	uint8_t end_y = start_y + 8;
+	if (y < (start_y < end_y ? start_y : end_y) ||
+	    y >= (end_y > start_y ? end_y : start_y)) {
+		return;
+	}
+
+	uint8_t line_y = y - start_y;
+	if (vertical_flip) {
+		line_y = 7 - line_y;
+	}
+
+	uint32_t line = character->lines[line_y];
+	if (horizontal_flip) {
+		line = reverse_nibbles(line);
+	}
+
+	draw_line(start_x, y, line, pal, priority);
+}
+
 static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 {
 	if (GET(OBJA0_OBJ_DISABLE, obj->attr_0)) {
@@ -258,29 +282,13 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 
 	// Only handling 8x8 right now.
 	uint8_t start_y = GET(OBJA0_Y, obj->attr_0);
-	uint8_t end_y = start_y + 8;
+	uint8_t start_x = GET(OBJA1_X, obj->attr_1);
 
-	if (y < (start_y < end_y ? start_y : end_y) ||
-	    y >= (end_y > start_y ? end_y : start_y)) {
-		return;
-	}
-
-	uint8_t line_y = y - start_y;
-	if (GET(OBJA1_VERTICAL_FLIP, obj->attr_1)) {
-		line_y = 7 - line_y;
-	}
-
-	// Only handling mode 0
+	// Only handling mode 0 right now.
 	struct character_4bpp *char_block =
 		(struct character_4bpp *)character_block_begin(4);
 
 	uint32_t char_name = GET(OBJA2_CHAR, obj->attr_2);
-
-	uint32_t line = char_block[char_name].lines[line_y];
-	if (GET(OBJA1_VERTICAL_FLIP, obj->attr_1)) {
-		line = reverse_nibbles(line);
-	}
-
 	struct palette *palette =
 		(struct palette *)obj_palette(GET(OBJA2_PALETTE, obj->attr_2));
 
@@ -288,7 +296,29 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 		PREP(PRIORITY_LAYER, 0x20) |
 		PREP(PRIORITY_UPPER, GET(OBJA2_PRIORITY, obj->attr_2));
 
-	draw_line(GET(OBJA1_X, obj->attr_1), y, line, palette, priority);
+	enum obj_shape shape = GET(OBJA0_SHAPE, obj->attr_0);
+	enum obj_size size = GET(OBJA1_SIZE, obj->attr_1);
+	bool vertical_flip = GET(OBJA1_VERTICAL_FLIP, obj->attr_1);
+	bool horizontal_flip = GET(OBJA1_HORIZONTAL_FLIP, obj->attr_1);
+
+	size_t width = object_width(shape, size);
+	size_t height = object_height(shape, size);
+
+	// TODO: It would be smarter to check if we are within the right Y
+	//   and not do this silly looping business
+
+	// TODO: The flipping
+	for (size_t i = 0; i < width; ++i) {
+		for (size_t j = 0; j < height; ++j) {
+			uint32_t obj_x = start_x + i * 8;
+			uint32_t obj_y = start_y + j * 8;
+			draw_obj_char(y, &char_block[char_name], palette,
+				      priority, obj_x, obj_y, vertical_flip,
+				      horizontal_flip);
+
+			char_name++;
+		}
+	}
 }
 
 static void render_entire_line(uint32_t y)

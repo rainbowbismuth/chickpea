@@ -21,8 +21,19 @@ void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
 			 : "r"(src_r), "r"(dst_r), "r"(word_count_r));
 }
 
-void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count) {
-	cpu_fast_set(&src, dst, word_count | (1<<24));
+void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count)
+{
+	cpu_fast_set(&src, dst, word_count | (1 << 24));
+}
+
+/*
+ * TODO: Use a better implementation.
+ */
+void __aeabi_memcpy(uint8_t *nonnull dest, const uint8_t *nonnull src, size_t n)
+{
+	for (size_t i = 0; i < n; ++i) {
+		dest[i] = src[i];
+	}
 }
 
 #define BG_PALETTE_RAM	0x05000000

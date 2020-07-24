@@ -1,13 +1,15 @@
-    .global _default_debug_font
-    .global default_debug_font
-_default_debug_font:
-default_debug_font:
+.macro include_bin, name:req, path:req
+    .global \name
+    .global _\name
+\name:
+_\name:
     .align 4
-    .incbin "../baked/fonts/debug_font"
+    .incbin "\path"
+.endm
 
-    .global _tile_highlight_gfx
-    .global tile_highlight_gfx
-_tile_highlight_gfx:
-tile_highlight_gfx:
-    .align 4
-    .incbin "../baked/map/tile_highlight"
+    include_bin debug_font_4bpp, "../baked/fonts/debug_font.4bpp"
+    include_bin debug_font_pal, "../baked/fonts/debug_font.pal"
+    include_bin tile_highlight_4bpp, "../baked/map/tile_highlight.4bpp"
+    include_bin tile_highlight_pal, "../baked/map/tile_highlight.pal"
+    include_bin tile_cursor_4bpp, "../baked/map/tile_cursor.4bpp"
+    include_bin tile_cursor_pal, "../baked/map/tile_cursor.pal"

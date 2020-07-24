@@ -33,10 +33,30 @@ bool map_bit_vec_test(struct map_bit_vec *nonnull bitset, struct vec2 pos)
 			    ARRAY_SIZE(bitset->bits[pos.y]), pos.x);
 }
 
-extern struct tile_highlight_gfx tile_highlight_gfx;
+static struct tile_highlight_gfx tile_highlight_gfx = { 0 };
 static const size_t pal = 9;
 static const size_t top_left[2] = { 1, 2 };
 static const size_t top_left_together[2] = { 3, 4 };
+
+extern struct character_4bpp tile_highlight_4bpp[2];
+extern struct palette tile_highlight_pal;
+
+void demo_init(void)
+{
+	tile_highlight_gfx.palette = tile_highlight_pal;
+	tile_highlight_gfx.top_left[0] = tile_highlight_4bpp[0];
+	tile_highlight_gfx.top_left[1] = tile_highlight_4bpp[1];
+
+	tile_highlight_gfx.top_left_together[0] = tile_highlight_4bpp[1];
+	char_4bpp_flip_both(&tile_highlight_gfx.top_left_together[0]);
+	char_4bpp_bitwise_or(&tile_highlight_gfx.top_left_together[0],
+			     &tile_highlight_4bpp[0]);
+
+	tile_highlight_gfx.top_left_together[1] = tile_highlight_4bpp[0];
+	char_4bpp_flip_both(&tile_highlight_gfx.top_left_together[1]);
+	char_4bpp_bitwise_or(&tile_highlight_gfx.top_left_together[1],
+			     &tile_highlight_4bpp[1]);
+}
 
 size_t tile_to_screen(struct vec2 pos)
 {
@@ -146,4 +166,46 @@ void demo_rotate_highlight_palette(uint32_t offset)
 			tile_highlight_gfx.palette.color[1 + (i + offset) % 7];
 	}
 	write_palette(&palette, bg_palette(pal));
+}
+
+extern struct character_4bpp tile_cursor_4bpp[8];
+extern struct palette tile_cursor_pal;
+
+const static struct sprite_object_def cursor_objs[4] = {
+	{ .x_offset = 8,
+	  .y_offset = -2,
+	  .shape = OBJ_SHAPE_HORIZONTAL,
+	  .size = OBJ_SIZE_8 },
+	{ .x_offset = 8,
+	  .y_offset = 10,
+	  .shape = OBJ_SHAPE_HORIZONTAL,
+	  .size = OBJ_SIZE_8 },
+	{ .x_offset = -2,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 },
+	{ .x_offset = 26,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 },
+};
+
+const static struct sprite_template cursor_template = {
+	.objects = cursor_objs,
+	.num_objects = ARRAY_SIZE(cursor_objs),
+	.palette = 1,
+	.mode = OBJ_MODE_NORMAL,
+};
+
+sprite_handle demo_alloc_cursor(void)
+{
+	sprite_handle h = sprite_alloc(&cursor_template);
+	write_4bpp_n(&tile_cursor_4bpp[1], sprite_obj_vram(h, 0), 2);
+	write_4bpp_n(&tile_cursor_4bpp[5], sprite_obj_vram(h, 1), 2);
+	write_4bpp(&tile_cursor_4bpp[0], sprite_obj_vram(h, 2) + 0);
+	write_4bpp(&tile_cursor_4bpp[4], sprite_obj_vram(h, 2) + 1);
+	write_4bpp(&tile_cursor_4bpp[3], sprite_obj_vram(h, 3) + 0);
+	write_4bpp(&tile_cursor_4bpp[7], sprite_obj_vram(h, 3) + 1);
+	write_palette(&tile_cursor_pal, obj_palette(1));
+	return h;
 }

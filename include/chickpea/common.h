@@ -12,6 +12,16 @@
 #define nullable _Nullable
 
 /*
+ * Our own static assert, because we can't use assert.h
+ */
+#define static_assert _Static_assert
+
+/*
+ * We want to pack our enums in particular.
+ */
+#define PACKED_ENUM __attribute__((__packed__))
+
+/*
  * Assert that condition is true at compile time, and evaluates to zero if
  * compilation succeeds.
  */
@@ -172,29 +182,29 @@ enum obj_mode {
 	OBJ_MODE_NORMAL = 0,
 	OBJ_MODE_SEMI_TRANSPARENT = 1,
 	OBJ_MODE_WINDOW = 2,
-};
+} PACKED_ENUM;
 
 enum obj_shape {
 	OBJ_SHAPE_SQUARE = 0,
 	OBJ_SHAPE_HORIZONTAL = 1,
 	OBJ_SHAPE_VERTICAL = 2
-};
+} PACKED_ENUM;
 
 enum obj_size {
 	OBJ_SIZE_8 = 0,
 	OBJ_SIZE_16 = 1,
 	OBJ_SIZE_32 = 2,
 	OBJ_SIZE_64 = 3
-};
+} PACKED_ENUM;
 
 enum blend_effect {
 	BLEND_NONE = 0,
 	BLEND_ALPHA = 1,
 	BLEND_BRIGHTNESS_INCREASE = 2,
 	BLEND_BRIGHTNESS_DECREASE = 3
-};
+} PACKED_ENUM;
 
-enum background { BG0 = 0, BG1, BG2, BG3 };
+enum background { BG0 = 0, BG1, BG2, BG3 } PACKED_ENUM;
 
 struct character_4bpp {
 	uint32_t lines[8];
@@ -242,6 +252,10 @@ uint32_t reverse_nibbles(uint32_t n);
 void write_4bpp(const struct character_4bpp *restrict nonnull src,
 		volatile struct character_4bpp *restrict nonnull dst);
 
+void write_4bpp_n(const struct character_4bpp *restrict nonnull src,
+		  volatile struct character_4bpp *restrict nonnull dst,
+		  size_t n);
+
 void write_palette(const struct palette *restrict nonnull src,
 		   volatile struct palette *restrict nonnull dst);
 
@@ -255,6 +269,19 @@ uint16_t color(uint32_t red, uint32_t green, uint32_t blue);
 
 uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 			uint16_t dst_color, uint16_t dst_weight);
+
+size_t object_width(enum obj_shape shape, enum obj_size size);
+size_t object_height(enum obj_shape shape, enum obj_size size);
+size_t tiles_in_object(enum obj_shape shape, enum obj_size size);
+
+void char_4bpp_bitwise_or(struct character_4bpp *restrict nonnull self,
+			  const struct character_4bpp *restrict nonnull other);
+
+void char_4bpp_flip_vertical(struct character_4bpp *nonnull self);
+
+void char_4bpp_flip_horizontal(struct character_4bpp *nonnull self);
+
+void char_4bpp_flip_both(struct character_4bpp *nonnull self);
 
 extern void (*nonnull volatile irq_handler)(void);
 

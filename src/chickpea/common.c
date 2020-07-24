@@ -15,6 +15,13 @@ void write_4bpp(const struct character_4bpp *restrict nonnull src,
 	cpu_fast_set(src, (void *)dst, sizeof(*src) / 4);
 }
 
+void write_4bpp_n(const struct character_4bpp *restrict nonnull src,
+		  volatile struct character_4bpp *restrict nonnull dst,
+		  size_t n)
+{
+	cpu_fast_set(src, (void *)dst, (sizeof(*src) * n) / 4);
+}
+
 void write_palette(const struct palette *restrict nonnull src,
 		   volatile struct palette *restrict nonnull dst)
 {
@@ -46,6 +53,73 @@ uint16_t additive_blend(uint16_t src_color, uint16_t src_weight,
 	blue = blue > 31 ? 31 : blue;
 	return PREP(COL_RED, red) | PREP(COL_GREEN, green) |
 	       PREP(COL_BLUE, blue);
+}
+
+static uint8_t width_table[4][3] = {
+	/* Square | Horizontal | Vertical */
+	{ 1, 2, 1 },
+	{ 2, 4, 1 },
+	{ 4, 4, 2 },
+	{ 8, 8, 4 }
+};
+
+size_t object_width(enum obj_shape shape, enum obj_size size)
+{
+	return width_table[size][shape];
+}
+
+static uint8_t height_table[4][3] = {
+	/* Square | Horizontal | Vertical */
+	{ 1, 1, 2 },
+	{ 2, 1, 4 },
+	{ 4, 2, 4 },
+	{ 8, 4, 8 }
+};
+
+size_t object_height(enum obj_shape shape, enum obj_size size)
+{
+	return height_table[size][shape];
+}
+
+static uint8_t size_table[4][3] = {
+	/* Square | Horizontal | Vertical */
+	{ 1, 2, 2 },
+	{ 4, 4, 4 },
+	{ 16, 8, 8 },
+	{ 64, 32, 32 },
+};
+
+size_t tiles_in_object(enum obj_shape shape, enum obj_size size)
+{
+	return size_table[size][shape];
+}
+
+void char_4bpp_bitwise_or(struct character_4bpp *restrict nonnull self,
+			  const struct character_4bpp *restrict nonnull other)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
+		self->lines[i] |= other->lines[i];
+	}
+}
+void char_4bpp_flip_vertical(struct character_4bpp *nonnull self)
+{
+	struct character_4bpp copy = *self;
+	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
+		self->lines[i] = copy.lines[7 - i];
+	}
+}
+
+void char_4bpp_flip_horizontal(struct character_4bpp *nonnull self)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
+		self->lines[i] = reverse_nibbles(self->lines[i]);
+	}
+}
+
+void char_4bpp_flip_both(struct character_4bpp *nonnull self)
+{
+	char_4bpp_flip_vertical(self);
+	char_4bpp_flip_horizontal(self);
 }
 
 void debug_put_u32(uint32_t n)
@@ -97,9 +171,32 @@ exit:
 	return;
 }
 
+static void test_object_sizes(struct nano_unit_case *nonnull test)
+{
+	enum obj_shape shapes[3] = { OBJ_SHAPE_SQUARE, OBJ_SHAPE_VERTICAL,
+				     OBJ_SHAPE_VERTICAL };
+	enum obj_size sizes[4] = { OBJ_SIZE_8, OBJ_SIZE_16, OBJ_SIZE_32,
+				   OBJ_SIZE_64 };
+
+	for (size_t i = 0; i < ARRAY_SIZE(shapes); ++i) {
+		for (size_t j = 0; j < ARRAY_SIZE(sizes); ++j) {
+			enum obj_shape shape = shapes[i];
+			enum obj_size size = sizes[j];
+
+			size_t width = object_width(shape, size);
+			size_t height = object_height(shape, size);
+			size_t total = tiles_in_object(shape, size);
+			NANO_ASSERT(test, total == width * height, exit);
+		}
+	}
+exit:
+	return;
+}
+
 struct nano_unit_case common_test_suite[] = {
 	NANO_UNIT_CASE(test_reverse_nibbles),
 	NANO_UNIT_CASE(test_additive_blend),
 	NANO_UNIT_CASE(test_cpu_fast_fill),
+	NANO_UNIT_CASE(test_object_sizes),
 	{}
 };

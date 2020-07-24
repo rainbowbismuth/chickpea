@@ -5,13 +5,16 @@ project(chickpea_c C)
 set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+
 set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c
         src/test_suites.c src/chickpea/nano_unit.c src/chickpea/bit_vec.c
-        src/game/map.c)
+        src/game/map.c src/game/sprite.c src/game/object_tiles.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/game/debug_font.h
         include/chickpea/nano_unit.h include/chickpea/bit_vec.h
-        include/game/map.h include/chickpea/vec2.h)
+        include/game/map.h include/chickpea/vec2.h include/game/sprite.h
+        include/game/object_tiles.h)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
@@ -45,7 +48,8 @@ if (BUILD_GBA)
             OUTPUT crt0.o
             DEPENDS ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
             BYPRODUCTS crt0.o
-            COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/crt0.s -o crt0.o
+            COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
+                -o crt0.o
     )
     add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o
             embedded_data.o)
@@ -65,7 +69,7 @@ if (BUILD_GBA)
             BYPRODUCTS chickpea_c.gba
     )
 else ()
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1 -fsanitize=address \
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address \
         -fsanitize=undefined")
 
     set(SRC_FILES ${SRC_FILES} src/chickpea/emulated.c)
