@@ -226,6 +226,6 @@ void demo_move_cursor(struct map_byte_vec *nonnull height_map,
 {
 	struct vec2 screen_coords = to_screen_coord(height_map, pos);
 	screen_coords.x -= scroll.x;
-	screen_coords.y += scroll.y;
+	screen_coords.y -= scroll.y;
 	sprite_ref(cursor)->pos = screen_coords;
 }

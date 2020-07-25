@@ -98,6 +98,7 @@ void game_main(void)
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
+	struct vec2 bg3_scroll = { 0 };
 	uint32_t frame = 0;
 	uint16_t bg1_scroll_x = 0;
 	uint16_t bg1_scroll_y = 0;
@@ -123,20 +124,27 @@ void game_main(void)
 
 			uint16_t keyinput = ~REG_KEYINPUT;
 			if (GET(KEYINPUT_UP, keyinput) != 0) {
+				bg3_scroll.y++;
+				set_bg_scroll_y(BG3, bg3_scroll.y);
 				set_bg_scroll_y(BG1, bg1_scroll_y++);
 			}
 			if (GET(KEYINPUT_DOWN, keyinput) != 0) {
+				bg3_scroll.y--;
+				set_bg_scroll_y(BG3, bg3_scroll.y);
 				set_bg_scroll_y(BG1, bg1_scroll_y--);
 			}
 			if (GET(KEYINPUT_LEFT, keyinput) != 0) {
+				bg3_scroll.x++;
+				set_bg_scroll_x(BG3, bg3_scroll.x);
 				set_bg_scroll_x(BG1, bg1_scroll_x++);
 			}
 			if (GET(KEYINPUT_RIGHT, keyinput) != 0) {
+				bg3_scroll.x--;
+				set_bg_scroll_x(BG3, bg3_scroll.x);
 				set_bg_scroll_x(BG1, bg1_scroll_x--);
 			}
-			struct vec2 pos = {.x = 6, .y = 6};
-			struct vec2 scroll = {.x = 0, .y = 0};
-			demo_move_cursor(&height_map, cursor, pos, scroll);
+			struct vec2 pos = { .x = 6, .y = 6 };
+			demo_move_cursor(&height_map, cursor, pos, bg3_scroll);
 			sprite_build_oam_buffer();
 			sprite_commit_buffer_to_oam();
 		}
