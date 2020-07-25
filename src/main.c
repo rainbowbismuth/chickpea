@@ -4,6 +4,7 @@
 #include "chickpea.h"
 #include "game/debug_font.h"
 #include "game/map.h"
+#include "game/input.h"
 
 void our_irq_handler(void)
 {
@@ -99,6 +100,7 @@ void game_main(void)
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
 	struct vec2 bg3_scroll = { 0 };
+	struct vec2 cursor_pos = { .x = 6, .y = 6 };
 	uint32_t frame = 0;
 	uint16_t bg1_scroll_x = 0;
 	uint16_t bg1_scroll_y = 0;
@@ -109,6 +111,7 @@ void game_main(void)
 
 		if (REG_VCOUNT == 160) {
 			frame++;
+			input_read();
 			uint32_t c = (frame >> 2) & 0x1F;
 			bg_palette(0)->color[1] = color(22, c, 15);
 			bg_palette(1)->color[1] = color(c, 22, 15);
@@ -122,29 +125,41 @@ void game_main(void)
 			set_bg_scroll_x(BG0, v);
 			set_bg_scroll_y(BG0, v);
 
-			uint16_t keyinput = ~REG_KEYINPUT;
-			if (GET(KEYINPUT_UP, keyinput) != 0) {
-				bg3_scroll.y++;
-				set_bg_scroll_y(BG3, bg3_scroll.y);
-				set_bg_scroll_y(BG1, bg1_scroll_y++);
+			if (input_held(KEYINPUT_BUTTON_B)) {
+				if (input_pressed(KEYINPUT_UP)) {
+					cursor_pos.y--;
+				} else if (input_pressed(KEYINPUT_DOWN)) {
+					cursor_pos.y++;
+				} else if (input_pressed(KEYINPUT_LEFT)) {
+					cursor_pos.x--;
+				} else if (input_pressed(KEYINPUT_RIGHT)) {
+					cursor_pos.x++;
+				}
+			} else {
+				if (input_held(KEYINPUT_UP)) {
+					bg3_scroll.y++;
+					set_bg_scroll_y(BG3, bg3_scroll.y);
+					set_bg_scroll_y(BG1, bg1_scroll_y++);
+				}
+				if (input_held(KEYINPUT_DOWN)) {
+					bg3_scroll.y--;
+					set_bg_scroll_y(BG3, bg3_scroll.y);
+					set_bg_scroll_y(BG1, bg1_scroll_y--);
+				}
+				if (input_held(KEYINPUT_LEFT)) {
+					bg3_scroll.x++;
+					set_bg_scroll_x(BG3, bg3_scroll.x);
+					set_bg_scroll_x(BG1, bg1_scroll_x++);
+				}
+				if (input_held(KEYINPUT_RIGHT)) {
+					bg3_scroll.x--;
+					set_bg_scroll_x(BG3, bg3_scroll.x);
+					set_bg_scroll_x(BG1, bg1_scroll_x--);
+				}
 			}
-			if (GET(KEYINPUT_DOWN, keyinput) != 0) {
-				bg3_scroll.y--;
-				set_bg_scroll_y(BG3, bg3_scroll.y);
-				set_bg_scroll_y(BG1, bg1_scroll_y--);
-			}
-			if (GET(KEYINPUT_LEFT, keyinput) != 0) {
-				bg3_scroll.x++;
-				set_bg_scroll_x(BG3, bg3_scroll.x);
-				set_bg_scroll_x(BG1, bg1_scroll_x++);
-			}
-			if (GET(KEYINPUT_RIGHT, keyinput) != 0) {
-				bg3_scroll.x--;
-				set_bg_scroll_x(BG3, bg3_scroll.x);
-				set_bg_scroll_x(BG1, bg1_scroll_x--);
-			}
-			struct vec2 pos = { .x = 6, .y = 6 };
-			demo_move_cursor(&height_map, cursor, pos, bg3_scroll);
+
+			demo_move_cursor(&height_map, cursor, cursor_pos,
+					 bg3_scroll);
 			sprite_build_oam_buffer();
 			sprite_commit_buffer_to_oam();
 		}
