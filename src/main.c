@@ -5,6 +5,7 @@
 #include "game/debug_font.h"
 #include "game/map.h"
 #include "game/input.h"
+#include "game/random.h"
 
 void our_irq_handler(void)
 {
@@ -102,8 +103,6 @@ void game_main(void)
 	struct vec2 bg3_scroll = { 0 };
 	struct vec2 cursor_pos = { .x = 6, .y = 6 };
 	uint32_t frame = 0;
-	uint16_t bg1_scroll_x = 0;
-	uint16_t bg1_scroll_y = 0;
 	while (1) {
 		wait_for_horizontal_blank();
 		bg_palette(0)->color[0] =
@@ -125,6 +124,11 @@ void game_main(void)
 			set_bg_scroll_x(BG0, v);
 			set_bg_scroll_y(BG0, v);
 
+			if (frame % 30 == 0) {
+				set_bg_scroll_x(BG1, random_global());
+				set_bg_scroll_y(BG1, random_global());
+			}
+
 			if (input_held(KEYINPUT_BUTTON_B)) {
 				if (input_pressed(KEYINPUT_UP)) {
 					cursor_pos.y--;
@@ -139,22 +143,18 @@ void game_main(void)
 				if (input_held(KEYINPUT_UP)) {
 					bg3_scroll.y++;
 					set_bg_scroll_y(BG3, bg3_scroll.y);
-					set_bg_scroll_y(BG1, bg1_scroll_y++);
 				}
 				if (input_held(KEYINPUT_DOWN)) {
 					bg3_scroll.y--;
 					set_bg_scroll_y(BG3, bg3_scroll.y);
-					set_bg_scroll_y(BG1, bg1_scroll_y--);
 				}
 				if (input_held(KEYINPUT_LEFT)) {
 					bg3_scroll.x++;
 					set_bg_scroll_x(BG3, bg3_scroll.x);
-					set_bg_scroll_x(BG1, bg1_scroll_x++);
 				}
 				if (input_held(KEYINPUT_RIGHT)) {
 					bg3_scroll.x--;
 					set_bg_scroll_x(BG3, bg3_scroll.x);
-					set_bg_scroll_x(BG1, bg1_scroll_x--);
 				}
 			}
 
