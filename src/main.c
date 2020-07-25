@@ -22,7 +22,7 @@ void wait_for_horizontal_blank()
 	REG_IME = 0;
 }
 
-static const struct character_4bpp
+static const struct char_4bpp
 	demo_tile = { .lines = {
 			      0b00010001000100010001000100010001u,
 			      0b00010000000000000000000000000001u,

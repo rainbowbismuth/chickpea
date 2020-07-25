@@ -18,8 +18,8 @@ struct map_byte_vec {
 
 struct tile_highlight_gfx {
 	struct palette palette;
-	struct character_4bpp top_left[2];
-	struct character_4bpp top_left_together[2];
+	struct char_4bpp top_left[2];
+	struct char_4bpp top_left_together[2];
 };
 
 bool inside_map(struct vec2 pos);

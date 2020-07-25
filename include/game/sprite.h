@@ -40,7 +40,7 @@ size_t sprite_allocated(void);
 bool sprite_exists(sprite_handle handle);
 struct sprite *nonnull sprite_ref(sprite_handle handle);
 sprite_handle sprite_alloc(const struct sprite_template *nonnull template);
-volatile struct character_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
+volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
 							size_t idx);
 void sprite_drop(sprite_handle handle);
 

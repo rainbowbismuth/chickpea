@@ -53,10 +53,10 @@ volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
 						   palette_idx * 0x20);
 }
 
-volatile struct character_4bpp *nonnull
+volatile struct char_4bpp *nonnull
 character_block_begin(uint32_t char_block)
 {
-	return (volatile struct character_4bpp *)(size_t)(VRAM_BEGIN +
+	return (volatile struct char_4bpp *)(size_t)(VRAM_BEGIN +
 							  char_block * 0x4000);
 }
 

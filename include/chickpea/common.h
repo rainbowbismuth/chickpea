@@ -206,7 +206,7 @@ enum blend_effect {
 
 enum background { BG0 = 0, BG1, BG2, BG3 } PACKED_ENUM;
 
-struct character_4bpp {
+struct char_4bpp {
 	uint32_t lines[8];
 };
 
@@ -225,7 +225,7 @@ struct object_attribute_mem {
 	struct oam_entry entries[128];
 };
 
-volatile struct character_4bpp *nonnull
+volatile struct char_4bpp *nonnull
 character_block_begin(uint32_t char_block);
 
 volatile struct palette *nonnull bg_palette(uint32_t palette_idx);
@@ -249,11 +249,11 @@ void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count);
 
 uint32_t reverse_nibbles(uint32_t n);
 
-void write_4bpp(const struct character_4bpp *restrict nonnull src,
-		volatile struct character_4bpp *restrict nonnull dst);
+void write_4bpp(const struct char_4bpp *restrict nonnull src,
+		volatile struct char_4bpp *restrict nonnull dst);
 
-void write_4bpp_n(const struct character_4bpp *restrict nonnull src,
-		  volatile struct character_4bpp *restrict nonnull dst,
+void write_4bpp_n(const struct char_4bpp *restrict nonnull src,
+		  volatile struct char_4bpp *restrict nonnull dst,
 		  size_t n);
 
 void write_palette(const struct palette *restrict nonnull src,
@@ -274,14 +274,14 @@ size_t object_width(enum obj_shape shape, enum obj_size size);
 size_t object_height(enum obj_shape shape, enum obj_size size);
 size_t tiles_in_object(enum obj_shape shape, enum obj_size size);
 
-void char_4bpp_bitwise_or(struct character_4bpp *restrict nonnull self,
-			  const struct character_4bpp *restrict nonnull other);
+void char_4bpp_bitwise_or(struct char_4bpp *restrict nonnull self,
+			  const struct char_4bpp *restrict nonnull other);
 
-void char_4bpp_flip_vertical(struct character_4bpp *nonnull self);
+void char_4bpp_flip_vertical(struct char_4bpp *nonnull self);
 
-void char_4bpp_flip_horizontal(struct character_4bpp *nonnull self);
+void char_4bpp_flip_horizontal(struct char_4bpp *nonnull self);
 
-void char_4bpp_flip_both(struct character_4bpp *nonnull self);
+void char_4bpp_flip_both(struct char_4bpp *nonnull self);
 
 extern void (*nonnull volatile irq_handler)(void);
 

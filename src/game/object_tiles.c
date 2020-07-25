@@ -104,7 +104,7 @@ size_t obj_tiles_start(obj_tiles_handle handle)
 	return allocs[handle.index].start;
 }
 
-volatile struct character_4bpp *nonnull obj_tiles_vram(obj_tiles_handle handle)
+volatile struct char_4bpp *nonnull obj_tiles_vram(obj_tiles_handle handle)
 {
 	assert(obj_tiles_exists(handle));
 	size_t start = allocs[handle.index].start;

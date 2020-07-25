@@ -5,11 +5,11 @@ void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 		     uint32_t screen_block, uint32_t palette, uint32_t tile_x,
 		     uint32_t tile_y, const char *nonnull msg)
 {
-	volatile struct character_4bpp *character =
+	volatile struct char_4bpp *character =
 		character_block_begin(char_block);
 	volatile uint16_t *tile = screen_block_begin(screen_block);
 
-	const struct character_4bpp empty = { 0 };
+	const struct char_4bpp empty = { 0 };
 	write_4bpp(&empty, character);
 	write_palette(font->palette, bg_palette(palette));
 	character++;

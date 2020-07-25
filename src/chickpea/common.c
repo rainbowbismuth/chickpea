@@ -9,14 +9,14 @@ uint32_t reverse_nibbles(uint32_t n)
 	return n;
 }
 
-void write_4bpp(const struct character_4bpp *restrict nonnull src,
-		volatile struct character_4bpp *restrict nonnull dst)
+void write_4bpp(const struct char_4bpp *restrict nonnull src,
+		volatile struct char_4bpp *restrict nonnull dst)
 {
 	cpu_fast_set(src, (void *)dst, sizeof(*src) / 4);
 }
 
-void write_4bpp_n(const struct character_4bpp *restrict nonnull src,
-		  volatile struct character_4bpp *restrict nonnull dst,
+void write_4bpp_n(const struct char_4bpp *restrict nonnull src,
+		  volatile struct char_4bpp *restrict nonnull dst,
 		  size_t n)
 {
 	cpu_fast_set(src, (void *)dst, (sizeof(*src) * n) / 4);
@@ -94,29 +94,29 @@ size_t tiles_in_object(enum obj_shape shape, enum obj_size size)
 	return size_table[size][shape];
 }
 
-void char_4bpp_bitwise_or(struct character_4bpp *restrict nonnull self,
-			  const struct character_4bpp *restrict nonnull other)
+void char_4bpp_bitwise_or(struct char_4bpp *restrict nonnull self,
+			  const struct char_4bpp *restrict nonnull other)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
 		self->lines[i] |= other->lines[i];
 	}
 }
-void char_4bpp_flip_vertical(struct character_4bpp *nonnull self)
+void char_4bpp_flip_vertical(struct char_4bpp *nonnull self)
 {
-	struct character_4bpp copy = *self;
+	struct char_4bpp copy = *self;
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
 		self->lines[i] = copy.lines[7 - i];
 	}
 }
 
-void char_4bpp_flip_horizontal(struct character_4bpp *nonnull self)
+void char_4bpp_flip_horizontal(struct char_4bpp *nonnull self)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
 		self->lines[i] = reverse_nibbles(self->lines[i]);
 	}
 }
 
-void char_4bpp_flip_both(struct character_4bpp *nonnull self)
+void char_4bpp_flip_both(struct char_4bpp *nonnull self)
 {
 	char_4bpp_flip_vertical(self);
 	char_4bpp_flip_horizontal(self);

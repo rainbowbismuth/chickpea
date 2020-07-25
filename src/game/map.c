@@ -38,7 +38,7 @@ static const size_t pal = 9;
 static const size_t top_left[2] = { 1, 2 };
 static const size_t top_left_together[2] = { 3, 4 };
 
-extern struct character_4bpp tile_highlight_4bpp[2];
+extern struct char_4bpp tile_highlight_4bpp[2];
 extern struct palette tile_highlight_pal;
 
 void demo_init(void)
@@ -130,7 +130,7 @@ void demo_render_tile_highlights(struct map_render_params *nonnull params,
 	}
 
 	volatile uint16_t *screen = screen_block_begin(params->screen_block);
-	volatile struct character_4bpp *chars =
+	volatile struct char_4bpp *chars =
 		character_block_begin(params->char_block);
 
 	/*
@@ -168,7 +168,7 @@ void demo_rotate_highlight_palette(uint32_t offset)
 	write_palette(&palette, bg_palette(pal));
 }
 
-extern struct character_4bpp tile_cursor_4bpp[8];
+extern struct char_4bpp tile_cursor_4bpp[8];
 extern struct palette tile_cursor_pal;
 
 const static struct sprite_object_def cursor_objs[4] = {

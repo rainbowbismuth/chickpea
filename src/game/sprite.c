@@ -71,7 +71,7 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 	return handle;
 }
 
-volatile struct character_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
+volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
 							size_t idx)
 {
 	assert(sprite_exists(handle));
