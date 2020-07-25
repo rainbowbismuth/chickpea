@@ -94,8 +94,6 @@ void game_main(void)
 				    &height_map);
 
 	sprite_handle cursor = demo_alloc_cursor();
-	sprite_ref(cursor)->pos.x = 50;
-	sprite_ref(cursor)->pos.y = 50;
 	sprite_ref(cursor)->enabled = true;
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
@@ -136,7 +134,9 @@ void game_main(void)
 			if (GET(KEYINPUT_RIGHT, keyinput) != 0) {
 				set_bg_scroll_x(BG1, bg1_scroll_x--);
 			}
-
+			struct vec2 pos = {.x = 6, .y = 6};
+			struct vec2 scroll = {.x = 0, .y = 0};
+			demo_move_cursor(&height_map, cursor, pos, scroll);
 			sprite_build_oam_buffer();
 			sprite_commit_buffer_to_oam();
 		}

@@ -292,7 +292,6 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 		(struct palette *)obj_palette(GET(OBJA2_PALETTE, obj->attr_2));
 
 	uint16_t priority =
-		PREP(PRIORITY_LAYER, 0x20) |
 		PREP(PRIORITY_UPPER, GET(OBJA2_PRIORITY, obj->attr_2));
 
 	enum obj_shape shape = GET(OBJA0_SHAPE, obj->attr_0);
@@ -535,8 +534,7 @@ volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
 	return (volatile struct palette *)(&obj_pallete_ram[palette_idx]);
 }
 
-volatile struct char_4bpp *nonnull
-character_block_begin(uint32_t char_block)
+volatile struct char_4bpp *nonnull character_block_begin(uint32_t char_block)
 {
 	assert(char_block < 5);
 	return (volatile struct char_4bpp *)(&video_ram[char_block * 0x4000]);

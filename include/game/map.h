@@ -48,4 +48,8 @@ void demo_rotate_highlight_palette(uint32_t offset);
 
 sprite_handle demo_alloc_cursor(void);
 
+void demo_move_cursor(struct map_byte_vec *nonnull height_map,
+		      sprite_handle cursor, struct vec2 pos,
+		      struct vec2 scroll);
+
 #endif //CHICKPEA_MAP_H

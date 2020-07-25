@@ -19,6 +19,17 @@ struct vec2 to_tile_coord(struct vec2 pos)
 	return coords;
 }
 
+struct vec2 to_screen_coord(struct map_byte_vec *nonnull height_map,
+			    struct vec2 pos)
+{
+	assert(inside_map(pos));
+	uint8_t height = height_map->bytes[pos.y][pos.x];
+	struct vec2 tile_coord = to_tile_coord(pos);
+	struct vec2 coords = { .x = tile_coord.x * 8,
+			       .y = tile_coord.y * 8 - height * 8 };
+	return coords;
+}
+
 void map_bit_vec_set(struct map_bit_vec *nonnull bitset, struct vec2 pos)
 {
 	assert(inside_map(pos));
@@ -208,4 +219,13 @@ sprite_handle demo_alloc_cursor(void)
 	write_4bpp(&tile_cursor_4bpp[7], sprite_obj_vram(h, 3) + 1);
 	write_palette(&tile_cursor_pal, obj_palette(1));
 	return h;
+}
+
+void demo_move_cursor(struct map_byte_vec *nonnull height_map,
+		      sprite_handle cursor, struct vec2 pos, struct vec2 scroll)
+{
+	struct vec2 screen_coords = to_screen_coord(height_map, pos);
+	screen_coords.x -= scroll.x;
+	screen_coords.y += scroll.y;
+	sprite_ref(cursor)->pos = screen_coords;
 }
