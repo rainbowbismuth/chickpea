@@ -29,7 +29,8 @@ void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count)
 /*
  * TODO: Use a better implementation.
  */
-void __aeabi_memcpy(uint8_t *nonnull dest, const uint8_t *nonnull src, size_t n)
+void __aeabi_memcpy(uint8_t *restrict nonnull dest,
+		    const uint8_t *restrict nonnull src, size_t n)
 {
 	for (size_t i = 0; i < n; ++i) {
 		dest[i] = src[i];
@@ -116,4 +117,5 @@ int main(void)
 	nano_unit_run_suites(test_suites);
 
 	game_main();
+	return 0;
 }

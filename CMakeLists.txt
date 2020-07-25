@@ -56,7 +56,7 @@ if (BUILD_GBA)
     set_target_properties(chickpea_c.elf
             PROPERTIES
             COMPILE_FLAGS "-Wall -Wextra -nostdlib -target arm-none-eabi\
-                -mcpu=arm7tdmi -mthumb"
+                -mcpu=arm7tdmi -mthumb -ffreestanding"
             COMPILE_DEFINITIONS BUILD_GBA=1
             )
 
