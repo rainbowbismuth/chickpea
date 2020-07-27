@@ -141,11 +141,11 @@ static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,
 	}
 	struct vec2 pos = v2_add_xy(sprite->pub.pos, x_offset, y_offset);
 
-	entry->attr_0 = PREP(OBJA0_Y, pos.y) |
+	entry->attr_0 = PREP_WRAP(OBJA0_Y, (uint16_t)pos.y) |
 			PREP(OBJA0_MODE, sprite->pub.mode) |
 			PREP(OBJA0_SHAPE, object->shape);
-	entry->attr_1 = PREP(OBJA1_X, pos.x) | PREP(OBJA1_SIZE, object->size) |
-			flip_bits;
+	entry->attr_1 = PREP_WRAP(OBJA1_X, (uint16_t)pos.x) |
+			PREP(OBJA1_SIZE, object->size) | flip_bits;
 	entry->attr_2 = PREP(OBJA2_CHAR, tile_start) |
 			PREP(OBJA2_PALETTE, sprite->pub.palette) |
 			PREP(OBJA2_PRIORITY, priority);

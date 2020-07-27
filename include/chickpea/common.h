@@ -79,6 +79,13 @@
 #define PREP(mask, val) (((val) << MASK_OFFSET(CONSTANT(mask))) & (mask))
 
 /*
+ * Masks & offset val, like PREP, except the mask is first to clip the value
+ *  so an undefined out of bounds shift won't occur.
+ */
+#define PREP_WRAP(mask, val) \
+	(((val) & (mask >> MASK_OFFSET(CONSTANT(mask)))) << MASK_OFFSET(mask))
+
+/*
  * Replace the field with a new value
  */
 #define REPLACE(mask, val, new_val) ((val & ~mask) | PREP(mask, new_val))
@@ -225,8 +232,7 @@ struct object_attribute_mem {
 	struct oam_entry entries[128];
 };
 
-volatile struct char_4bpp *nonnull
-character_block_begin(uint32_t char_block);
+volatile struct char_4bpp *nonnull character_block_begin(uint32_t char_block);
 
 volatile struct palette *nonnull bg_palette(uint32_t palette_idx);
 
@@ -253,8 +259,7 @@ void write_4bpp(const struct char_4bpp *restrict nonnull src,
 		volatile struct char_4bpp *restrict nonnull dst);
 
 void write_4bpp_n(const struct char_4bpp *restrict nonnull src,
-		  volatile struct char_4bpp *restrict nonnull dst,
-		  size_t n);
+		  volatile struct char_4bpp *restrict nonnull dst, size_t n);
 
 void write_palette(const struct palette *restrict nonnull src,
 		   volatile struct palette *restrict nonnull dst);
