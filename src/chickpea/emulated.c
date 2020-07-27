@@ -262,13 +262,14 @@ static void draw_obj_char(uint32_t y, struct char_4bpp *nonnull character,
 			  uint32_t start_x, uint32_t start_y,
 			  bool vertical_flip, bool horizontal_flip)
 {
-	// TODO: Improve this very silly loop
-	bool ok = false;
-	for (size_t i = 0; i < 8; ++i) {
-		ok = ok || y == ((start_y + i) & 0xFF);
-	}
-	if (!ok) {
-		return;
+	if (start_y + 8 <= 0xFF) {
+		if (y < start_y || y >= start_y + 8) {
+			return;
+		}
+	} else {
+		if (y >= ((start_y + 8) & 0xFF) && y < start_y) {
+			return;
+		}
 	}
 
 	uint8_t line_y = y - start_y;
