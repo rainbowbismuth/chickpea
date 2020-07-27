@@ -41,8 +41,8 @@ uint64_t frame_counter = 0;
 uint32_t real_win_width = GBA_WIDTH * 2;
 uint32_t real_win_height = GBA_HEIGHT * 2;
 
-uint16_t screen_color[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
-uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH + 16] = { 0 };
+uint16_t screen_color[GBA_HEIGHT][GBA_WIDTH] = { 0 };
+uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH] = { 0 };
 
 extern struct nano_unit_suite test_suites[];
 
@@ -135,7 +135,7 @@ draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
 static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 		      const struct palette *nonnull palette, uint16_t priority)
 {
-	if (line == 0 || (x >= GBA_WIDTH && x < UINT32_MAX - GBA_WIDTH)) {
+	if (line == 0) {
 		return;
 	}
 	uint16_t blend_control = REG_BLDCNT;
@@ -155,7 +155,11 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 				continue;
 			}
 			uint16_t color = palette->color[col_index];
-			draw_pixel_blend_alpha(x + i + 8, y, color, priority,
+			uint32_t new_x = (x + i) & 0x1FF;
+			if (new_x >= GBA_WIDTH) {
+				continue;
+			}
+			draw_pixel_blend_alpha(new_x, y, color, priority,
 					       &params);
 		}
 	} else {
@@ -172,7 +176,11 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 				continue;
 			}
 			uint16_t color = palette->color[col_index];
-			draw_pixel(x + i + 8, y, color, priority);
+			uint32_t new_x = (x + i) & 0x1FF;
+			if (new_x >= GBA_WIDTH) {
+				continue;
+			}
+			draw_pixel(new_x, y, color, priority);
 		}
 	}
 };
@@ -254,9 +262,12 @@ static void draw_obj_char(uint32_t y, struct char_4bpp *nonnull character,
 			  uint32_t start_x, uint32_t start_y,
 			  bool vertical_flip, bool horizontal_flip)
 {
-	uint8_t end_y = start_y + 8;
-	if (y < (start_y < end_y ? start_y : end_y) ||
-	    y >= (end_y > start_y ? end_y : start_y)) {
+	// TODO: Improve this very silly loop
+	bool ok = false;
+	for (size_t i = 0; i < 8; ++i) {
+		ok = ok || y == ((start_y + i) & 0xFF);
+	}
+	if (!ok) {
 		return;
 	}
 
@@ -279,9 +290,8 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 		return;
 	}
 
-	// Only handling 8x8 right now.
-	uint8_t start_y = GET(OBJA0_Y, obj->attr_0);
-	uint8_t start_x = GET(OBJA1_X, obj->attr_1);
+	uint32_t start_y = GET(OBJA0_Y, obj->attr_0);
+	uint32_t start_x = GET(OBJA1_X, obj->attr_1);
 
 	// Only handling mode 0 right now.
 	struct char_4bpp *char_block =
@@ -308,8 +318,8 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 	// TODO: The flipping
 	for (size_t i = 0; i < width; ++i) {
 		for (size_t j = 0; j < height; ++j) {
-			uint32_t obj_x = start_x + i * 8;
-			uint32_t obj_y = start_y + j * 8;
+			uint32_t obj_x = (start_x + i * 8) & 0x1FF;
+			uint32_t obj_y = (start_y + j * 8) & 0xFF;
 			draw_obj_char(y, &char_block[char_name], palette,
 				      priority, obj_x, obj_y, vertical_flip,
 				      horizontal_flip);
@@ -374,7 +384,7 @@ static void update_surface_from_screen(void)
 {
 	uint16_t *pixels = surface->pixels;
 	for (size_t y = 0; y < GBA_HEIGHT; ++y) {
-		for (size_t x = 8; x < GBA_WIDTH + 8; ++x) {
+		for (size_t x = 0; x < GBA_WIDTH; ++x) {
 			uint16_t col = screen_color[y][x];
 			uint16_t rotated = GET(COL_RED, col) << 10 |
 					   GET(COL_GREEN, col) << 5 |
