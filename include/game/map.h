@@ -35,6 +35,8 @@ struct map_render_params {
 	uint32_t char_block;
 };
 
+enum facing { FACING_NORTH = 0, FACING_EAST, FACING_SOUTH, FACING_WEST };
+
 /**
  * A temporary function just to try rendering this out
  * @param highlights The currently highlighted tiles.
@@ -51,5 +53,12 @@ sprite_handle demo_alloc_cursor(void);
 void demo_move_cursor(struct map_byte_vec *nonnull height_map,
 		      sprite_handle cursor, struct vec2 pos,
 		      struct vec2 scroll);
+
+sprite_handle demo_alloc_soldier(void);
+void demo_move_soldier(struct map_byte_vec *nonnull height_map,
+		      sprite_handle soldier, struct vec2 pos,
+		      struct vec2 scroll);
+void demo_soldier_frame(sprite_handle soldier, enum facing facing,
+			uint32_t frame);
 
 #endif //CHICKPEA_MAP_H

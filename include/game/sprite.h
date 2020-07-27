@@ -32,8 +32,10 @@ struct sprite {
 	uint8_t palette;
 	enum obj_mode mode;
 	bool enabled;
+	bool flip_vertical;
+	bool flip_horizontal;
 	uint8_t priority[MAX_SPRITE_OBJECTS];
-	uint16_t _padding[7];
+	uint16_t _padding[6];
 };
 
 size_t sprite_allocated(void);
@@ -41,7 +43,7 @@ bool sprite_exists(sprite_handle handle);
 struct sprite *nonnull sprite_ref(sprite_handle handle);
 sprite_handle sprite_alloc(const struct sprite_template *nonnull template);
 volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
-							size_t idx);
+						   size_t idx);
 void sprite_drop(sprite_handle handle);
 
 /*

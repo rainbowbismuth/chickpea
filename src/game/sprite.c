@@ -6,6 +6,7 @@ struct sprite_priv {
 	uint8_t generation;
 	bool used;
 	struct sprite_template template;
+	struct vec2 center;
 	obj_tiles_handle tile_handles[MAX_SPRITE_OBJECTS];
 };
 
@@ -44,6 +45,35 @@ static size_t find_first_unused(void)
 	assert(false && "no disabled sprites");
 }
 
+static struct vec2 calculate_center(const struct sprite_priv *nonnull sprite)
+{
+	int32_t min_x = 0xFFFF, min_y = 0xFFFF;
+	int32_t max_x = -0xFFFF, max_y = -0xFFFF;
+	for (size_t i = 0; i < sprite->template.num_objects; ++i) {
+		const struct sprite_object_def *obj_def =
+			&sprite->template.objects[i];
+
+		if (obj_def->x_offset < min_x) {
+			min_x = obj_def->x_offset;
+		}
+		if (obj_def->y_offset < min_y) {
+			min_y = obj_def->y_offset;
+		}
+		int32_t x_extent = obj_def->x_offset +
+				   object_width(obj_def->shape, obj_def->size);
+		if (x_extent > max_x) {
+			max_x = x_extent;
+		}
+		int32_t y_extent = obj_def->y_offset +
+				   object_height(obj_def->shape, obj_def->size);
+		if (y_extent > max_y) {
+			max_y = y_extent;
+		}
+	}
+	return (struct vec2){ .x = (min_x + max_x) / 2,
+			      .y = (min_y + max_y) / 2 };
+}
+
 sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 {
 	assert(allocated < MAX_SPRITES);
@@ -59,6 +89,7 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 	sprite->template = *template;
 	sprite->pub.palette = template->palette;
 	sprite->pub.mode = template->mode;
+	sprite->center = calculate_center(sprite);
 
 	for (size_t i = 0; i < template->num_objects; ++i) {
 		const struct sprite_object_def *obj_def = &template->objects[i];
@@ -72,7 +103,7 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 }
 
 volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
-							size_t idx)
+						   size_t idx)
 {
 	assert(sprite_exists(handle));
 	struct sprite_priv *sprite = &sprites[handle.index];
@@ -96,17 +127,30 @@ static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,
 				 size_t tile_start, size_t priority)
 {
 	struct oam_entry *entry = &oam_buf.entries[objs_in_buf];
-	struct vec2 pos =
-		v2_add_xy(sprite->pub.pos, object->x_offset, object->y_offset);
+
+	int32_t x_offset = object->x_offset;
+	int32_t y_offset = object->y_offset;
+	uint32_t flip_bits = 0;
+	if (sprite->pub.flip_horizontal) {
+		flip_bits |= OBJA1_HORIZONTAL_FLIP;
+		x_offset = -(x_offset - sprite->center.x) + sprite->center.x;
+	}
+	if (sprite->pub.flip_vertical) {
+		flip_bits |= OBJA1_VERTICAL_FLIP;
+		y_offset = -(y_offset - sprite->center.y) + sprite->center.y;
+	}
+	struct vec2 pos = v2_add_xy(sprite->pub.pos, x_offset, y_offset);
 
 	entry->attr_0 = PREP(OBJA0_Y, pos.y) |
 			PREP(OBJA0_MODE, sprite->pub.mode) |
 			PREP(OBJA0_SHAPE, object->shape);
-	entry->attr_1 = PREP(OBJA1_X, pos.x) | PREP(OBJA1_SIZE, object->size);
+	entry->attr_1 = PREP(OBJA1_X, pos.x) | PREP(OBJA1_SIZE, object->size) |
+			flip_bits;
 	entry->attr_2 = PREP(OBJA2_CHAR, tile_start) |
 			PREP(OBJA2_PALETTE, sprite->pub.palette) |
 			PREP(OBJA2_PRIORITY, priority);
 	entry->_rotation_scaling_padding = 0;
+
 	objs_in_buf++;
 }
 

@@ -97,6 +97,17 @@ void game_main(void)
 
 	sprite_handle cursor = demo_alloc_cursor();
 	sprite_ref(cursor)->enabled = true;
+	sprite_ref(cursor)->order = 100;
+
+	sprite_handle soldiers[4] = {
+		demo_alloc_soldier(),
+		demo_alloc_soldier(),
+		demo_alloc_soldier(),
+		demo_alloc_soldier(),
+	};
+	for (size_t i = 0; i < ARRAY_SIZE(soldiers); ++i) {
+		sprite_ref(soldiers[i])->enabled = true;
+	}
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
@@ -111,10 +122,10 @@ void game_main(void)
 		if (REG_VCOUNT == 160) {
 			frame++;
 			input_read();
-			uint32_t c = (frame >> 2) & 0x1F;
-			bg_palette(0)->color[1] = color(22, c, 15);
-			bg_palette(1)->color[1] = color(c, 22, 15);
-			bg_palette(2)->color[1] = color(15, 22, c);
+			uint32_t c = (frame >> 2) & 0x0F;
+			bg_palette(0)->color[1] = color(11, c, 7);
+			bg_palette(1)->color[1] = color(c, 11, 7);
+			bg_palette(2)->color[1] = color(7, 11, c);
 			bg_palette(3)->color[1] = color(c, c, c);
 
 			demo_rotate_highlight_palette(frame);
@@ -160,6 +171,33 @@ void game_main(void)
 
 			demo_move_cursor(&height_map, cursor, cursor_pos,
 					 bg3_scroll);
+
+			demo_move_soldier(&height_map, soldiers[0],
+					  (struct vec2){ .x = 4, .y = 4 },
+					  bg3_scroll);
+			demo_move_soldier(&height_map, soldiers[1],
+					  (struct vec2){ .x = 6, .y = 4 },
+					  bg3_scroll);
+			demo_move_soldier(&height_map, soldiers[2],
+					  (struct vec2){ .x = 4, .y = 6 },
+					  bg3_scroll);
+			demo_move_soldier(&height_map, soldiers[3],
+					  (struct vec2){ .x = 6, .y = 6 },
+					  bg3_scroll);
+
+			uint32_t walk_c[4] = { 0, 1, 2, 1 };
+			uint32_t unit_frame =
+				walk_c[(frame / 12) % ARRAY_SIZE(walk_c)];
+
+			demo_soldier_frame(soldiers[0], FACING_EAST,
+					   unit_frame);
+			demo_soldier_frame(soldiers[1], FACING_SOUTH,
+					   unit_frame);
+			demo_soldier_frame(soldiers[2], FACING_NORTH,
+					   unit_frame);
+			demo_soldier_frame(soldiers[3], FACING_WEST,
+					   unit_frame);
+
 			sprite_build_oam_buffer();
 			sprite_commit_buffer_to_oam();
 		}

@@ -229,3 +229,75 @@ void demo_move_cursor(struct map_byte_vec *nonnull height_map,
 	screen_coords.y -= scroll.y;
 	sprite_ref(cursor)->pos = screen_coords;
 }
+
+const static struct sprite_object_def soldier_objs[4] = {
+	{ .x_offset = 0,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 },
+	{ .x_offset = 8,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 },
+	{ .x_offset = 0,
+	  .y_offset = 16,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 },
+	{ .x_offset = 8,
+	  .y_offset = 16,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 },
+};
+
+const static struct sprite_template soldier_template = {
+	.objects = soldier_objs,
+	.num_objects = ARRAY_SIZE(soldier_objs),
+	.palette = 2,
+	.mode = OBJ_MODE_NORMAL,
+};
+
+extern struct char_4bpp soldier_4bpp[8 * 6];
+extern struct palette soldier_pal;
+
+sprite_handle demo_alloc_soldier(void)
+{
+	return sprite_alloc(&soldier_template);
+}
+
+void demo_move_soldier(struct map_byte_vec *nonnull height_map,
+		       sprite_handle soldier, struct vec2 pos,
+		       struct vec2 scroll)
+{
+	struct vec2 screen_coords = to_screen_coord(height_map, pos);
+	screen_coords.x -= scroll.x;
+	screen_coords.y -= scroll.y;
+	screen_coords.x += 8;
+	screen_coords.y -= (32 - 11);
+	sprite_ref(soldier)->pos = screen_coords;
+}
+
+void demo_soldier_frame(sprite_handle soldier, enum facing facing,
+			uint32_t frame)
+{
+	struct sprite *sprite = sprite_ref(soldier);
+	sprite->flip_horizontal = facing == FACING_NORTH ||
+				  facing == FACING_EAST;
+	uint32_t offset =
+		facing == FACING_SOUTH || facing == FACING_EAST ? 0 : 3 * 8;
+	offset += frame * 8;
+
+	volatile struct char_4bpp *top_left_c = sprite_obj_vram(soldier, 0);
+	volatile struct char_4bpp *top_right_c = sprite_obj_vram(soldier, 1);
+	volatile struct char_4bpp *bottom_left_c = sprite_obj_vram(soldier, 2);
+	volatile struct char_4bpp *bottom_right_c = sprite_obj_vram(soldier, 3);
+
+	write_4bpp(&soldier_4bpp[offset], top_left_c);
+	write_4bpp(&soldier_4bpp[offset + 2], top_left_c + 1);
+	write_4bpp(&soldier_4bpp[offset + 1], top_right_c);
+	write_4bpp(&soldier_4bpp[offset + 3], top_right_c + 1);
+	write_4bpp(&soldier_4bpp[offset + 4], bottom_left_c);
+	write_4bpp(&soldier_4bpp[offset + 6], bottom_left_c + 1);
+	write_4bpp(&soldier_4bpp[offset + 5], bottom_right_c);
+	write_4bpp(&soldier_4bpp[offset + 7], bottom_right_c + 1);
+	write_palette(&soldier_pal, obj_palette(sprite->palette));
+}
