@@ -7,7 +7,13 @@ struct sprite_priv {
 	bool used;
 	struct sprite_template template;
 	struct vec2 center;
-	obj_tiles_handle tile_handles[MAX_SPRITE_OBJECTS];
+	obj_tiles_handle tile_handle;
+};
+
+struct sprite_frame_copy {
+	sprite_handle handle;
+	uint16_t tile_count;
+	const struct char_4bpp *nonnull src;
 };
 
 static size_t allocated = 0;
@@ -16,6 +22,9 @@ static uint8_t sorted_sprites[MAX_SPRITES] = { 0 };
 
 static size_t objs_in_buf = 0;
 static struct object_attribute_mem oam_buf = { 0 };
+
+static size_t copy_requests = 0;
+static struct sprite_frame_copy copy_queue[MAX_SPRITES] = { 0 };
 
 size_t sprite_allocated(void)
 {
@@ -91,24 +100,22 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 	sprite->pub.mode = template->mode;
 	sprite->center = calculate_center(sprite);
 
+	size_t tiles = 0;
 	for (size_t i = 0; i < template->num_objects; ++i) {
 		const struct sprite_object_def *obj_def = &template->objects[i];
-		size_t tiles = tiles_in_object(obj_def->shape, obj_def->size);
-		obj_tiles_handle obj_h = obj_tiles_alloc(tiles);
-		sprite->tile_handles[i] = obj_h;
+		tiles += tiles_in_object(obj_def->shape, obj_def->size);
 	}
+	sprite->tile_handle = obj_tiles_alloc(tiles);
 
 	allocated++;
 	return handle;
 }
 
-volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle,
-						   size_t idx)
+volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
 	struct sprite_priv *sprite = &sprites[handle.index];
-	assert(idx < sprite->template.num_objects);
-	return obj_tiles_vram(sprite->tile_handles[idx]);
+	return obj_tiles_vram(sprite->tile_handle);
 }
 
 void sprite_drop(sprite_handle handle)
@@ -117,9 +124,7 @@ void sprite_drop(sprite_handle handle)
 	struct sprite_priv *sprite = &sprites[handle.index];
 	sprite->generation++;
 	sprite->used = false;
-	for (size_t i = 0; i < sprites->template.num_objects; ++i) {
-		obj_tiles_drop(sprite->tile_handles[i]);
-	}
+	obj_tiles_drop(sprite->tile_handle);
 }
 
 static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,
@@ -163,11 +168,13 @@ static void add_sprite_to_buffer(const struct sprite_priv *nonnull sprite)
 	assert(sprite->template.num_objects + objs_in_buf <
 	       ARRAY_SIZE(oam_buf.entries));
 
+	size_t offset = obj_tiles_start(sprite->tile_handle);
 	for (size_t i = 0; i < sprite->template.num_objects; ++i) {
-		size_t start = obj_tiles_start(sprite->tile_handles[i]);
 		size_t priority = sprite->pub.priority[i];
 		add_object_to_buffer(sprite, &sprite->template.objects[i],
-				     start, priority);
+				     offset, priority);
+		offset += tiles_in_object(sprite->template.objects[i].shape,
+					  sprite->template.objects[i].size);
 	}
 }
 
@@ -194,18 +201,46 @@ static void sort_sprites_by_priority(void)
 	}
 }
 
+void sprite_queue_frame_copy(sprite_handle handle,
+			     const struct char_4bpp *nonnull src)
+{
+	assert(sprite_exists(handle));
+	assert(copy_requests < ARRAY_SIZE(copy_queue));
+	struct sprite_frame_copy *req = &copy_queue[copy_requests];
+	copy_requests++;
+	req->handle = handle;
+	req->tile_count = obj_tiles_count(sprites[handle.index].tile_handle);
+	req->src = src;
+}
+
+void sprite_execute_frame_copies(void)
+{
+	for (size_t i = 0; i < copy_requests; ++i) {
+		struct sprite_frame_copy *req = &copy_queue[i];
+		if (!sprite_exists(req->handle)) {
+			continue;
+		}
+		write_4bpp_n(req->src, sprite_obj_vram(req->handle),
+			     req->tile_count);
+	}
+	copy_requests = 0;
+}
+
 static_assert(sizeof(struct sprite) % 4 == 0, "needed for cpu_fast_fill/set");
 static_assert(sizeof(sprites) % 4 == 0, "needed for cpu_fast_fill/set");
 static_assert(sizeof(sorted_sprites) % 4 == 0, "needed for cpu_fast_fill/set");
 static_assert(sizeof(oam_buf) % 4 == 0, "needed for cpu_fast_fill/set");
+static_assert(sizeof(copy_queue) % 4 == 0, "needed for cpu_fast_fill/set");
 
 void sprite_reset(void)
 {
 	allocated = 0;
 	objs_in_buf = 0;
+	copy_requests = 0;
 	cpu_fast_fill(0, &sprites, sizeof(sprites) / 4);
 	cpu_fast_fill(0, &sorted_sprites, sizeof(sorted_sprites) / 4);
 	cpu_fast_fill(0, &oam_buf, sizeof(oam_buf) / 4);
+	cpu_fast_fill(0, &copy_queue, sizeof(copy_queue) / 4);
 	obj_tiles_reset();
 }
 

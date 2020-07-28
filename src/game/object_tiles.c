@@ -104,6 +104,12 @@ size_t obj_tiles_start(obj_tiles_handle handle)
 	return allocs[handle.index].start;
 }
 
+size_t obj_tiles_count(obj_tiles_handle handle)
+{
+	assert(obj_tiles_exists(handle));
+	return GET(OBJ_TILES_COUNT, allocs[handle.index].attr);
+}
+
 volatile struct char_4bpp *nonnull obj_tiles_vram(obj_tiles_handle handle)
 {
 	assert(obj_tiles_exists(handle));

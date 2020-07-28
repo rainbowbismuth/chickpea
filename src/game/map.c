@@ -211,12 +211,7 @@ const static struct sprite_template cursor_template = {
 sprite_handle demo_alloc_cursor(void)
 {
 	sprite_handle h = sprite_alloc(&cursor_template);
-	write_4bpp_n(&tile_cursor_4bpp[1], sprite_obj_vram(h, 0), 2);
-	write_4bpp_n(&tile_cursor_4bpp[5], sprite_obj_vram(h, 1), 2);
-	write_4bpp(&tile_cursor_4bpp[0], sprite_obj_vram(h, 2) + 0);
-	write_4bpp(&tile_cursor_4bpp[4], sprite_obj_vram(h, 2) + 1);
-	write_4bpp(&tile_cursor_4bpp[3], sprite_obj_vram(h, 3) + 0);
-	write_4bpp(&tile_cursor_4bpp[7], sprite_obj_vram(h, 3) + 1);
+	sprite_queue_frame_copy(h, &tile_cursor_4bpp[0]);
 	write_palette(&tile_cursor_pal, obj_palette(1));
 	return h;
 }
@@ -286,18 +281,6 @@ void demo_soldier_frame(sprite_handle soldier, enum facing facing,
 		facing == FACING_SOUTH || facing == FACING_EAST ? 0 : 3 * 8;
 	offset += frame * 8;
 
-	volatile struct char_4bpp *top_left_c = sprite_obj_vram(soldier, 0);
-	volatile struct char_4bpp *top_right_c = sprite_obj_vram(soldier, 1);
-	volatile struct char_4bpp *bottom_left_c = sprite_obj_vram(soldier, 2);
-	volatile struct char_4bpp *bottom_right_c = sprite_obj_vram(soldier, 3);
-
-	write_4bpp(&soldier_4bpp[offset], top_left_c);
-	write_4bpp(&soldier_4bpp[offset + 2], top_left_c + 1);
-	write_4bpp(&soldier_4bpp[offset + 1], top_right_c);
-	write_4bpp(&soldier_4bpp[offset + 3], top_right_c + 1);
-	write_4bpp(&soldier_4bpp[offset + 4], bottom_left_c);
-	write_4bpp(&soldier_4bpp[offset + 6], bottom_left_c + 1);
-	write_4bpp(&soldier_4bpp[offset + 5], bottom_right_c);
-	write_4bpp(&soldier_4bpp[offset + 7], bottom_right_c + 1);
+	sprite_queue_frame_copy(soldier, &soldier_4bpp[offset]);
 	write_palette(&soldier_pal, obj_palette(sprite->palette));
 }

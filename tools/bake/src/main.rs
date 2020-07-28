@@ -221,19 +221,60 @@ struct Bake4BPP {
     #[clap(short = 'i')]
     input: String,
 
+    #[clap(short = 's')]
+    swizzle: Option<String>,
+
     #[clap(short = 'o')]
     output: String,
 }
 
-fn bake_4bpp(input: String, output: String) -> io::Result<()> {
+fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
+    let pattern: Vec<usize> = swizzle.chars().map(|c| c.to_digit(16).unwrap() as usize).collect();
+    let mut counts = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for idx in &pattern {
+        counts[*idx] += 1usize;
+    }
+    let mut running_offset = 0;
+    let mut offsets = Vec::with_capacity(16);
+    for count in &counts {
+        offsets.push(running_offset);
+        running_offset += count;
+    }
+    let mut counts = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut index_pattern = Vec::with_capacity(pattern.len());
+    for idx in &pattern {
+        index_pattern.push(offsets[*idx] + counts[*idx]);
+        counts[*idx] += 1;
+    }
+    index_pattern
+}
+
+fn bake_4bpp(input: String, swizzle: Option<String>, output: String) -> io::Result<()> {
     let img = Image::load_png(&input);
+
+    let out_tiles = if let Some(swizzle) = swizzle {
+        let pattern = swizzle_to_pattern(swizzle);
+
+        let mut swizzled_tiles = vec![Character4BPP::blank(); img.tiles.len()];
+        let mut chunk_offset = 0;
+        for chunk in img.tiles.chunks_exact(pattern.len()) {
+            for (tile_i, pattern_i) in pattern.iter().enumerate() {
+                swizzled_tiles[chunk_offset + *pattern_i] = chunk[tile_i];
+            }
+            chunk_offset += pattern.len();
+        }
+        swizzled_tiles
+    } else {
+        img.tiles
+    };
 
     let mut out_4bpp = PathBuf::from(&output);
     out_4bpp.set_extension("4bpp");
     let mut out_pal = PathBuf::from(&output);
     out_pal.set_extension("pal");
 
-    std::fs::write(out_4bpp, serialize(img.tiles.as_slice()))?;
+
+    std::fs::write(out_4bpp, serialize(out_tiles.as_slice()))?;
     std::fs::write(out_pal, serialize(&img.palette))?;
 
     Ok(())
@@ -243,6 +284,6 @@ fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
     match opts.sub_cmd {
-        SubCommand::Bake4BPP(bake) => bake_4bpp(bake.input, bake.output)
+        SubCommand::Bake4BPP(bake) => bake_4bpp(bake.input, bake.swizzle, bake.output)
     }
 }

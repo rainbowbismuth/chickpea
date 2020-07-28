@@ -61,6 +61,13 @@ void demo_update(void)
 	demo_move_soldier(&height_map, soldiers[3],
 			  (struct vec2){ .x = 6, .y = 6 }, bg3_scroll);
 
+	uint32_t walk_c[4] = { 0, 1, 2, 1 };
+	uint32_t unit_frame = walk_c[(frame / 12) % ARRAY_SIZE(walk_c)];
+	demo_soldier_frame(soldiers[0], FACING_EAST, unit_frame);
+	demo_soldier_frame(soldiers[1], FACING_SOUTH, unit_frame);
+	demo_soldier_frame(soldiers[2], FACING_NORTH, unit_frame);
+	demo_soldier_frame(soldiers[3], FACING_WEST, unit_frame);
+
 	sprite_build_oam_buffer();
 }
 
@@ -89,13 +96,9 @@ void demo_on_vertical_blank(void)
 	set_bg_scroll_x(BG0, v);
 	set_bg_scroll_y(BG0, v);
 
-	uint32_t walk_c[4] = { 0, 1, 2, 1 };
-	uint32_t unit_frame = walk_c[(frame / 12) % ARRAY_SIZE(walk_c)];
-	demo_soldier_frame(soldiers[0], FACING_EAST, unit_frame);
-	demo_soldier_frame(soldiers[1], FACING_SOUTH, unit_frame);
-	demo_soldier_frame(soldiers[2], FACING_NORTH, unit_frame);
-	demo_soldier_frame(soldiers[3], FACING_WEST, unit_frame);
+	sprite_execute_frame_copies();
 	sprite_commit_buffer_to_oam();
+
 //	if (frame % 600 == 0) {
 //		debug_put_str("time ");
 //		debug_put_u32(REG_VCOUNT - 160);
@@ -202,6 +205,7 @@ void game_main(void)
 		soldiers[i] = demo_alloc_soldier();
 		sprite_ref(soldiers[i])->enabled = true;
 	}
+	sprite_execute_frame_copies();
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
