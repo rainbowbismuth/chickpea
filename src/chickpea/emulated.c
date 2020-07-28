@@ -599,9 +599,11 @@ void halt()
 		}
 
 		bool done = REG_IF != 0;
-		while (REG_IF) {
+		while (REG_IF && --steps_left) {
 			irq_handler();
 		}
+		assert(steps_left &&
+		       "irq_handler() loop, not acknowledging interrupt?");
 		if (done) {
 			return;
 		}

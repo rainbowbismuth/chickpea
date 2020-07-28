@@ -107,9 +107,11 @@ void debug_put_str(const char *nonnull str)
 	}
 }
 
+#define REG_IF_MUTABLE (*((volatile uint16_t *)0x04000202))
+
 void interrupt_acknowledge(uint16_t int_flag)
 {
-	REG_IF = int_flag;
+	REG_IF_MUTABLE = int_flag;
 }
 
 extern struct nano_unit_suite test_suites[];
