@@ -288,6 +288,8 @@ void char_4bpp_flip_horizontal(struct char_4bpp *nonnull self);
 
 void char_4bpp_flip_both(struct char_4bpp *nonnull self);
 
+void interrupt_acknowledge(uint16_t int_flag);
+
 extern void (*nonnull volatile irq_handler)(void);
 
 #endif //CHICKPEA_COMMON_H

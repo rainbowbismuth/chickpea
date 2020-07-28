@@ -500,6 +500,8 @@ static void present_frame_and_handle_events(void)
 	}
 }
 
+static bool trigger_vertical_blank = false;
+
 static void step_emulated_hardware(void)
 {
 	uint16_t y = REG_VCOUNT;
@@ -526,6 +528,7 @@ static void step_emulated_hardware(void)
 		if (horizontal_blank) {
 			REG_VCOUNT = 0;
 			REG_DISPSTAT &= ~DISPSTAT_HORIZONTAL_BLANK;
+			trigger_vertical_blank = true;
 			present_frame_and_handle_events();
 		} else {
 			REG_DISPSTAT |= DISPSTAT_HORIZONTAL_BLANK;
@@ -584,14 +587,22 @@ void halt()
 		if (GET(INT_HORIZONTAL_BLANK, REG_IE) &&
 		    GET(DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED, REG_DISPSTAT) &&
 		    GET(DISPSTAT_HORIZONTAL_BLANK, REG_DISPSTAT)) {
-			irq_handler();
-			return;
+			REG_IF |= INT_HORIZONTAL_BLANK;
 		}
 
 		if (GET(INT_VERTICAL_BLANK, REG_IE) &&
 		    GET(DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED, REG_DISPSTAT) &&
-		    GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT)) {
+		    GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT) &&
+		    trigger_vertical_blank) {
+			REG_IF |= INT_VERTICAL_BLANK;
+			trigger_vertical_blank = false;
+		}
+
+		bool done = REG_IF != 0;
+		while (REG_IF) {
 			irq_handler();
+		}
+		if (done) {
 			return;
 		}
 	}
@@ -625,4 +636,9 @@ void debug_put_char(char c)
 void debug_put_str(const char *nonnull str)
 {
 	fputs(str, stdout);
+}
+
+void interrupt_acknowledge(uint16_t int_flag)
+{
+	REG_IF &= ~int_flag;
 }

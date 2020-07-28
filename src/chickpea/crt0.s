@@ -96,11 +96,6 @@ main_irq_handler:
     @; r2 (0x4000200) can be used as we only care about bit 0 being unset
     strh r2, [r2, #8]
 
-    @; Acknowledge all received interrupts that were enabled in IE
-    ldr r3, [r2, #0]
-    and r0, r3, r3, lsr #16
-    strh r0, [r2, #2]
-
     @; Switch from IRQ mode to system mode
     @; cpsr_c = 0b000_10010u8 | 0b000_01101u8
     mrs r2, cpsr

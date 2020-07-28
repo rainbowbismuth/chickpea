@@ -53,11 +53,10 @@ volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
 						   palette_idx * 0x20);
 }
 
-volatile struct char_4bpp *nonnull
-character_block_begin(uint32_t char_block)
+volatile struct char_4bpp *nonnull character_block_begin(uint32_t char_block)
 {
 	return (volatile struct char_4bpp *)(size_t)(VRAM_BEGIN +
-							  char_block * 0x4000);
+						     char_block * 0x4000);
 }
 
 volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block)
@@ -106,6 +105,11 @@ void debug_put_str(const char *nonnull str)
 	while (*str != '\0') {
 		debug_put_char(*str++);
 	}
+}
+
+void interrupt_acknowledge(uint16_t int_flag)
+{
+	REG_IF = int_flag;
 }
 
 extern struct nano_unit_suite test_suites[];
