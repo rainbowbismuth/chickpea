@@ -74,6 +74,12 @@ obj_tiles_handle obj_tiles_alloc(size_t num_tiles)
 	struct object_tiles_alloc *alloc = &allocs[alloc_idx];
 	alloc->start = start;
 	alloc->attr = PREP(OBJ_TILES_COUNT, num_tiles) | OBJ_TILES_ENABLED;
+
+	// Skip over zero on allocation so that { 0 } is never a valid handle
+	if (alloc->generation == 0) {
+		alloc->generation++;
+	}
+
 	obj_tiles_handle handle = { .index = alloc_idx,
 				    .generation = alloc->generation };
 	allocated++;

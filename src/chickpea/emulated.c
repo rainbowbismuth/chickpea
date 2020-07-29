@@ -183,7 +183,7 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 			draw_pixel(new_x, y, color, priority);
 		}
 	}
-};
+}
 
 static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {

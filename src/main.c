@@ -2,26 +2,100 @@
 #include "stddef.h"
 
 #include "chickpea.h"
-#include "game/debug_font.h"
 #include "game/map.h"
 #include "game/input.h"
-#include "game/random.h"
 #include "game/screen.h"
+#include "game/debug_font.h"
 
 static struct vec2 bg3_scroll = { 0 };
 static struct vec2 cursor_pos = { .x = 6, .y = 6 };
 static uint32_t frame = 0;
 static sprite_handle cursor = { 0 };
 static sprite_handle soldiers[4] = { 0 };
-static struct map_bit_vec highlights = { 0 };
-static struct map_byte_vec height_map = { 0 };
+static sprite_handle height_msg = { 0 };
+extern struct map_bit_vec demo_map_walk;
+extern struct map_byte_vec demo_map_height;
+extern struct map_bit_vec demo_map_occlusion;
+struct map_render_params map_render_params = { .char_block = 3,
+					       .screen_block_low = 3 * 8,
+					       .screen_block_high =
+						       (3 * 8) - 1 };
+static struct debug_font demo_font = {
+	.characters = debug_font_4bpp,
+	.palette = &debug_font_pal,
+};
+
+static struct sprite_object_def height_msg_objs[1] = { {
+	.x_offset = 0,
+	.y_offset = 0,
+	.shape = OBJ_SHAPE_HORIZONTAL,
+	.size = OBJ_SIZE_16,
+} };
+
+static struct sprite_template height_msg_template = {
+	.palette = 11,
+	.mode = OBJ_MODE_NORMAL,
+	.num_objects = ARRAY_SIZE(height_msg_objs),
+	.objects = height_msg_objs
+};
+
+static bool dirty_highlights = false;
+
+#ifndef BUILD_GBA
+#include <stdio.h>
+bool desktop_only_inputs(void)
+{
+	if (input_pressed(KEYINPUT_BUTTON_Y)) {
+		FILE *f = fopen("./baked/map/demo/map.height", "wb");
+		fwrite(&demo_map_height, 1, sizeof(demo_map_height), f);
+		fclose(f);
+		f = fopen("./baked/map/demo/map.occlusion", "wb");
+		fwrite(&demo_map_occlusion, 1, sizeof(demo_map_occlusion), f);
+		fclose(f);
+		f = fopen("./baked/map/demo/map.walk", "wb");
+		fwrite(&demo_map_walk, 1, sizeof(demo_map_walk), f);
+		fclose(f);
+		return true;
+	} else if (input_pressed(KEYINPUT_BUTTON_X)) {
+		FILE *f = fopen("./baked/map/demo/map.height", "rb");
+		fread(&demo_map_height, 1, sizeof(demo_map_height), f);
+		fclose(f);
+		f = fopen("./baked/map/demo/map.occlusion", "rb");
+		fread(&demo_map_occlusion, 1, sizeof(demo_map_occlusion), f);
+		fclose(f);
+		f = fopen("./baked/map/demo/map.walk", "rb");
+		fread(&demo_map_walk, 1, sizeof(demo_map_walk), f);
+		fclose(f);
+		dirty_highlights = true;
+		return true;
+	}
+	return false;
+}
+#else
+bool desktop_only_inputs(void)
+{
+	return false;
+}
+#endif
 
 void demo_update(void)
 {
 	frame++;
 	input_read();
 
-	if (input_held(KEYINPUT_BUTTON_B)) {
+	if (desktop_only_inputs()) {
+	} else if (input_held(KEYINPUT_BUTTON_B) &&
+		   input_pressed(KEYINPUT_BUTTON_A)) {
+		map_bit_vec_toggle(&demo_map_occlusion, cursor_pos);
+		dirty_highlights = true;
+	} else if (input_pressed(KEYINPUT_BUTTON_A)) {
+		map_bit_vec_toggle(&demo_map_walk, cursor_pos);
+		dirty_highlights = true;
+	} else if (input_pressed(KEYINPUT_BUTTON_R)) {
+		demo_map_height.bytes[cursor_pos.y][cursor_pos.x]++;
+	} else if (input_pressed(KEYINPUT_BUTTON_L)) {
+		demo_map_height.bytes[cursor_pos.y][cursor_pos.x]--;
+	} else if (!input_held(KEYINPUT_BUTTON_B)) {
 		if (input_pressed(KEYINPUT_UP)) {
 			cursor_pos.y--;
 		} else if (input_pressed(KEYINPUT_DOWN)) {
@@ -34,31 +108,36 @@ void demo_update(void)
 	} else {
 		if (input_held(KEYINPUT_UP)) {
 			bg3_scroll.y++;
-			set_bg_scroll_y(BG3, bg3_scroll.y);
 		}
 		if (input_held(KEYINPUT_DOWN)) {
 			bg3_scroll.y--;
-			set_bg_scroll_y(BG3, bg3_scroll.y);
 		}
 		if (input_held(KEYINPUT_LEFT)) {
 			bg3_scroll.x++;
-			set_bg_scroll_x(BG3, bg3_scroll.x);
 		}
 		if (input_held(KEYINPUT_RIGHT)) {
 			bg3_scroll.x--;
-			set_bg_scroll_x(BG3, bg3_scroll.x);
 		}
 	}
+	set_bg_scroll_x(BG0, bg3_scroll.x - 8);
+	set_bg_scroll_y(BG0, bg3_scroll.y);
+	set_bg_scroll_x(BG1, bg3_scroll.x - 8);
+	set_bg_scroll_y(BG1, bg3_scroll.y);
+	set_bg_scroll_x(BG2, bg3_scroll.x);
+	set_bg_scroll_y(BG2, bg3_scroll.y);
+	set_bg_scroll_x(BG3, bg3_scroll.x);
+	set_bg_scroll_y(BG3, bg3_scroll.y);
 
-	demo_move_cursor(&height_map, cursor, cursor_pos, bg3_scroll);
+	demo_move_cursor(&demo_map_height, &demo_map_occlusion, cursor,
+			 cursor_pos, bg3_scroll);
 
-	demo_move_soldier(&height_map, soldiers[0],
+	demo_move_soldier(&demo_map_height, soldiers[0],
 			  (struct vec2){ .x = 4, .y = 4 }, bg3_scroll);
-	demo_move_soldier(&height_map, soldiers[1],
+	demo_move_soldier(&demo_map_height, soldiers[1],
 			  (struct vec2){ .x = 6, .y = 4 }, bg3_scroll);
-	demo_move_soldier(&height_map, soldiers[2],
+	demo_move_soldier(&demo_map_height, soldiers[2],
 			  (struct vec2){ .x = 4, .y = 6 }, bg3_scroll);
-	demo_move_soldier(&height_map, soldiers[3],
+	demo_move_soldier(&demo_map_height, soldiers[3],
 			  (struct vec2){ .x = 6, .y = 6 }, bg3_scroll);
 
 	uint32_t walk_c[4] = { 0, 1, 2, 1 };
@@ -73,37 +152,32 @@ void demo_update(void)
 
 void demo_on_horizontal_blank(void)
 {
-	bg_palette(0)->color[0] = color(((REG_VCOUNT >> 2) & 0b1111), 5, 10);
+	bg_palette(0)->color[0] = color(((REG_VCOUNT >> 4) & 0b1111), 5, 10);
 }
 
 void demo_on_vertical_blank(void)
 {
-	if (frame % 30 == 0) {
-		set_bg_scroll_x(BG1, random_global());
-		set_bg_scroll_y(BG1, random_global());
-	}
-
-	uint32_t c = (frame >> 2) & 0x0F;
-
-	bg_palette(0)->color[1] = color(11, c, 7);
-	bg_palette(1)->color[1] = color(c, 11, 7);
-	bg_palette(2)->color[1] = color(7, 11, c);
-	bg_palette(3)->color[1] = color(c, c, c);
 	demo_rotate_highlight_palette(frame);
-
-	uint32_t v = (frame >> 1) % 512;
-
-	set_bg_scroll_x(BG0, v);
-	set_bg_scroll_y(BG0, v);
 
 	sprite_execute_frame_copies();
 	sprite_commit_buffer_to_oam();
 
-//	if (frame % 600 == 0) {
-//		debug_put_str("time ");
-//		debug_put_u32(REG_VCOUNT - 160);
-//		debug_put_str("\n");
-//	}
+	if (sprite_exists(height_msg)) {
+		sprite_drop(height_msg);
+	}
+	char msg[3] = "0h";
+	msg[0] = '0' + demo_map_height.bytes[cursor_pos.y][cursor_pos.x];
+	height_msg =
+		write_debug_msg_sprite(&demo_font, &height_msg_template, msg);
+	sprite_ref(height_msg)->enabled = true;
+	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
+
+	if (dirty_highlights) {
+		demo_render_tile_highlights(&map_render_params, &demo_map_walk,
+					    &demo_map_height,
+					    &demo_map_occlusion);
+		dirty_highlights = false;
+	}
 }
 
 struct screen *nonnull current_screen = &(struct screen){
@@ -129,18 +203,6 @@ void our_irq_handler(void)
 
 void (*volatile irq_handler)(void) = our_irq_handler;
 
-static const struct char_4bpp
-	demo_tile = { .lines = {
-			      0b00010001000100010001000100010001u,
-			      0b00010000000000000000000000000001u,
-			      0b00010000000000010001000000000001u,
-			      0b00010000000000010001000000000001u,
-			      0b00010000000000010001000000000001u,
-			      0b00010000000000010001000000000001u,
-			      0b00010000000000000000000000000001u,
-			      0b00010001000100010001000100010001u,
-		      } };
-
 void game_main(void)
 {
 	REG_DISPCNT = DISPCNT_FORCED_BLANK |
@@ -151,51 +213,28 @@ void game_main(void)
 
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
-	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 1) |
+	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 8) |
+			       PREP(BGCNT_PRIORITY, 3);
+
+	*reg_bg_control(BG1) = PREP(BGCNT_SCREEN_BLOCK, 9) |
 			       PREP(BGCNT_PRIORITY, 1);
 
-	write_4bpp(&demo_tile, &character_block_begin(0)[1]);
-
-	*reg_bg_control(BG1) = PREP(BGCNT_CHAR_BLOCK, 2) |
-			       PREP(BGCNT_SCREEN_BLOCK, 2);
-
-	*reg_bg_control(BG2) = PREP(BGCNT_CHAR_BLOCK, 2) |
-			       PREP(BGCNT_SCREEN_BLOCK, 2) |
-			       PREP(BGCNT_PRIORITY, 1);
-
-	set_bg_scroll_x(BG2, -20);
-	set_bg_scroll_y(BG2, -20);
-
-	volatile uint16_t *tiles = screen_block_begin(1);
-	for (size_t i = 0; i < 16 * 32; ++i) {
-		if (i % 7 == 0) {
-			continue;
-		}
-		tiles[i << 1] = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, i % 4);
-	}
-
-	struct debug_font default_debug_font = {
-		.characters = debug_font_4bpp,
-		.palette = &debug_font_pal,
-	};
-
-	write_debug_msg(&default_debug_font, 2, 2, 4, 3, 3, "Hello, world!");
-
-	REG_BLDCNT = BLDCNT_1ST_TARGET_BG3 | BLDCNT_1ST_TARGET_BG1 |
-		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BD |
-		     PREP(BLDCNT_EFFECT, BLEND_ALPHA);
+	REG_BLDCNT = BLDCNT_1ST_TARGET_BG3 | BLDCNT_1ST_TARGET_BG2 |
+		     BLDCNT_2ND_TARGET_BG1 | BLDCNT_2ND_TARGET_BG0 |
+		     BLDCNT_2ND_TARGET_BD | PREP(BLDCNT_EFFECT, BLEND_ALPHA);
 	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
 		       PREP(BLDALPHA_2ND_WEIGHT, 8);
 
-	struct map_render_params map_render_params = { .char_block = 3,
-						       .screen_block = 3 };
 	*reg_bg_control(BG3) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
-		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block);
+		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_high);
+
+	*reg_bg_control(BG2) =
+		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
+		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_low) |
+		PREP(BGCNT_PRIORITY, 2);
 
 	demo_init();
-	demo_render_tile_highlights(&map_render_params, &highlights,
-				    &height_map);
 
 	cursor = demo_alloc_cursor();
 	sprite_ref(cursor)->enabled = true;
@@ -203,9 +242,12 @@ void game_main(void)
 
 	for (size_t i = 0; i < ARRAY_SIZE(soldiers); ++i) {
 		soldiers[i] = demo_alloc_soldier();
-		sprite_ref(soldiers[i])->enabled = true;
+		//		sprite_ref(soldiers[i])->enabled = true;
 	}
 	sprite_execute_frame_copies();
+
+	demo_render_tile_highlights(&map_render_params, &demo_map_walk,
+				    &demo_map_height, &demo_map_occlusion);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 

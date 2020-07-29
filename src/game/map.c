@@ -1,5 +1,6 @@
 #include "game/map.h"
 #include "chickpea/bit_vec.h"
+#include "chickpea/vec2.h"
 
 bool inside_map(struct vec2 pos)
 {
@@ -37,6 +38,13 @@ void map_bit_vec_set(struct map_bit_vec *nonnull bitset, struct vec2 pos)
 		    pos.x);
 }
 
+void map_bit_vec_toggle(struct map_bit_vec *nonnull bitset, struct vec2 pos)
+{
+	assert(inside_map(pos));
+	bit_vec_toggle(bitset->bits[pos.y], ARRAY_SIZE(bitset->bits[pos.y]),
+		       pos.x);
+}
+
 bool map_bit_vec_test(struct map_bit_vec *nonnull bitset, struct vec2 pos)
 {
 	assert(inside_map(pos));
@@ -51,6 +59,11 @@ static const size_t top_left_together[2] = { 3, 4 };
 
 extern struct char_4bpp tile_highlight_4bpp[2];
 extern struct palette tile_highlight_pal;
+
+extern uint16_t demo_map_low[32][32];
+extern uint16_t demo_map_high[32][32];
+extern struct char_4bpp demo_map_4bpp[];
+extern struct palette demo_map_pal;
 
 void demo_init(void)
 {
@@ -67,6 +80,14 @@ void demo_init(void)
 	char_4bpp_flip_both(&tile_highlight_gfx.top_left_together[1]);
 	char_4bpp_bitwise_or(&tile_highlight_gfx.top_left_together[1],
 			     &tile_highlight_4bpp[1]);
+
+	// TODO: Should determine how many tiles there are ;)
+	write_4bpp_n(demo_map_4bpp, character_block_begin(0), 128);
+	write_palette(&demo_map_pal, bg_palette(0));
+	cpu_fast_set(&demo_map_low, (void *)screen_block_begin(8),
+		     sizeof(demo_map_low) / 4);
+	cpu_fast_set(&demo_map_high, (void *)screen_block_begin(9),
+		     sizeof(demo_map_high) / 4);
 }
 
 size_t tile_to_screen(struct vec2 pos)
@@ -127,20 +148,16 @@ void demo_render_one_highlight(volatile uint16_t *screen,
 
 void demo_render_tile_highlights(struct map_render_params *nonnull params,
 				 struct map_bit_vec *nonnull highlights,
-				 struct map_byte_vec *nonnull height_map)
+				 struct map_byte_vec *nonnull height_map,
+				 struct map_bit_vec *nonnull occlusion)
 {
-	for (size_t y = 4; y < 8; ++y) {
-		for (size_t x = 4; x < 8; ++x) {
-			struct vec2 pos = { .x = x, .y = y };
-			map_bit_vec_set(highlights, pos);
-		}
-	}
-	for (size_t y = 7; y >= 4; --y) {
-		height_map->bytes[y][4] = 7 - y;
-		height_map->bytes[y][5] = 7 - y;
-	}
+	volatile uint16_t *screen_low =
+		screen_block_begin(params->screen_block_low);
+	volatile uint16_t *screen_high =
+		screen_block_begin(params->screen_block_high);
+	cpu_fast_fill(0, (void *)screen_low, (16 * 32 * 32) / 4);
+	cpu_fast_fill(0, (void *)screen_high, (16 * 32 * 32) / 4);
 
-	volatile uint16_t *screen = screen_block_begin(params->screen_block);
 	volatile struct char_4bpp *chars =
 		character_block_begin(params->char_block);
 
@@ -163,7 +180,13 @@ void demo_render_tile_highlights(struct map_render_params *nonnull params,
 			}
 			struct vec2 tile_0_pos = to_tile_coord(pos);
 			tile_0_pos.y -= height_map->bytes[y][x];
-			demo_render_one_highlight(screen, tile_0_pos);
+			if (map_bit_vec_test(occlusion, pos)) {
+				demo_render_one_highlight(screen_low,
+							  tile_0_pos);
+			} else {
+				demo_render_one_highlight(screen_high,
+							  tile_0_pos);
+			}
 		}
 	}
 }
@@ -217,12 +240,32 @@ sprite_handle demo_alloc_cursor(void)
 }
 
 void demo_move_cursor(struct map_byte_vec *nonnull height_map,
+		      struct map_bit_vec *nonnull occlusion,
 		      sprite_handle cursor, struct vec2 pos, struct vec2 scroll)
 {
 	struct vec2 screen_coords = to_screen_coord(height_map, pos);
 	screen_coords.x -= scroll.x;
 	screen_coords.y -= scroll.y;
-	sprite_ref(cursor)->pos = screen_coords;
+	struct sprite *sprite = sprite_ref(cursor);
+	sprite->pos = screen_coords;
+
+//	sprite->priority[0] = 0;
+//	sprite->priority[1] = 0;
+//	sprite->priority[2] = 0;
+//	sprite->priority[3] = 0;
+//	if (map_bit_vec_test(occlusion, v2_add_xy(pos, 1, 0))) {
+//		sprite->priority[1] = 2;
+//		sprite->priority[3] = 2;
+//	} else if (map_bit_vec_test(occlusion, v2_add_xy(pos, 0, 1))) {
+//		sprite->priority[1] = 2;
+//		sprite->priority[2] = 2;
+//	} else if (map_bit_vec_test(occlusion, v2_add_xy(pos, -1, 0))) {
+//		sprite->priority[0] = 2;
+//		sprite->priority[2] = 2;
+//	} else if (map_bit_vec_test(occlusion, v2_add_xy(pos, 0, -1))) {
+//		sprite->priority[0] = 2;
+//		sprite->priority[3] = 2;
+//	}
 }
 
 const static struct sprite_object_def soldier_objs[4] = {

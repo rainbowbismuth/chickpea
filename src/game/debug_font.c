@@ -28,3 +28,24 @@ void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 			      PREP(TILE_PALETTE, palette);
 	}
 }
+
+sprite_handle
+write_debug_msg_sprite(const struct debug_font *nonnull font,
+		       const struct sprite_template *nonnull template,
+		       const char *nonnull msg)
+{
+	sprite_handle h = sprite_alloc(template);
+	volatile struct char_4bpp *vram = sprite_obj_vram(h);
+	write_palette(font->palette, obj_palette(template->palette));
+	size_t num_tiles = sprite_num_tiles(h);
+	size_t count = 0;
+	for (; *msg != '\0'; ++msg, ++vram, ++count) {
+		write_4bpp(&font->characters[(size_t)*msg], vram);
+	}
+	assert(count <= num_tiles);
+	if (count < num_tiles) {
+		cpu_fast_fill(0, (void *)vram,
+			      (num_tiles - count) * sizeof(*vram) / 4);
+	}
+	return h;
+}

@@ -91,6 +91,12 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 
 	size_t index = find_first_unused();
 	struct sprite_priv *sprite = &sprites[index];
+
+	// Skip over zero on allocation so that { 0 } is never a valid handle
+	if (sprite->generation == 0) {
+		sprite->generation++;
+	}
+
 	sprite_handle handle = { .index = index,
 				 .generation = sprite->generation };
 	sprite->used = true;
@@ -118,6 +124,13 @@ volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle)
 	return obj_tiles_vram(sprite->tile_handle);
 }
 
+size_t sprite_num_tiles(sprite_handle handle)
+{
+	assert(sprite_exists(handle));
+	struct sprite_priv *sprite = &sprites[handle.index];
+	return obj_tiles_count(sprite->tile_handle);
+}
+
 void sprite_drop(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
@@ -125,6 +138,7 @@ void sprite_drop(sprite_handle handle)
 	sprite->generation++;
 	sprite->used = false;
 	obj_tiles_drop(sprite->tile_handle);
+	allocated--;
 }
 
 static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,

@@ -14,6 +14,12 @@ void bit_vec_clear(uint8_t *nonnull vec, size_t length, size_t n)
 	vec[n / 8] &= ~(1 << (n % 8));
 }
 
+void bit_vec_toggle(uint8_t *nonnull vec, size_t length, size_t n)
+{
+	assert(n < length * 8);
+	vec[n / 8] ^= 1 << (n % 8);
+}
+
 bool bit_vec_test(uint8_t *nonnull vec, size_t length, size_t n)
 {
 	assert(n < length * 8);

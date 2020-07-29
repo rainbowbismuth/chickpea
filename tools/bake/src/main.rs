@@ -1,8 +1,16 @@
+use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
 use clap::Clap;
 use png::{BitDepth, ColorType};
+
+pub fn reverse_nibbles(mut n: u32) -> u32 {
+    n = (n & 0x0F0F0F0F) << 4 | (n & 0xF0F0F0F0) >> 4;
+    n = (n & 0x00FF00FF) << 8 | (n & 0xFF00FF00) >> 8;
+    n = (n & 0x0000FFFF) << 16 | (n & 0xFFFF0000) >> 16;
+    n
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -54,6 +62,30 @@ impl Character4BPP {
 
     pub const fn line(&self, y: usize) -> u32 {
         self.0[y]
+    }
+
+
+    pub fn flip_vertical(&self) -> Self {
+        Self([
+            self.0[7], self.0[6], self.0[5], self.0[4], self.0[3], self.0[2], self.0[1], self.0[0],
+        ])
+    }
+
+    pub fn flip_horizontal(&self) -> Self {
+        Self([
+            reverse_nibbles(self.0[0]),
+            reverse_nibbles(self.0[1]),
+            reverse_nibbles(self.0[2]),
+            reverse_nibbles(self.0[3]),
+            reverse_nibbles(self.0[4]),
+            reverse_nibbles(self.0[5]),
+            reverse_nibbles(self.0[6]),
+            reverse_nibbles(self.0[7]),
+        ])
+    }
+
+    pub fn flip_both(&self) -> Self {
+        self.flip_horizontal().flip_vertical()
     }
 }
 
@@ -214,6 +246,9 @@ struct Opts {
 enum SubCommand {
     #[clap(name = "4bpp")]
     Bake4BPP(Bake4BPP),
+
+    #[clap(name = "map")]
+    BakeTileMap(BakeTileMap),
 }
 
 #[derive(Clap)]
@@ -223,6 +258,21 @@ struct Bake4BPP {
 
     #[clap(short = 's')]
     swizzle: Option<String>,
+
+    #[clap(short = 'o')]
+    output: String,
+}
+
+#[derive(Clap)]
+struct BakeTileMap {
+    #[clap(short = 'h')]
+    high_csv: String,
+
+    #[clap(short = 'l')]
+    low_csv: String,
+
+    #[clap(short = 't')]
+    tile_set: String,
 
     #[clap(short = 'o')]
     output: String,
@@ -249,10 +299,10 @@ fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
     index_pattern
 }
 
-fn bake_4bpp(input: String, swizzle: Option<String>, output: String) -> io::Result<()> {
-    let img = Image::load_png(&input);
+fn bake_4bpp(args: Bake4BPP) -> io::Result<()> {
+    let img = Image::load_png(&args.input);
 
-    let out_tiles = if let Some(swizzle) = swizzle {
+    let out_tiles = if let Some(swizzle) = args.swizzle {
         let pattern = swizzle_to_pattern(swizzle);
 
         let mut swizzled_tiles = vec![Character4BPP::blank(); img.tiles.len()];
@@ -268,14 +318,130 @@ fn bake_4bpp(input: String, swizzle: Option<String>, output: String) -> io::Resu
         img.tiles
     };
 
-    let mut out_4bpp = PathBuf::from(&output);
+    let mut out_4bpp = PathBuf::from(&args.output);
     out_4bpp.set_extension("4bpp");
-    let mut out_pal = PathBuf::from(&output);
+    let mut out_pal = PathBuf::from(&args.output);
     out_pal.set_extension("pal");
-
 
     std::fs::write(out_4bpp, serialize(out_tiles.as_slice()))?;
     std::fs::write(out_pal, serialize(&img.palette))?;
+
+    Ok(())
+}
+
+#[derive(Copy, Clone)]
+struct Tile {
+    name: usize,
+    horizontal_flip: bool,
+    vertical_flip: bool,
+    /* TODO: Palettes? */
+}
+
+struct TileSet {
+    tiles: Vec<Character4BPP>,
+    mapping: HashMap<Character4BPP, Tile>,
+    original: HashMap<isize, Tile>,
+}
+
+impl TileSet {
+    pub fn new() -> Self {
+        let mut tile_set = Self {
+            tiles: vec![],
+            mapping: HashMap::new(),
+            original: HashMap::new(),
+        };
+        tile_set.add(-1, &Character4BPP::blank());
+        tile_set
+    }
+
+    pub fn add(&mut self, original: isize, character: &Character4BPP) {
+        if let Some(tile) = self.mapping.get(&character) {
+            self.original.insert(original, *tile);
+            return;
+        }
+        let idx = self.tiles.len();
+        self.tiles.push(*character);
+        let tile = Tile {
+            name: idx,
+            horizontal_flip: false,
+            vertical_flip: false,
+        };
+        self.mapping.insert(*character, tile);
+        self.original.insert(original, tile);
+        self.mapping.insert(character.flip_horizontal(), Tile {
+            name: idx,
+            horizontal_flip: true,
+            vertical_flip: false,
+        });
+        self.mapping.insert(character.flip_vertical(), Tile {
+            name: idx,
+            horizontal_flip: false,
+            vertical_flip: true,
+        });
+        self.mapping.insert(character.flip_both(), Tile {
+            name: idx,
+            horizontal_flip: true,
+            vertical_flip: true,
+        });
+    }
+
+    pub fn get(&self, original: isize) -> Option<Tile> {
+        self.original.get(&original).copied()
+    }
+}
+
+fn parse_tile_map_csv(data: String) -> Vec<isize> {
+    let mut out = vec![];
+    for line in data.split("\n") {
+        if line.is_empty() {
+            continue;
+        }
+        for val in line.split(",") {
+            let parsed: isize = val.parse().unwrap();
+            out.push(parsed);
+        }
+    }
+    out
+}
+
+fn tile_map_with_tile_set(tile_set: &TileSet, map: Vec<isize>) -> Vec<u16> {
+    let mut out = vec![];
+    for index in map {
+        let tile = tile_set.get(index).unwrap();
+        assert!(tile.name < 1024);
+        let val = (tile.name as u16) | (tile.horizontal_flip as u16) << 10 | (tile.vertical_flip as u16) << 11;
+        out.push(val);
+    }
+    out
+}
+
+fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
+    let img = Image::load_png(&args.tile_set);
+    let mut tile_set = TileSet::new();
+    for (i, character) in img.tiles.iter().enumerate() {
+        tile_set.add(i as isize, character);
+    }
+
+    let mut out_4bpp = PathBuf::from(&args.output);
+    out_4bpp.set_extension("4bpp");
+    let mut out_pal = PathBuf::from(&args.output);
+    out_pal.set_extension("pal");
+    std::fs::write(out_4bpp, serialize(tile_set.tiles.as_slice()))?;
+    std::fs::write(out_pal, serialize(&img.palette))?;
+
+    let tile_map_low = parse_tile_map_csv(std::fs::read_to_string(&args.low_csv)?);
+    let tile_map_high = parse_tile_map_csv(std::fs::read_to_string(&args.high_csv)?);
+
+    let low_tiles = tile_map_with_tile_set(&tile_set, tile_map_low);
+    let high_tiles = tile_map_with_tile_set(&tile_set, tile_map_high);
+
+    let mut out_low = PathBuf::from(&args.output);
+    out_low.set_extension("low");
+    std::fs::write(out_low, serialize(low_tiles.as_slice()))?;
+
+    let mut out_high = PathBuf::from(&args.output);
+    out_high.set_extension("high");
+    std::fs::write(out_high, serialize(high_tiles.as_slice()))?;
 
     Ok(())
 }
@@ -284,6 +450,7 @@ fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
     match opts.sub_cmd {
-        SubCommand::Bake4BPP(bake) => bake_4bpp(bake.input, bake.swizzle, bake.output)
+        SubCommand::Bake4BPP(args) => bake_4bpp(args),
+        SubCommand::BakeTileMap(args) => bake_tilemap(args)
     }
 }

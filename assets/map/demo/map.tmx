@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.4" tiledversion="1.4.1" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextlayerid="3" nextobjectid="1">
+ <editorsettings>
+  <export target="map.csv" format="csv"/>
+ </editorsettings>
+ <tileset firstgid="1" source="tileset.tsx"/>
+ <layer id="1" name="low" width="32" height="32">
+  <data encoding="base64" compression="zstd">
+   KLUv/WAADx0OACJPJC1wbWsAAIB5laIVnhjFvEpCkh8KIAIzQAQDJPMfGcTd3d13l93dfeD/////EH653MY1OKhJw3LW9qUcpfq6kINkHOMX23YKL8tGLnKCD9zgBRPHpO8f9+je8ZObvOQkmsUrSjzCO8QfHKzVGb5whYt6QsOvWwKfHnCAI/zg6KKHDvrnnnfOKX1zzTPH/HLLKweAhKDBqkmEtIZcAUACIxhQZz23qLrl3GbChVzuOF1M3EIQ9xS1B2eNkEWCAh+auQ331ev2QgvAIX2PwVVDOr/6GmWsC5C9SsuEllaLWyN3c24aiEVA51G3SbEizmpzzRVZ4piGKUVkjeQFOpPsj+wVZH6ITeJOCGSmDRS+hcg9cAKYg3xFxBmZJ+QaAicIcmF8Bz9SpNWyI3M5Gulgz3ImEJkJIj+T7gO7/SiPj1gjdwMysrBZxHtgQN/YN9lsIG5rZIsWR0iYmNsDDuNXA95ulrxZYgS7JiJrF3EO8pqbpZERa8QACCS9owHCMkBPF2YjJVo2v+i537KHzfC9ALMjvpwWHbDLpg+RKc48scV9EIIuSOMRp0ecaAkWapbAMd6dWIILMiofU+976i+qywc=
+  </data>
+ </layer>
+ <layer id="2" name="high" width="32" height="32">
+  <data encoding="base64" compression="zstd">
+   KLUv/WAAD4UEALQDAAB5AAAAegBXAAAAWAAAAFkAAABaAJsAAACqAAAApwCVAAAAqAAAAKlrAAAAbABlAAAAZgBVAAAAVpwioICBBBYkAIOJoBDuudTLyK5qP6WjJapVhQzje5oyADuIZwNKpCaIVqVWd1pqJ87APC7uYqWiMpLRi/hXLYzaU7RGuvUZJ+peMiHmSdomD/zPBw==
+  </data>
+ </layer>
+</map>
