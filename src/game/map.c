@@ -15,7 +15,7 @@ bool inside_map(struct vec2 pos)
 
 struct vec2 to_tile_coord(struct vec2 pos)
 {
-	struct vec2 coords = { .x = 16 + (pos.x - pos.y) * 2,
+	struct vec2 coords = { .x = 15 + (pos.x - pos.y) * 2,
 			       .y = pos.x + pos.y };
 	return coords;
 }
@@ -146,6 +146,29 @@ void demo_render_one_highlight(volatile uint16_t *screen,
 		TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
 }
 
+void demo_gross_fix_up_step(volatile uint16_t *screen_high, struct vec2 t_0_pos)
+{
+	if (demo_map_high[t_0_pos.y][t_0_pos.x] &&
+	    demo_map_high[t_0_pos.y][t_0_pos.x + 1] &&
+	    !demo_map_high[t_0_pos.y + 1][t_0_pos.x] &&
+	    !demo_map_high[t_0_pos.y][t_0_pos.x + 2]) {
+		screen_high[tile_to_screen(t_0_pos)] =
+			PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal);
+		screen_high[tile_to_screen(t_0_pos) + 1] =
+			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal);
+	} else if (demo_map_high[t_0_pos.y][t_0_pos.x + 2] &&
+		   demo_map_high[t_0_pos.y][t_0_pos.x + 3] &&
+		   !demo_map_high[t_0_pos.y + 1][t_0_pos.x + 2] &&
+		   !demo_map_high[t_0_pos.y][t_0_pos.x + 1]) {
+		screen_high[tile_to_screen(t_0_pos) + 2] =
+			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal) |
+			TILE_HORIZONTAL_FLIP;
+		screen_high[tile_to_screen(t_0_pos) + 3] =
+			PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal) |
+			TILE_HORIZONTAL_FLIP;
+	}
+}
+
 void demo_render_tile_highlights(struct map_render_params *nonnull params,
 				 struct map_bit_vec *nonnull highlights,
 				 struct map_byte_vec *nonnull height_map,
@@ -178,14 +201,19 @@ void demo_render_tile_highlights(struct map_render_params *nonnull params,
 			if (!map_bit_vec_test(highlights, pos)) {
 				continue;
 			}
-			struct vec2 tile_0_pos = to_tile_coord(pos);
-			tile_0_pos.y -= height_map->bytes[y][x];
-			if (map_bit_vec_test(occlusion, pos)) {
-				demo_render_one_highlight(screen_low,
-							  tile_0_pos);
+			struct vec2 t_0_pos = to_tile_coord(pos);
+			t_0_pos.y -= height_map->bytes[y][x];
+
+			if (demo_map_high[t_0_pos.y][t_0_pos.x + 2] &&
+			    demo_map_high[t_0_pos.y][t_0_pos.x + 3] &&
+			    demo_map_high[t_0_pos.y + 1][t_0_pos.x] &&
+			    demo_map_high[t_0_pos.y + 1][t_0_pos.x + 1] &&
+			    demo_map_high[t_0_pos.y + 1][t_0_pos.x + 2] &&
+			    demo_map_high[t_0_pos.y + 1][t_0_pos.x + 3]) {
+				demo_render_one_highlight(screen_high, t_0_pos);
 			} else {
-				demo_render_one_highlight(screen_high,
-							  tile_0_pos);
+				demo_render_one_highlight(screen_low, t_0_pos);
+				demo_gross_fix_up_step(screen_high, t_0_pos);
 			}
 		}
 	}
@@ -248,24 +276,6 @@ void demo_move_cursor(struct map_byte_vec *nonnull height_map,
 	screen_coords.y -= scroll.y;
 	struct sprite *sprite = sprite_ref(cursor);
 	sprite->pos = screen_coords;
-
-//	sprite->priority[0] = 0;
-//	sprite->priority[1] = 0;
-//	sprite->priority[2] = 0;
-//	sprite->priority[3] = 0;
-//	if (map_bit_vec_test(occlusion, v2_add_xy(pos, 1, 0))) {
-//		sprite->priority[1] = 2;
-//		sprite->priority[3] = 2;
-//	} else if (map_bit_vec_test(occlusion, v2_add_xy(pos, 0, 1))) {
-//		sprite->priority[1] = 2;
-//		sprite->priority[2] = 2;
-//	} else if (map_bit_vec_test(occlusion, v2_add_xy(pos, -1, 0))) {
-//		sprite->priority[0] = 2;
-//		sprite->priority[2] = 2;
-//	} else if (map_bit_vec_test(occlusion, v2_add_xy(pos, 0, -1))) {
-//		sprite->priority[0] = 2;
-//		sprite->priority[3] = 2;
-//	}
 }
 
 const static struct sprite_object_def soldier_objs[4] = {
@@ -303,6 +313,7 @@ sprite_handle demo_alloc_soldier(void)
 }
 
 void demo_move_soldier(struct map_byte_vec *nonnull height_map,
+		       struct map_bit_vec *nonnull occlusion,
 		       sprite_handle soldier, struct vec2 pos,
 		       struct vec2 scroll)
 {
@@ -311,7 +322,15 @@ void demo_move_soldier(struct map_byte_vec *nonnull height_map,
 	screen_coords.y -= scroll.y;
 	screen_coords.x += 8;
 	screen_coords.y -= (32 - 11);
-	sprite_ref(soldier)->pos = screen_coords;
+	struct sprite *sprite = sprite_ref(soldier);
+	sprite->pos = screen_coords;
+	for (size_t i = 0; i < 4; ++i) {
+		sprite->priority[i] = 2;
+	}
+	if (map_bit_vec_test(occlusion, pos)) {
+		sprite->priority[2] = 3;
+		sprite->priority[3] = 3;
+	}
 }
 
 void demo_soldier_frame(sprite_handle soldier, enum facing facing,

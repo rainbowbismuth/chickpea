@@ -65,6 +65,7 @@ void demo_move_cursor(struct map_byte_vec *nonnull height_map,
 
 sprite_handle demo_alloc_soldier(void);
 void demo_move_soldier(struct map_byte_vec *nonnull height_map,
+		       struct map_bit_vec *nonnull occlusion,
 		       sprite_handle soldier, struct vec2 pos,
 		       struct vec2 scroll);
 void demo_soldier_frame(sprite_handle soldier, enum facing facing,

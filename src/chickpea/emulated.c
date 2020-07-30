@@ -4,8 +4,10 @@
 #include "SDL.h"
 #include "SDL_timer.h"
 
-#define PRIORITY_LAYER FIELD(0, 6)
-#define PRIORITY_UPPER FIELD(6, 3)
+#define PRIORITY_2ND_TARGET BIT(0)
+#define PRIORITY_1ST_TARGET BIT(1)
+#define PRIORITY_LAYER	    FIELD(3, 6)
+#define PRIORITY_UPPER	    FIELD(9, 3)
 
 uint16_t reg_dispcnt = 0;
 uint16_t reg_dispstat = 0;
@@ -90,24 +92,36 @@ int main(int argc, const char *nonnull argv[])
 
 static void clear_line(uint16_t bg_color, uint16_t y)
 {
+	uint16_t blend_target_bits = 0;
+	if (GET(BLDCNT_1ST_TARGET_BD, REG_BLDCNT)) {
+		blend_target_bits |= PRIORITY_1ST_TARGET;
+	}
+	if (GET(BLDCNT_2ND_TARGET, REG_BLDCNT)) {
+		blend_target_bits |= PRIORITY_2ND_TARGET;
+	}
 	for (size_t i = 0; i < ARRAY_SIZE(screen_color[0]); ++i) {
 		screen_color[y][i] = bg_color;
 		screen_priority[y][i] = PREP(PRIORITY_UPPER, 0x3) |
-					PREP(PRIORITY_LAYER, 1 << 5);
+					PREP(PRIORITY_LAYER, 1 << 5) |
+					blend_target_bits;
 	}
 }
 
 static void draw_pixel(uint32_t x, uint32_t y, uint16_t color,
 		       uint16_t priority)
 {
-	if (priority < screen_priority[y][x]) {
+	uint16_t current = screen_priority[y][x];
+	if (priority >= current) {
+		color = screen_color[y][x];
+		screen_priority[y][x] =
+			current & ~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
+	} else {
 		screen_priority[y][x] = priority;
-		screen_color[y][x] = color;
 	}
+	screen_color[y][x] = color;
 }
 
 struct blend_alpha_params {
-	uint16_t target_mask;
 	uint16_t src_weight;
 	uint16_t dst_weight;
 };
@@ -117,19 +131,26 @@ draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
 		       uint16_t priority,
 		       const struct blend_alpha_params *nonnull params)
 {
-	uint16_t target_priority = screen_priority[y][x];
-	if (priority < target_priority) {
-		screen_priority[y][x] = priority;
-		uint32_t target_layer = GET(PRIORITY_LAYER, target_priority);
-		if ((target_layer & params->target_mask) != 0) {
-			screen_color[y][x] = additive_blend(color,
-							    params->src_weight,
-							    screen_color[y][x],
-							    params->dst_weight);
+	uint16_t current = screen_priority[y][x];
+	if (priority >= current) {
+		if (current & PRIORITY_1ST_TARGET &&
+		    priority & PRIORITY_2ND_TARGET) {
+			color = additive_blend(screen_color[y][x],
+					       params->src_weight, color,
+					       params->dst_weight);
+			screen_priority[y][x] =
+				priority &
+				~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 		} else {
-			screen_color[y][x] = color;
+			color = screen_color[y][x];
+			screen_priority[y][x] =
+				current &
+				~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 		}
+	} else {
+		screen_priority[y][x] = priority & ~PRIORITY_2ND_TARGET;
 	}
+	screen_color[y][x] = color;
 }
 
 static void draw_line(uint32_t x, uint32_t y, uint32_t line,
@@ -141,10 +162,8 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 	uint16_t blend_control = REG_BLDCNT;
 
 	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA &&
-	    (GET(PRIORITY_LAYER, priority) &
-	     GET(BLDCNT_1ST_TARGET, blend_control)) != 0) {
+	    GET(PRIORITY_2ND_TARGET, priority)) {
 		struct blend_alpha_params params = {
-			.target_mask = GET(BLDCNT_2ND_TARGET, blend_control),
 			.src_weight = GET(BLDALPHA_1ST_WEIGHT, REG_BLDALPHA),
 			.dst_weight = GET(BLDALPHA_2ND_WEIGHT, REG_BLDALPHA)
 		};
@@ -187,6 +206,10 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 
 static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {
+	if ((GET(DISPCNT_SCREEN_BG_ENABLED, REG_DISPCNT) & (1 << bg)) == 0) {
+		return;
+	}
+
 	uint32_t scroll_x = reg_bg_scrolls_x[bg];
 	uint32_t scroll_y = 0xFFFF - reg_bg_scrolls_y[bg];
 
@@ -238,16 +261,23 @@ struct background_array {
 static void sort_backgrounds_by_priority(struct background_array *arr)
 {
 	/*
-	 * Standard insertion sort. Higher priority values first.
+	 * Standard insertion sort. Lower priority backgrounds come first
+	 * so that rendering is top-most pixel to back-most pixel.
 	 */
 	size_t i = 1;
 	while (i < ARRAY_SIZE(arr->bgs)) {
 		size_t j = i;
-		uint16_t j_m1_priority =
-			GET(BGCNT_PRIORITY, *reg_bg_control(arr->bgs[j - 1]));
-		uint16_t j_priority =
-			GET(BGCNT_PRIORITY, *reg_bg_control(arr->bgs[j]));
-		while (j > 0 && j_priority > j_m1_priority) {
+
+		/* (╯°□°)╯︵ ┻━┻ sorry for huge conditional */
+		while (j > 0 &&
+		       (PREP(PRIORITY_UPPER,
+			     GET(BGCNT_PRIORITY,
+				 *reg_bg_control(arr->bgs[j - 1]))) |
+			PREP(PRIORITY_LAYER, arr->bgs[j - 1])) >
+			       (PREP(PRIORITY_UPPER,
+				     GET(BGCNT_PRIORITY,
+					 *reg_bg_control(arr->bgs[j]))) |
+				PREP(PRIORITY_LAYER, arr->bgs[j]))) {
 			enum background tmp = arr->bgs[j - 1];
 			arr->bgs[j - 1] = arr->bgs[j];
 			arr->bgs[j] = tmp;
@@ -305,6 +335,13 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 	uint16_t priority =
 		PREP(PRIORITY_UPPER, GET(OBJA2_PRIORITY, obj->attr_2));
 
+	if (GET(BLDCNT_1ST_TARGET_OBJ, REG_BLDCNT)) {
+		priority |= PRIORITY_1ST_TARGET;
+	}
+	if (GET(BLDCNT_2ND_TARGET_OBJ, REG_BLDCNT)) {
+		priority |= PRIORITY_2ND_TARGET;
+	}
+
 	enum obj_shape shape = GET(OBJA0_SHAPE, obj->attr_0);
 	enum obj_size size = GET(OBJA1_SIZE, obj->attr_1);
 	bool vertical_flip = GET(OBJA1_VERTICAL_FLIP, obj->attr_1);
@@ -330,6 +367,19 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 	}
 }
 
+static void draw_objects_with_bg_priority(uint32_t y, uint8_t bg_priority)
+{
+	if (!GET(DISPCNT_SCREEN_DISPLAY_OBJ, REG_DISPCNT)) {
+		return;
+	}
+	for (size_t i = 0; i < ARRAY_SIZE(obj_attr_mem.entries); ++i) {
+		struct oam_entry *obj = &obj_attr_mem.entries[i];
+		if (GET(OBJA2_PRIORITY, obj->attr_2) == bg_priority) {
+			draw_object(y, obj);
+		}
+	}
+}
+
 static void render_entire_line(uint32_t y)
 {
 	uint16_t bg_color = bg_palette(0)->color[0];
@@ -338,27 +388,30 @@ static void render_entire_line(uint32_t y)
 	struct background_array arr = { .bgs = { BG0, BG1, BG2, BG3 } };
 	sort_backgrounds_by_priority(&arr);
 
-	uint16_t display_control = REG_DISPCNT;
+	uint8_t object_bg_priority = 0;
+	draw_objects_with_bg_priority(y, object_bg_priority);
 
 	for (size_t i = 0; i < ARRAY_SIZE(arr.bgs); ++i) {
 		enum background bg = arr.bgs[i];
-		if ((GET(DISPCNT_SCREEN_BG_ENABLED, display_control) &
-		     (1 << bg)) == 0) {
-			continue;
-		}
+
 		uint16_t bg_control = *reg_bg_control(bg);
 		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
 		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
 				    (1 << bg);
+
+		if (GET(BLDCNT_1ST_TARGET, REG_BLDCNT) & (1 << bg)) {
+			priority |= PRIORITY_1ST_TARGET;
+		}
+		if (GET(BLDCNT_2ND_TARGET, REG_BLDCNT) & (1 << bg)) {
+			priority |= PRIORITY_2ND_TARGET;
+		}
+
+		while (object_bg_priority < bg_priority) {
+			object_bg_priority++;
+			draw_objects_with_bg_priority(y, object_bg_priority);
+		}
+
 		draw_background(bg, y, priority);
-	}
-
-	if (!GET(DISPCNT_SCREEN_DISPLAY_OBJ, display_control)) {
-		return;
-	}
-
-	for (size_t i = 0; i < ARRAY_SIZE(obj_attr_mem.entries); ++i) {
-		draw_object(y, &obj_attr_mem.entries[i]);
 	}
 }
 

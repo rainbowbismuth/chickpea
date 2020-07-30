@@ -7,7 +7,7 @@
 #include "game/screen.h"
 #include "game/debug_font.h"
 
-static struct vec2 bg3_scroll = { 0 };
+static struct vec2 bg_scroll = { 0 };
 static struct vec2 cursor_pos = { .x = 6, .y = 6 };
 static uint32_t frame = 0;
 static sprite_handle cursor = { 0 };
@@ -17,9 +17,8 @@ extern struct map_bit_vec demo_map_walk;
 extern struct map_byte_vec demo_map_height;
 extern struct map_bit_vec demo_map_occlusion;
 struct map_render_params map_render_params = { .char_block = 3,
-					       .screen_block_low = 3 * 8,
-					       .screen_block_high =
-						       (3 * 8) - 1 };
+					       .screen_block_low = 10,
+					       .screen_block_high = 11 };
 static struct debug_font demo_font = {
 	.characters = debug_font_4bpp,
 	.palette = &debug_font_pal,
@@ -107,38 +106,38 @@ void demo_update(void)
 		}
 	} else {
 		if (input_held(KEYINPUT_UP)) {
-			bg3_scroll.y++;
+			bg_scroll.y++;
 		}
 		if (input_held(KEYINPUT_DOWN)) {
-			bg3_scroll.y--;
+			bg_scroll.y--;
 		}
 		if (input_held(KEYINPUT_LEFT)) {
-			bg3_scroll.x++;
+			bg_scroll.x++;
 		}
 		if (input_held(KEYINPUT_RIGHT)) {
-			bg3_scroll.x--;
+			bg_scroll.x--;
 		}
 	}
-	set_bg_scroll_x(BG0, bg3_scroll.x - 8);
-	set_bg_scroll_y(BG0, bg3_scroll.y);
-	set_bg_scroll_x(BG1, bg3_scroll.x - 8);
-	set_bg_scroll_y(BG1, bg3_scroll.y);
-	set_bg_scroll_x(BG2, bg3_scroll.x);
-	set_bg_scroll_y(BG2, bg3_scroll.y);
-	set_bg_scroll_x(BG3, bg3_scroll.x);
-	set_bg_scroll_y(BG3, bg3_scroll.y);
+	set_bg_scroll_x(BG0, bg_scroll.x);
+	set_bg_scroll_y(BG0, bg_scroll.y);
+	set_bg_scroll_x(BG1, bg_scroll.x);
+	set_bg_scroll_y(BG1, bg_scroll.y);
+	set_bg_scroll_x(BG2, bg_scroll.x);
+	set_bg_scroll_y(BG2, bg_scroll.y);
+	set_bg_scroll_x(BG3, bg_scroll.x);
+	set_bg_scroll_y(BG3, bg_scroll.y);
 
 	demo_move_cursor(&demo_map_height, &demo_map_occlusion, cursor,
-			 cursor_pos, bg3_scroll);
+			 cursor_pos, bg_scroll);
 
-	demo_move_soldier(&demo_map_height, soldiers[0],
-			  (struct vec2){ .x = 4, .y = 4 }, bg3_scroll);
-	demo_move_soldier(&demo_map_height, soldiers[1],
-			  (struct vec2){ .x = 6, .y = 4 }, bg3_scroll);
-	demo_move_soldier(&demo_map_height, soldiers[2],
-			  (struct vec2){ .x = 4, .y = 6 }, bg3_scroll);
-	demo_move_soldier(&demo_map_height, soldiers[3],
-			  (struct vec2){ .x = 6, .y = 6 }, bg3_scroll);
+	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[0],
+			  (struct vec2){ .x = 8, .y = 9 }, bg_scroll);
+	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[1],
+			  (struct vec2){ .x = 13, .y = 9 }, bg_scroll);
+	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[2],
+			  (struct vec2){ .x = 7, .y = 10 }, bg_scroll);
+	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[3],
+			  (struct vec2){ .x = 11, .y = 11 }, bg_scroll);
 
 	uint32_t walk_c[4] = { 0, 1, 2, 1 };
 	uint32_t unit_frame = walk_c[(frame / 12) % ARRAY_SIZE(walk_c)];
@@ -213,26 +212,29 @@ void game_main(void)
 
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
-	*reg_bg_control(BG0) = PREP(BGCNT_SCREEN_BLOCK, 8) |
-			       PREP(BGCNT_PRIORITY, 3);
-
-	*reg_bg_control(BG1) = PREP(BGCNT_SCREEN_BLOCK, 9) |
-			       PREP(BGCNT_PRIORITY, 1);
-
-	REG_BLDCNT = BLDCNT_1ST_TARGET_BG3 | BLDCNT_1ST_TARGET_BG2 |
-		     BLDCNT_2ND_TARGET_BG1 | BLDCNT_2ND_TARGET_BG0 |
-		     BLDCNT_2ND_TARGET_BD | PREP(BLDCNT_EFFECT, BLEND_ALPHA);
-	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
-		       PREP(BLDALPHA_2ND_WEIGHT, 8);
-
-	*reg_bg_control(BG3) =
-		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
-		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_high);
-
-	*reg_bg_control(BG2) =
+	*reg_bg_control(BG0) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
 		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_low) |
+		PREP(BGCNT_PRIORITY, 3);
+
+	*reg_bg_control(BG1) =
+		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
+		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_high) |
 		PREP(BGCNT_PRIORITY, 2);
+
+	*reg_bg_control(BG2) = PREP(BGCNT_SCREEN_BLOCK, 8) |
+			       PREP(BGCNT_PRIORITY, 3);
+
+	*reg_bg_control(BG3) = PREP(BGCNT_SCREEN_BLOCK, 9) |
+			       PREP(BGCNT_PRIORITY, 2);
+
+	REG_BLDCNT = BLDCNT_1ST_TARGET_BG0 | BLDCNT_1ST_TARGET_BG1 |
+		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BG1 |
+		     BLDCNT_2ND_TARGET_BG2 | BLDCNT_2ND_TARGET_BG3 |
+		     BLDCNT_2ND_TARGET_OBJ | BLDCNT_2ND_TARGET_BD |
+		     PREP(BLDCNT_EFFECT, BLEND_ALPHA);
+	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
+		       PREP(BLDALPHA_2ND_WEIGHT, 8);
 
 	demo_init();
 
@@ -242,7 +244,7 @@ void game_main(void)
 
 	for (size_t i = 0; i < ARRAY_SIZE(soldiers); ++i) {
 		soldiers[i] = demo_alloc_soldier();
-		//		sprite_ref(soldiers[i])->enabled = true;
+		sprite_ref(soldiers[i])->enabled = true;
 	}
 	sprite_execute_frame_copies();
 
