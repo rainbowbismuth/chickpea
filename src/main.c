@@ -75,15 +75,6 @@ void demo_update(void)
 			bg_scroll.x--;
 		}
 	}
-	set_bg_scroll_x(BG0, bg_scroll.x);
-	set_bg_scroll_y(BG0, bg_scroll.y);
-	set_bg_scroll_x(BG1, bg_scroll.x);
-	set_bg_scroll_y(BG1, bg_scroll.y);
-	set_bg_scroll_x(BG2, bg_scroll.x);
-	set_bg_scroll_y(BG2, bg_scroll.y);
-	set_bg_scroll_x(BG3, bg_scroll.x);
-	set_bg_scroll_y(BG3, bg_scroll.y);
-
 	demo_move_cursor(&demo_map, cursor, cursor_pos, bg_scroll);
 	demo_move_pointer(&demo_map, pointer, cursor_pos, bg_scroll, frame);
 
@@ -113,6 +104,15 @@ void demo_on_horizontal_blank(void)
 
 void demo_on_vertical_blank(void)
 {
+	set_bg_scroll_x(BG0, bg_scroll.x);
+	set_bg_scroll_y(BG0, bg_scroll.y);
+	set_bg_scroll_x(BG1, bg_scroll.x);
+	set_bg_scroll_y(BG1, bg_scroll.y);
+	set_bg_scroll_x(BG2, bg_scroll.x);
+	set_bg_scroll_y(BG2, bg_scroll.y);
+	set_bg_scroll_x(BG3, bg_scroll.x);
+	set_bg_scroll_y(BG3, bg_scroll.y);
+
 	demo_rotate_highlight_palette(frame);
 
 	sprite_execute_frame_copies();
