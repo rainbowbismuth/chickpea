@@ -20,8 +20,8 @@ struct vec2 to_tile_coord(struct vec2 pos)
 	return coords;
 }
 
-struct vec2 to_screen_coord(struct map_byte_vec *nonnull height_map,
-			    struct vec2 pos)
+static struct vec2
+to_screen_coord(const struct map_byte_vec *nonnull height_map, struct vec2 pos)
 {
 	assert(inside_map(pos));
 	uint8_t height = height_map->bytes[pos.y][pos.x];
@@ -60,10 +60,19 @@ static const size_t top_left_together[2] = { 3, 4 };
 extern struct char_4bpp tile_highlight_4bpp[2];
 extern struct palette tile_highlight_pal;
 
-extern uint16_t demo_map_low[32][32];
-extern uint16_t demo_map_high[32][32];
+extern struct map_tiles demo_map_low;
+extern struct map_tiles demo_map_high;
+extern struct map_byte_vec demo_map_height;
+extern struct map_byte_vec demo_map_attributes;
 extern struct char_4bpp demo_map_4bpp[];
 extern struct palette demo_map_pal;
+
+struct map demo_map = {
+	.lower = &demo_map_low,
+	.upper = &demo_map_high,
+	.height = &demo_map_height,
+	.attributes = &demo_map_attributes,
+};
 
 void demo_init(void)
 {
@@ -146,20 +155,21 @@ void demo_render_one_highlight(volatile uint16_t *screen,
 		TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
 }
 
-void demo_gross_fix_up_step(volatile uint16_t *screen_high, struct vec2 t_0_pos)
+void demo_gross_fix_up_step(struct map *nonnull map,
+			    volatile uint16_t *screen_high, struct vec2 t_0_pos)
 {
-	if (demo_map_high[t_0_pos.y][t_0_pos.x] &&
-	    demo_map_high[t_0_pos.y][t_0_pos.x + 1] &&
-	    !demo_map_high[t_0_pos.y + 1][t_0_pos.x] &&
-	    !demo_map_high[t_0_pos.y][t_0_pos.x + 2]) {
+	if (map->upper->tiles[t_0_pos.y][t_0_pos.x] &&
+	    map->upper->tiles[t_0_pos.y][t_0_pos.x + 1] &&
+	    !map->upper->tiles[t_0_pos.y + 1][t_0_pos.x] &&
+	    !map->upper->tiles[t_0_pos.y][t_0_pos.x + 2]) {
 		screen_high[tile_to_screen(t_0_pos)] =
 			PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal);
 		screen_high[tile_to_screen(t_0_pos) + 1] =
 			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal);
-	} else if (demo_map_high[t_0_pos.y][t_0_pos.x + 2] &&
-		   demo_map_high[t_0_pos.y][t_0_pos.x + 3] &&
-		   !demo_map_high[t_0_pos.y + 1][t_0_pos.x + 2] &&
-		   !demo_map_high[t_0_pos.y][t_0_pos.x + 1]) {
+	} else if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2] &&
+		   map->upper->tiles[t_0_pos.y][t_0_pos.x + 3] &&
+		   !map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2] &&
+		   !map->upper->tiles[t_0_pos.y][t_0_pos.x + 1]) {
 		screen_high[tile_to_screen(t_0_pos) + 2] =
 			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal) |
 			TILE_HORIZONTAL_FLIP;
@@ -169,10 +179,9 @@ void demo_gross_fix_up_step(volatile uint16_t *screen_high, struct vec2 t_0_pos)
 	}
 }
 
-void demo_render_tile_highlights(struct map_render_params *nonnull params,
-				 struct map_bit_vec *nonnull highlights,
-				 struct map_byte_vec *nonnull height_map,
-				 struct map_bit_vec *nonnull occlusion)
+void demo_render_tile_highlights(struct map *nonnull map,
+				 struct map_render_params *nonnull params,
+				 struct map_bit_vec *nonnull highlights)
 {
 	volatile uint16_t *screen_low =
 		screen_block_begin(params->screen_block_low);
@@ -202,18 +211,19 @@ void demo_render_tile_highlights(struct map_render_params *nonnull params,
 				continue;
 			}
 			struct vec2 t_0_pos = to_tile_coord(pos);
-			t_0_pos.y -= height_map->bytes[y][x];
+			t_0_pos.y -= map->height->bytes[y][x];
 
-			if (demo_map_high[t_0_pos.y][t_0_pos.x + 2] &&
-			    demo_map_high[t_0_pos.y][t_0_pos.x + 3] &&
-			    demo_map_high[t_0_pos.y + 1][t_0_pos.x] &&
-			    demo_map_high[t_0_pos.y + 1][t_0_pos.x + 1] &&
-			    demo_map_high[t_0_pos.y + 1][t_0_pos.x + 2] &&
-			    demo_map_high[t_0_pos.y + 1][t_0_pos.x + 3]) {
+			if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2] &&
+			    map->upper->tiles[t_0_pos.y][t_0_pos.x + 3] &&
+			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x] &&
+			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 1] &&
+			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2] &&
+			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 3]) {
 				demo_render_one_highlight(screen_high, t_0_pos);
 			} else {
 				demo_render_one_highlight(screen_low, t_0_pos);
-				demo_gross_fix_up_step(screen_high, t_0_pos);
+				demo_gross_fix_up_step(map, screen_high,
+						       t_0_pos);
 			}
 		}
 	}
@@ -267,11 +277,10 @@ sprite_handle demo_alloc_cursor(void)
 	return h;
 }
 
-void demo_move_cursor(struct map_byte_vec *nonnull height_map,
-		      struct map_bit_vec *nonnull occlusion,
-		      sprite_handle cursor, struct vec2 pos, struct vec2 scroll)
+void demo_move_cursor(struct map *nonnull map, sprite_handle cursor,
+		      struct vec2 pos, struct vec2 scroll)
 {
-	struct vec2 screen_coords = to_screen_coord(height_map, pos);
+	struct vec2 screen_coords = to_screen_coord(map->height, pos);
 	screen_coords.x -= scroll.x;
 	screen_coords.y -= scroll.y;
 	struct sprite *sprite = sprite_ref(cursor);
@@ -312,12 +321,10 @@ sprite_handle demo_alloc_soldier(void)
 	return sprite_alloc(&soldier_template);
 }
 
-void demo_move_soldier(struct map_byte_vec *nonnull height_map,
-		       struct map_bit_vec *nonnull occlusion,
-		       sprite_handle soldier, struct vec2 pos,
-		       struct vec2 scroll)
+void demo_move_soldier(struct map *nonnull map, sprite_handle soldier,
+		       struct vec2 pos, struct vec2 scroll)
 {
-	struct vec2 screen_coords = to_screen_coord(height_map, pos);
+	struct vec2 screen_coords = to_screen_coord(map->height, pos);
 	screen_coords.x -= scroll.x;
 	screen_coords.y -= scroll.y;
 	screen_coords.x += 8;
@@ -327,9 +334,20 @@ void demo_move_soldier(struct map_byte_vec *nonnull height_map,
 	for (size_t i = 0; i < 4; ++i) {
 		sprite->priority[i] = 2;
 	}
-	if (map_bit_vec_test(occlusion, pos)) {
-		sprite->priority[2] = 3;
-		sprite->priority[3] = 3;
+
+	uint8_t attr = map->attributes->bytes[pos.y][pos.x];
+
+	size_t bottom_left = 2;
+	size_t bottom_right = 3;
+	if (sprite->flip_horizontal) {
+		bottom_left = 3;
+		bottom_right = 2;
+	}
+	if (attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
+		sprite->priority[bottom_left] = 3;
+	}
+	if (attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
+		sprite->priority[bottom_right] = 3;
 	}
 }
 

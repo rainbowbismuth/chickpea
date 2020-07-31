@@ -21,5 +21,4 @@ _\name:
     include_bin demo_map_low, "../baked/map/demo/map.low"
     include_bin demo_map_high, "../baked/map/demo/map.high"
     include_bin demo_map_height, "../baked/map/demo/map.height"
-    include_bin demo_map_occlusion, "../baked/map/demo/map.occlusion"
-    include_bin demo_map_walk, "../baked/map/demo/map.walk"
+    include_bin demo_map_attributes, "../baked/map/demo/map.attributes"

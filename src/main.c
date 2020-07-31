@@ -13,9 +13,6 @@ static uint32_t frame = 0;
 static sprite_handle cursor = { 0 };
 static sprite_handle soldiers[4] = { 0 };
 static sprite_handle height_msg = { 0 };
-extern struct map_bit_vec demo_map_walk;
-extern struct map_byte_vec demo_map_height;
-extern struct map_bit_vec demo_map_occlusion;
 struct map_render_params map_render_params = { .char_block = 3,
 					       .screen_block_low = 10,
 					       .screen_block_high = 11 };
@@ -38,63 +35,12 @@ static struct sprite_template height_msg_template = {
 	.objects = height_msg_objs
 };
 
-static bool dirty_highlights = false;
-
-#ifndef BUILD_GBA
-#include <stdio.h>
-bool desktop_only_inputs(void)
-{
-	if (input_pressed(KEYINPUT_BUTTON_Y)) {
-		FILE *f = fopen("./baked/map/demo/map.height", "wb");
-		fwrite(&demo_map_height, 1, sizeof(demo_map_height), f);
-		fclose(f);
-		f = fopen("./baked/map/demo/map.occlusion", "wb");
-		fwrite(&demo_map_occlusion, 1, sizeof(demo_map_occlusion), f);
-		fclose(f);
-		f = fopen("./baked/map/demo/map.walk", "wb");
-		fwrite(&demo_map_walk, 1, sizeof(demo_map_walk), f);
-		fclose(f);
-		return true;
-	} else if (input_pressed(KEYINPUT_BUTTON_X)) {
-		FILE *f = fopen("./baked/map/demo/map.height", "rb");
-		fread(&demo_map_height, 1, sizeof(demo_map_height), f);
-		fclose(f);
-		f = fopen("./baked/map/demo/map.occlusion", "rb");
-		fread(&demo_map_occlusion, 1, sizeof(demo_map_occlusion), f);
-		fclose(f);
-		f = fopen("./baked/map/demo/map.walk", "rb");
-		fread(&demo_map_walk, 1, sizeof(demo_map_walk), f);
-		fclose(f);
-		dirty_highlights = true;
-		return true;
-	}
-	return false;
-}
-#else
-bool desktop_only_inputs(void)
-{
-	return false;
-}
-#endif
-
 void demo_update(void)
 {
 	frame++;
 	input_read();
 
-	if (desktop_only_inputs()) {
-	} else if (input_held(KEYINPUT_BUTTON_B) &&
-		   input_pressed(KEYINPUT_BUTTON_A)) {
-		map_bit_vec_toggle(&demo_map_occlusion, cursor_pos);
-		dirty_highlights = true;
-	} else if (input_pressed(KEYINPUT_BUTTON_A)) {
-		map_bit_vec_toggle(&demo_map_walk, cursor_pos);
-		dirty_highlights = true;
-	} else if (input_pressed(KEYINPUT_BUTTON_R)) {
-		demo_map_height.bytes[cursor_pos.y][cursor_pos.x]++;
-	} else if (input_pressed(KEYINPUT_BUTTON_L)) {
-		demo_map_height.bytes[cursor_pos.y][cursor_pos.x]--;
-	} else if (!input_held(KEYINPUT_BUTTON_B)) {
+	if (!input_held(KEYINPUT_BUTTON_B)) {
 		if (input_pressed(KEYINPUT_UP)) {
 			cursor_pos.y--;
 		} else if (input_pressed(KEYINPUT_DOWN)) {
@@ -127,16 +73,15 @@ void demo_update(void)
 	set_bg_scroll_x(BG3, bg_scroll.x);
 	set_bg_scroll_y(BG3, bg_scroll.y);
 
-	demo_move_cursor(&demo_map_height, &demo_map_occlusion, cursor,
-			 cursor_pos, bg_scroll);
+	demo_move_cursor(&demo_map, cursor, cursor_pos, bg_scroll);
 
-	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[0],
+	demo_move_soldier(&demo_map, soldiers[0],
 			  (struct vec2){ .x = 8, .y = 9 }, bg_scroll);
-	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[1],
+	demo_move_soldier(&demo_map, soldiers[1],
 			  (struct vec2){ .x = 13, .y = 9 }, bg_scroll);
-	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[2],
+	demo_move_soldier(&demo_map, soldiers[2],
 			  (struct vec2){ .x = 7, .y = 10 }, bg_scroll);
-	demo_move_soldier(&demo_map_height, &demo_map_occlusion, soldiers[3],
+	demo_move_soldier(&demo_map, soldiers[3],
 			  (struct vec2){ .x = 11, .y = 11 }, bg_scroll);
 
 	uint32_t walk_c[4] = { 0, 1, 2, 1 };
@@ -165,18 +110,11 @@ void demo_on_vertical_blank(void)
 		sprite_drop(height_msg);
 	}
 	char msg[3] = "0h";
-	msg[0] = '0' + demo_map_height.bytes[cursor_pos.y][cursor_pos.x];
+	msg[0] = '0' + demo_map.height->bytes[cursor_pos.y][cursor_pos.x];
 	height_msg =
 		write_debug_msg_sprite(&demo_font, &height_msg_template, msg);
 	sprite_ref(height_msg)->enabled = true;
 	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
-
-	if (dirty_highlights) {
-		demo_render_tile_highlights(&map_render_params, &demo_map_walk,
-					    &demo_map_height,
-					    &demo_map_occlusion);
-		dirty_highlights = false;
-	}
 }
 
 struct screen *nonnull current_screen = &(struct screen){
@@ -201,6 +139,8 @@ void our_irq_handler(void)
 }
 
 void (*volatile irq_handler)(void) = our_irq_handler;
+
+static struct map_bit_vec highlights = { 0 };
 
 void game_main(void)
 {
@@ -248,8 +188,18 @@ void game_main(void)
 	}
 	sprite_execute_frame_copies();
 
-	demo_render_tile_highlights(&map_render_params, &demo_map_walk,
-				    &demo_map_height, &demo_map_occlusion);
+	for (size_t y = 0; y < MAP_HEIGHT; ++y) {
+		for (size_t x = 0; x < MAP_WIDTH; ++x) {
+			uint8_t attr = demo_map.attributes->bytes[y][x];
+			if (~attr & MAP_ATTR_WALK) {
+				continue;
+			}
+			map_bit_vec_set(&highlights,
+					(struct vec2){ .x = x, .y = y });
+		}
+	}
+
+	demo_render_tile_highlights(&demo_map, &map_render_params, &highlights);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 

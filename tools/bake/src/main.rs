@@ -456,21 +456,48 @@ fn compute_height_map(map: &[isize]) -> Vec<u8> {
     out
 }
 
-fn compute_walk_map(map: &[isize], height_map: &[isize]) -> Vec<u8> {
-    let mut out = vec![0; 32 * (32 / 8)];
-    for (i, tile) in map.iter().enumerate() {
-        if tile < &0 {
+pub const WALK: u8 = 1 << 0;
+pub const OCCLUDE_BOTTOM_LEFT: u8 = 1 << 1;
+pub const OCCLUDE_BOTTOM_RIGHT: u8 = 1 << 2;
+
+pub const BOTTOM_ARROW_TILE: isize = 25;
+pub const RIGHT_ARROW_TILE: isize = 26;
+pub const LEFT_ARROW_TILE: isize = 27;
+
+fn compute_attribute_map(walk: &[isize], occlude: &[isize], height_map: &[isize]) -> Vec<u8> {
+    let mut out = vec![0u8; 32 * 32];
+    for (i, height_tile) in height_map.iter().enumerate() {
+        if height_tile < &0 {
             continue;
         }
+        let mut val = 0;
+
+        if walk[i] > 0 {
+            val |= WALK;
+        }
+
+        match occlude[i] {
+            BOTTOM_ARROW_TILE => {
+                val |= OCCLUDE_BOTTOM_LEFT | OCCLUDE_BOTTOM_RIGHT;
+            }
+            RIGHT_ARROW_TILE => {
+                val |= OCCLUDE_BOTTOM_RIGHT;
+            }
+            LEFT_ARROW_TILE => {
+                val |= OCCLUDE_BOTTOM_LEFT;
+            }
+            _ => {}
+        };
+
+        let height = (height_map[i] - ('0' as isize)) as i16;
         let x = (i % 32) as i16;
         let y = (i / 32) as i16;
-        let height = (height_map[i] - ('0' as isize)) as i16;
         let loc = Vec2::new(x - 1, y).tile_to_map(height);
-        let bit = loc.x + loc.y * 32;
-        out[bit as usize / 8] |= 1 << (bit % 8);
+        out[(loc.x + loc.y * 32) as usize] = val;
     }
     out
 }
+
 
 fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     let img = Image::load_png(&args.tile_set);
@@ -514,10 +541,15 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
 
     let tile_map_walk = parse_tile_map_csv(
         std::fs::read_to_string(&(args.input.clone() + "_walkable.csv"))?);
-    let walk_map = compute_walk_map(&tile_map_walk, &tile_map_height);
-    let mut out_walk = PathBuf::from(&args.output);
-    out_walk.set_extension("walk");
-    std::fs::write(out_walk, serialize(walk_map.as_slice()))?;
+
+    let tile_map_occlude = parse_tile_map_csv(
+        std::fs::read_to_string(&(args.input.clone() + "_occlusion.csv"))?);
+
+    let attr_map = compute_attribute_map(&tile_map_walk, &tile_map_occlude, &tile_map_height);
+
+    let mut out_attr = PathBuf::from(&args.output);
+    out_attr.set_extension("attributes");
+    std::fs::write(out_attr, serialize(attr_map.as_slice()))?;
 
     Ok(())
 }
