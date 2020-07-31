@@ -277,6 +277,49 @@ sprite_handle demo_alloc_cursor(void)
 	return h;
 }
 
+extern struct char_4bpp tile_pointer_4bpp[2];
+
+const static struct sprite_object_def pointer_objs[1] = {
+	{ .x_offset = 0,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_8 }
+};
+
+const static struct sprite_template pointer_template = {
+	.objects = pointer_objs,
+	.num_objects = ARRAY_SIZE(pointer_objs),
+	.palette = 1,
+	.mode = OBJ_MODE_NORMAL,
+};
+
+sprite_handle demo_alloc_pointer(void)
+{
+	sprite_handle h = sprite_alloc(&pointer_template);
+	sprite_queue_frame_copy(h, &tile_pointer_4bpp[0]);
+	return h;
+}
+
+static int8_t pointer_bounce_anim[22] = { -5, -5, -5, -5, -5, -5, -4, -4,
+					  -4, -4, -3, -3, -2, -2, -1, 0,
+					  0,  0,  0,  -1, -4, -4 };
+
+void demo_move_pointer(struct map *nonnull map, sprite_handle pointer,
+		       struct vec2 pos, struct vec2 scroll, uint32_t frame)
+{
+	struct vec2 screen_coords = to_screen_coord(map->height, pos);
+	screen_coords.x -= scroll.x;
+	screen_coords.y -= scroll.y;
+	screen_coords.x += 12;
+	screen_coords.y -= 32;
+	screen_coords.y += pointer_bounce_anim[(frame >> 1) %
+					       ARRAY_SIZE(pointer_bounce_anim)];
+
+	struct sprite *sprite = sprite_ref(pointer);
+	sprite->pos = screen_coords;
+	sprite->order = 0;
+}
+
 void demo_move_cursor(struct map *nonnull map, sprite_handle cursor,
 		      struct vec2 pos, struct vec2 scroll)
 {

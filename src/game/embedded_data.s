@@ -12,7 +12,8 @@ _\name:
     include_bin tile_highlight_4bpp, "../baked/map/tile_highlight.4bpp"
     include_bin tile_highlight_pal, "../baked/map/tile_highlight.pal"
     include_bin tile_cursor_4bpp, "../baked/map/tile_cursor.4bpp"
-    include_bin tile_cursor_pal, "../baked/map/tile_cursor.pal"
+    include_bin tile_pointer_4bpp, "../baked/map/tile_pointer.4bpp"
+    include_bin tile_cursor_pal, "../baked/map/tile_pointer.pal"
     include_bin soldier_4bpp, "../baked/characters/soldier.4bpp"
     include_bin soldier_pal, "../baked/characters/soldier.pal"
 

@@ -11,6 +11,7 @@ static struct vec2 bg_scroll = { 0 };
 static struct vec2 cursor_pos = { .x = 6, .y = 6 };
 static uint32_t frame = 0;
 static sprite_handle cursor = { 0 };
+static sprite_handle pointer = { 0 };
 static sprite_handle soldiers[4] = { 0 };
 static sprite_handle height_msg = { 0 };
 struct map_render_params map_render_params = { .char_block = 3,
@@ -84,6 +85,7 @@ void demo_update(void)
 	set_bg_scroll_y(BG3, bg_scroll.y);
 
 	demo_move_cursor(&demo_map, cursor, cursor_pos, bg_scroll);
+	demo_move_pointer(&demo_map, pointer, cursor_pos, bg_scroll, frame);
 
 	demo_move_soldier(&demo_map, soldiers[0],
 			  (struct vec2){ .x = 8, .y = 9 }, bg_scroll);
@@ -190,7 +192,9 @@ void game_main(void)
 
 	cursor = demo_alloc_cursor();
 	sprite_ref(cursor)->enabled = true;
-	sprite_ref(cursor)->order = 100;
+
+	pointer = demo_alloc_pointer();
+	sprite_ref(pointer)->enabled = true;
 
 	for (size_t i = 0; i < ARRAY_SIZE(soldiers); ++i) {
 		soldiers[i] = demo_alloc_soldier();
