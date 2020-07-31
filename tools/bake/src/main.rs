@@ -110,6 +110,35 @@ pub struct Image {
     pub tiles: Vec<Character4BPP>,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct Vec2 {
+    x: i16,
+    y: i16,
+}
+
+const X_OFFSET: i16 = 15;
+
+impl Vec2 {
+    pub fn new(x: i16, y: i16) -> Self {
+        Self { x, y }
+    }
+
+    pub fn map_to_tile(self, height: i16) -> Self {
+        Self {
+            x: X_OFFSET + 2 * (self.x - self.y),
+            y: self.x + self.y - height,
+        }
+    }
+
+    pub fn tile_to_map(self, height: i16) -> Self {
+        Self {
+            x: (self.x + 2 * self.y + 2 * height - X_OFFSET) / 4,
+            y: (-self.x + 2 * self.y + 2 * height + X_OFFSET) / 4,
+        }
+    }
+}
+
+
 impl Image {
     pub fn load_png<P: AsRef<Path>>(path: P) -> Image {
         Self::load_png_impl(path.as_ref())
@@ -265,11 +294,8 @@ struct Bake4BPP {
 
 #[derive(Clap)]
 struct BakeTileMap {
-    #[clap(short = 'h')]
-    high_csv: String,
-
-    #[clap(short = 'l')]
-    low_csv: String,
+    #[clap(short = 'i')]
+    input: String,
 
     #[clap(short = 't')]
     tile_set: String,
@@ -415,6 +441,21 @@ fn tile_map_with_tile_set(tile_set: &TileSet, map: Vec<isize>) -> Vec<u16> {
     out
 }
 
+fn compute_height_map(map: Vec<isize>) -> Vec<u8> {
+    let mut out = vec![0; 32 * 32];
+    for (i, tile) in map.iter().enumerate() {
+        if tile < &0 {
+            continue;
+        }
+        let x = (i % 32) as i16;
+        let y = (i / 32) as i16;
+        let height = (tile - '0' as isize) as i16;
+        let loc = Vec2::new(x - 1, y).tile_to_map(height);
+        out[(loc.x + loc.y * 32) as usize] = height as u8;
+    }
+    out
+}
+
 fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     let img = Image::load_png(&args.tile_set);
     let mut tile_set = TileSet::new();
@@ -429,8 +470,12 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     std::fs::write(out_4bpp, serialize(tile_set.tiles.as_slice()))?;
     std::fs::write(out_pal, serialize(&img.palette))?;
 
-    let tile_map_low = parse_tile_map_csv(std::fs::read_to_string(&args.low_csv)?);
-    let tile_map_high = parse_tile_map_csv(std::fs::read_to_string(&args.high_csv)?);
+
+    let tile_map_low = parse_tile_map_csv(
+        std::fs::read_to_string(&(args.input.clone() + "_low.csv"))?);
+
+    let tile_map_high = parse_tile_map_csv(
+        std::fs::read_to_string(&(args.input.clone() + "_high.csv"))?);
 
     let low_tiles = tile_map_with_tile_set(&tile_set, tile_map_low);
     let high_tiles = tile_map_with_tile_set(&tile_set, tile_map_high);
@@ -442,6 +487,14 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     let mut out_high = PathBuf::from(&args.output);
     out_high.set_extension("high");
     std::fs::write(out_high, serialize(high_tiles.as_slice()))?;
+
+    let tile_map_height = parse_tile_map_csv(
+        std::fs::read_to_string(&(args.input.clone() + "_height.csv"))?);
+    let height_map = compute_height_map(tile_map_height);
+
+    let mut out_height = PathBuf::from(&args.output);
+    out_height.set_extension("height");
+    std::fs::write(out_height, serialize(height_map.as_slice()))?;
 
     Ok(())
 }

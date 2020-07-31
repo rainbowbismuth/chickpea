@@ -15,6 +15,8 @@ set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/game/map.h include/chickpea/vec2.h include/game/sprite.h
         include/game/object_tiles.h include/game/input.h include/game/random.h include/game/screen.h)
 
+file(GLOB BAKED_ASSETS "baked/**/*")
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
@@ -28,7 +30,7 @@ endif ()
 
 add_custom_command(
         OUTPUT embedded_data.o
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
+        DEPENDS ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s ${BAKED_ASSETS}
         BYPRODUCTS embedded_data.o
         COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
         -o embedded_data.o
@@ -49,7 +51,7 @@ if (BUILD_GBA)
             DEPENDS ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
             BYPRODUCTS crt0.o
             COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
-                -o crt0.o
+            -o crt0.o
     )
     add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o
             embedded_data.o)
