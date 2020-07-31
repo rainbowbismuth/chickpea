@@ -35,6 +35,16 @@ static struct sprite_template height_msg_template = {
 	.objects = height_msg_objs
 };
 
+void move_cursor_pos_bounded(int16_t x, int16_t y)
+{
+	uint8_t attr = demo_map.attributes->bytes[y][x];
+	if (~attr & MAP_ATTR_WALK) {
+		return;
+	}
+	cursor_pos.x = x;
+	cursor_pos.y = y;
+}
+
 void demo_update(void)
 {
 	frame++;
@@ -42,13 +52,13 @@ void demo_update(void)
 
 	if (!input_held(KEYINPUT_BUTTON_B)) {
 		if (input_pressed(KEYINPUT_UP)) {
-			cursor_pos.y--;
+			move_cursor_pos_bounded(cursor_pos.x, cursor_pos.y - 1);
 		} else if (input_pressed(KEYINPUT_DOWN)) {
-			cursor_pos.y++;
+			move_cursor_pos_bounded(cursor_pos.x, cursor_pos.y + 1);
 		} else if (input_pressed(KEYINPUT_LEFT)) {
-			cursor_pos.x--;
+			move_cursor_pos_bounded(cursor_pos.x - 1, cursor_pos.y);
 		} else if (input_pressed(KEYINPUT_RIGHT)) {
-			cursor_pos.x++;
+			move_cursor_pos_bounded(cursor_pos.x + 1, cursor_pos.y);
 		}
 	} else {
 		if (input_held(KEYINPUT_UP)) {

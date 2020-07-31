@@ -244,21 +244,21 @@ extern struct char_4bpp tile_cursor_4bpp[8];
 extern struct palette tile_cursor_pal;
 
 const static struct sprite_object_def cursor_objs[4] = {
-	{ .x_offset = 8,
-	  .y_offset = -2,
+	{ .x_offset = 0,
+	  .y_offset = 0,
 	  .shape = OBJ_SHAPE_HORIZONTAL,
 	  .size = OBJ_SIZE_8 },
-	{ .x_offset = 8,
-	  .y_offset = 10,
+	{ .x_offset = 16,
+	  .y_offset = 0,
 	  .shape = OBJ_SHAPE_HORIZONTAL,
 	  .size = OBJ_SIZE_8 },
-	{ .x_offset = -2,
-	  .y_offset = 0,
-	  .shape = OBJ_SHAPE_VERTICAL,
+	{ .x_offset = 0,
+	  .y_offset = 8,
+	  .shape = OBJ_SHAPE_HORIZONTAL,
 	  .size = OBJ_SIZE_8 },
-	{ .x_offset = 26,
-	  .y_offset = 0,
-	  .shape = OBJ_SHAPE_VERTICAL,
+	{ .x_offset = 16,
+	  .y_offset = 8,
+	  .shape = OBJ_SHAPE_HORIZONTAL,
 	  .size = OBJ_SIZE_8 },
 };
 
@@ -285,6 +285,29 @@ void demo_move_cursor(struct map *nonnull map, sprite_handle cursor,
 	screen_coords.y -= scroll.y;
 	struct sprite *sprite = sprite_ref(cursor);
 	sprite->pos = screen_coords;
+	sprite->order = ((32 - pos.y) << 8) + ((32 - pos.x) << 2) + 1;
+	for (size_t i = 0; i < 4; ++i) {
+		sprite->priority[i] = 3;
+	}
+	struct vec2 t_0_pos = to_tile_coord(pos);
+	t_0_pos.y -= map->height->bytes[pos.y][pos.x];
+	uint8_t attr = map->attributes->bytes[pos.y][pos.x];
+	if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 1] &&
+	    ~attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
+		sprite->priority[0] = 2;
+	}
+	if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2] &&
+	    ~attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
+		sprite->priority[1] = 2;
+	}
+	if (map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 1] &&
+	    ~attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
+		sprite->priority[2] = 2;
+	}
+	if (map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2] &&
+	    ~attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
+		sprite->priority[3] = 2;
+	}
 }
 
 const static struct sprite_object_def soldier_objs[4] = {
@@ -331,12 +354,11 @@ void demo_move_soldier(struct map *nonnull map, sprite_handle soldier,
 	screen_coords.y -= (32 - 11);
 	struct sprite *sprite = sprite_ref(soldier);
 	sprite->pos = screen_coords;
+	sprite->order = ((32 - pos.y) << 8) + ((32 - pos.x) << 2);
 	for (size_t i = 0; i < 4; ++i) {
 		sprite->priority[i] = 2;
 	}
-
 	uint8_t attr = map->attributes->bytes[pos.y][pos.x];
-
 	size_t bottom_left = 2;
 	size_t bottom_right = 3;
 	if (sprite->flip_horizontal) {
