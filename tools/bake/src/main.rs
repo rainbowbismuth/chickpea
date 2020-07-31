@@ -430,10 +430,10 @@ fn parse_tile_map_csv(data: String) -> Vec<isize> {
     out
 }
 
-fn tile_map_with_tile_set(tile_set: &TileSet, map: Vec<isize>) -> Vec<u16> {
+fn tile_map_with_tile_set(tile_set: &TileSet, map: &[isize]) -> Vec<u16> {
     let mut out = vec![];
     for index in map {
-        let tile = tile_set.get(index).unwrap();
+        let tile = tile_set.get(*index).unwrap();
         assert!(tile.name < 1024);
         let val = (tile.name as u16) | (tile.horizontal_flip as u16) << 10 | (tile.vertical_flip as u16) << 11;
         out.push(val);
@@ -441,7 +441,7 @@ fn tile_map_with_tile_set(tile_set: &TileSet, map: Vec<isize>) -> Vec<u16> {
     out
 }
 
-fn compute_height_map(map: Vec<isize>) -> Vec<u8> {
+fn compute_height_map(map: &[isize]) -> Vec<u8> {
     let mut out = vec![0; 32 * 32];
     for (i, tile) in map.iter().enumerate() {
         if tile < &0 {
@@ -452,6 +452,22 @@ fn compute_height_map(map: Vec<isize>) -> Vec<u8> {
         let height = (tile - '0' as isize) as i16;
         let loc = Vec2::new(x - 1, y).tile_to_map(height);
         out[(loc.x + loc.y * 32) as usize] = height as u8;
+    }
+    out
+}
+
+fn compute_walk_map(map: &[isize], height_map: &[isize]) -> Vec<u8> {
+    let mut out = vec![0; 32 * (32 / 8)];
+    for (i, tile) in map.iter().enumerate() {
+        if tile < &0 {
+            continue;
+        }
+        let x = (i % 32) as i16;
+        let y = (i / 32) as i16;
+        let height = (height_map[i] - ('0' as isize)) as i16;
+        let loc = Vec2::new(x - 1, y).tile_to_map(height);
+        let bit = loc.x + loc.y * 32;
+        out[bit as usize / 8] |= 1 << (bit % 8);
     }
     out
 }
@@ -477,8 +493,8 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     let tile_map_high = parse_tile_map_csv(
         std::fs::read_to_string(&(args.input.clone() + "_high.csv"))?);
 
-    let low_tiles = tile_map_with_tile_set(&tile_set, tile_map_low);
-    let high_tiles = tile_map_with_tile_set(&tile_set, tile_map_high);
+    let low_tiles = tile_map_with_tile_set(&tile_set, &tile_map_low);
+    let high_tiles = tile_map_with_tile_set(&tile_set, &tile_map_high);
 
     let mut out_low = PathBuf::from(&args.output);
     out_low.set_extension("low");
@@ -490,11 +506,18 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
 
     let tile_map_height = parse_tile_map_csv(
         std::fs::read_to_string(&(args.input.clone() + "_height.csv"))?);
-    let height_map = compute_height_map(tile_map_height);
+    let height_map = compute_height_map(&tile_map_height);
 
     let mut out_height = PathBuf::from(&args.output);
     out_height.set_extension("height");
     std::fs::write(out_height, serialize(height_map.as_slice()))?;
+
+    let tile_map_walk = parse_tile_map_csv(
+        std::fs::read_to_string(&(args.input.clone() + "_walkable.csv"))?);
+    let walk_map = compute_walk_map(&tile_map_walk, &tile_map_height);
+    let mut out_walk = PathBuf::from(&args.output);
+    out_walk.set_extension("walk");
+    std::fs::write(out_walk, serialize(walk_map.as_slice()))?;
 
     Ok(())
 }

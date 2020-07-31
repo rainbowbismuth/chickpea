@@ -5,27 +5,27 @@
  </editorsettings>
  <tileset firstgid="1" source="tileset.tsx"/>
  <tileset firstgid="257" source="../attributes.tsx"/>
- <layer id="1" name="low" width="32" height="32">
+ <layer id="1" name="low" width="32" height="32" locked="1">
   <data encoding="base64" compression="zstd">
    KLUv/WAAD0UOAKJOJC1gb2sATxdQEc2ldfZ/gqQlaKQvw40yCQsvzOlPz3R3Z7MkIqKBYRiGYRjW+gG37Obxjo9Ju26WVUlft3IVqvM4vnGNkpNov+Aw7OQmR/jBFZ5g8SvqPnKRlKP8u5dlHGPFKThLkphI/eEObwg5yHSGiEO8MnjBCT7whUsFHnCAhw765553Rud8c80zx/xyywGAhqCxMqVCUkJSADACIxhgrnq3aGXruM2SS1ztTJqmbrGI/YTakVtDyIWAoY7MnAZ9xdrdcJE4TN8DdHIT49BrmmMtQO4N2gmFjOZ7b+jNuNOMLAQ5bzqIUoCM5eqep7RIPw0TilgjdBdkkcQOT7tIS9DNM7FJyAnIzfSB4bYE2QVPgBnAr5aYEfNC1gR4PCGykDHSbyu5kd9ZTAV2z3AmCNEESI2jGwj4HsQpz/jvyhM2yC0WbFavAwF9k86kM4NFgrRo8ciJibl7yD1+NeDtZksbIWZQayJedZHPga9wQzIvxCoZEIHJ7WFMmA/QF7LAwsaKpIvG18wmQ3DKueOdqMb1+cvsRelbyH3LrghGcecJLzYGScDTYsL0EScuhwWbi2DMVycqiwsxeB+m3Ydpf1EBNA==
   </data>
  </layer>
- <layer id="2" name="high" width="32" height="32">
+ <layer id="2" name="high" width="32" height="32" locked="1">
   <data encoding="base64" compression="zstd">
    KLUv/WAAD6UCAOQCAABXAAAAWABrAAAAbABVAAAAVtUAAADWAJUAAACoAAAAqQAAAKoAWQAAAFqcAAsAO+F+zEHSPeKNmiCjwCdQ1cOl2vmCuSLUt0Atn0AtL/wACw==
   </data>
  </layer>
- <layer id="5" name="walkable" width="32" height="32" locked="1">
+ <layer id="5" name="walkable" width="32" height="32" visible="0" locked="1">
   <data encoding="base64" compression="zstd">
    KLUv/WAAD2UDAIgAAAoBAAoBCgEKAQAACgEKASqgsIMBAAMKKMwNLfAHipd5Uj2BvpGRIgUU9/QC2lGF1H0pAGaHpw5z7lZSrz2NATsJiURTGi5SWKTGU/mGSeue0yCqw0mTeMvRZYlpWotTcepRbFL6HVVoAQ==
   </data>
  </layer>
- <layer id="6" name="occlusion" width="32" height="32" locked="1">
+ <layer id="6" name="occlusion" width="32" height="32" visible="0" locked="1">
   <data encoding="base64" compression="zstd">
    KLUv/WAAD+0AAEgAABsBABocAQAFALrh/tkjEKADRHr1gTpm/wEW
   </data>
  </layer>
- <layer id="4" name="height" width="32" height="32" locked="1">
+ <layer id="4" name="height" width="32" height="32" visible="0" locked="1">
   <data encoding="base64" compression="zstd">
    KLUv/WAAD70DANgAADcBADcBNwE2NQE1AQAANDMBNDMBMwE0ATIvoGDJATCDCRV4LfAHGi/zpciTyBuJAEQB9Z9eRDeKkbpjioLvxNTBCUnEkQhed9JQISckk2hK40IWFqiWEk9qCN6nqEujINZuFBv1i7JpWguTsvQhSin9jiqQ
   </data>
