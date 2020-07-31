@@ -570,17 +570,19 @@ static void step_emulated_hardware(void)
 			render_entire_line(y);
 		}
 	} else if (y < 227) {
+		REG_DISPSTAT |= DISPSTAT_VERTICAL_BLANK;
 		if (horizontal_blank) {
 			REG_VCOUNT = y + 1;
 			REG_DISPSTAT &= ~DISPSTAT_HORIZONTAL_BLANK;
-			REG_DISPSTAT |= DISPSTAT_VERTICAL_BLANK;
+
 		} else {
 			REG_DISPSTAT |= DISPSTAT_HORIZONTAL_BLANK;
 		}
 	} else {
+		REG_DISPSTAT &= ~DISPSTAT_VERTICAL_BLANK;
 		if (horizontal_blank) {
-			REG_VCOUNT = 0;
 			REG_DISPSTAT &= ~DISPSTAT_HORIZONTAL_BLANK;
+			REG_VCOUNT = 0;
 			trigger_vertical_blank = true;
 			present_frame_and_handle_events();
 		} else {

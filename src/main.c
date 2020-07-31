@@ -7,6 +7,7 @@
 #include "game/screen.h"
 #include "game/debug_font.h"
 
+static volatile bool run_update = true;
 static struct vec2 bg_scroll = { 0 };
 static struct vec2 cursor_pos = { .x = 6, .y = 6 };
 static uint32_t frame = 0;
@@ -99,7 +100,11 @@ void demo_update(void)
 
 void demo_on_horizontal_blank(void)
 {
-	bg_palette(0)->color[0] = color(((REG_VCOUNT >> 4) & 0b1111), 5, 10);
+	uint16_t vcount = REG_VCOUNT;
+	if (vcount > 160) {
+		vcount = 0;
+	}
+	bg_palette(0)->color[0] = color(((vcount >> 4) & 0b1111), 5, 10);
 }
 
 void demo_on_vertical_blank(void)
@@ -127,6 +132,7 @@ void demo_on_vertical_blank(void)
 		write_debug_msg_sprite(&demo_font, &height_msg_template, msg);
 	sprite_ref(height_msg)->enabled = true;
 	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
+	run_update = true;
 }
 
 struct screen *nonnull current_screen = &(struct screen){
@@ -185,8 +191,8 @@ void game_main(void)
 		     BLDCNT_2ND_TARGET_BG2 | BLDCNT_2ND_TARGET_BG3 |
 		     BLDCNT_2ND_TARGET_OBJ | BLDCNT_2ND_TARGET_BD |
 		     PREP(BLDCNT_EFFECT, BLEND_ALPHA);
-	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 8) |
-		       PREP(BLDALPHA_2ND_WEIGHT, 8);
+	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 5) |
+		       PREP(BLDALPHA_2ND_WEIGHT, 11);
 
 	demo_init();
 
@@ -224,10 +230,9 @@ void game_main(void)
 	REG_IME = 1;
 
 	while (1) {
-		if (REG_VCOUNT == 0 &&
-		    !GET(DISPSTAT_HORIZONTAL_BLANK, REG_DISPSTAT) &&
-		    current_screen->update) {
+		if (REG_VCOUNT == 0 && run_update && current_screen->update) {
 			current_screen->update();
+			run_update = false;
 		}
 		halt();
 	}
