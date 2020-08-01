@@ -58,6 +58,4 @@ void sprite_reset(void);
 void sprite_build_oam_buffer(void);
 void sprite_commit_buffer_to_oam(void);
 
-
-
 #endif //CHICKPEA_SPRITE_H
