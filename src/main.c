@@ -102,6 +102,9 @@ void demo_on_horizontal_blank(void)
 {
 	uint16_t vcount = REG_VCOUNT;
 	if (vcount > 160) {
+		return;
+	}
+	if (vcount == 160) {
 		vcount = 0;
 	}
 	bg_palette(0)->color[0] = color(((vcount >> 4) & 0b1111), 5, 10);
