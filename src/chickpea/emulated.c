@@ -224,7 +224,7 @@ static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 		GET(BGCNT_SCREEN_BLOCK, bg_control));
 
 	const struct char_4bpp *char_block =
-		(struct char_4bpp *)character_block_begin(
+		(struct char_4bpp *)char_block_begin(
 			GET(BGCNT_CHAR_BLOCK, bg_control));
 
 	for (size_t tile_x = tile_x_min; tile_x < tile_x_min + 32; ++tile_x) {
@@ -326,7 +326,7 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 
 	// Only handling mode 0 right now.
 	struct char_4bpp *char_block =
-		(struct char_4bpp *)character_block_begin(4);
+		(struct char_4bpp *)char_block_begin(4);
 
 	uint32_t char_name = GET(OBJA2_CHAR, obj->attr_2);
 	struct palette *palette =
@@ -603,7 +603,7 @@ volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
 	return (volatile struct palette *)(&obj_pallete_ram[palette_idx]);
 }
 
-volatile struct char_4bpp *nonnull character_block_begin(uint32_t char_block)
+volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block)
 {
 	assert(char_block < 5);
 	return (volatile struct char_4bpp *)(&video_ram[char_block * 0x4000]);

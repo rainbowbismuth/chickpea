@@ -23,3 +23,7 @@ _\name:
     include_bin demo_map_high, "../baked/map/demo/map.high"
     include_bin demo_map_height, "../baked/map/demo/map.height"
     include_bin demo_map_attributes, "../baked/map/demo/map.attributes"
+
+    include_bin bismuth_font_4bpp, "../baked/fonts/bismuth_font.4bpp"
+    include_bin bismuth_font_width, "../baked/fonts/bismuth_font.width"
+    include_bin bismuth_font_pal, "../baked/fonts/bismuth_font.pal"

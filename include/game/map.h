@@ -52,8 +52,8 @@ void map_bit_vec_toggle(struct map_bit_vec *nonnull bitset, struct vec2 pos);
 bool map_bit_vec_test(struct map_bit_vec *nonnull bitset, struct vec2 pos);
 
 struct map_render_params {
-	uint32_t screen_block_low;
-	uint32_t screen_block_high;
+	uint32_t screen_low;
+	uint32_t screen_high;
 	uint32_t char_block;
 };
 

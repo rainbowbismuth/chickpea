@@ -1,5 +1,15 @@
 #include "chickpea/common.h"
 #include "chickpea/nano_unit.h"
+#include "chickpea.h"
+
+uint32_t char_name(uint32_t char_block,
+		   volatile struct char_4bpp *nonnull character)
+{
+	volatile struct char_4bpp *start = char_block_begin(char_block);
+	uint32_t ret = character - start;
+	assert(ret < 1024);
+	return ret;
+}
 
 uint32_t reverse_nibbles(uint32_t n)
 {
@@ -16,8 +26,7 @@ void write_4bpp(const struct char_4bpp *restrict nonnull src,
 }
 
 void write_4bpp_n(const struct char_4bpp *restrict nonnull src,
-		  volatile struct char_4bpp *restrict nonnull dst,
-		  size_t n)
+		  volatile struct char_4bpp *restrict nonnull dst, size_t n)
 {
 	cpu_fast_set(src, (void *)dst, (sizeof(*src) * n) / 4);
 }
@@ -101,6 +110,29 @@ void char_4bpp_bitwise_or(struct char_4bpp *restrict nonnull self,
 		self->lines[i] |= other->lines[i];
 	}
 }
+
+void char_4bpp_shift_left(struct char_4bpp *nonnull self, uint32_t amount)
+{
+	if (amount == 0) {
+		return;
+	}
+	amount *= 4;
+	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
+		self->lines[i] >>= amount;
+	}
+}
+
+void char_4bpp_shift_right(struct char_4bpp *nonnull self, uint32_t amount)
+{
+	if (amount == 0) {
+		return;
+	}
+	amount *= 4;
+	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
+		self->lines[i] <<= amount;
+	}
+}
+
 void char_4bpp_flip_vertical(struct char_4bpp *nonnull self)
 {
 	struct char_4bpp copy = *self;
@@ -193,10 +225,20 @@ exit:
 	return;
 }
 
+static void test_char_name(struct nano_unit_case *nonnull test)
+{
+	volatile struct char_4bpp *ch = char_block_begin(1);
+	volatile struct char_4bpp *ch5 = ch + 5;
+	NANO_ASSERT(test, char_name(1, ch5) == 5, exit);
+exit:
+	return;
+}
+
 struct nano_unit_case common_test_suite[] = {
 	NANO_UNIT_CASE(test_reverse_nibbles),
 	NANO_UNIT_CASE(test_additive_blend),
 	NANO_UNIT_CASE(test_cpu_fast_fill),
 	NANO_UNIT_CASE(test_object_sizes),
+	NANO_UNIT_CASE(test_char_name),
 	{}
 };

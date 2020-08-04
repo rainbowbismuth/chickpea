@@ -278,6 +278,9 @@ enum SubCommand {
 
     #[clap(name = "map")]
     BakeTileMap(BakeTileMap),
+
+    #[clap(name = "font")]
+    BakeFont(BakeFont),
 }
 
 #[derive(Clap)]
@@ -304,6 +307,15 @@ struct BakeTileMap {
     output: String,
 }
 
+#[derive(Clap)]
+struct BakeFont {
+    #[clap(short = 'i')]
+    input: String,
+
+    #[clap(short = 'o')]
+    output: String,
+}
+
 fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
     let pattern: Vec<usize> = swizzle.chars().map(|c| c.to_digit(16).unwrap() as usize).collect();
     let mut counts = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -325,7 +337,7 @@ fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
     index_pattern
 }
 
-fn bake_4bpp(args: Bake4BPP) -> io::Result<()> {
+fn bake_4bpp(args: Bake4BPP) -> io::Result<Vec<Character4BPP>> {
     let img = Image::load_png(&args.input);
 
     let out_tiles = if let Some(swizzle) = args.swizzle {
@@ -352,7 +364,7 @@ fn bake_4bpp(args: Bake4BPP) -> io::Result<()> {
     std::fs::write(out_4bpp, serialize(out_tiles.as_slice()))?;
     std::fs::write(out_pal, serialize(&img.palette))?;
 
-    Ok(())
+    Ok(out_tiles)
 }
 
 #[derive(Copy, Clone)]
@@ -554,11 +566,42 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     Ok(())
 }
 
+pub const FONT_8X16_SWIZZLE: &str = "0123456789ABCDEF0123456789ABCDEF";
+
+fn width_of_char(char: &Character4BPP) -> u8 {
+    // TODO: This disturbs me, did I mess up endian-ness or something?
+    //  re: leading_zeros() not trailing_zeros() ???
+    char.0.iter().map(|l| 8 - (l.leading_zeros() / 4)).max().unwrap() as u8
+}
+
+fn bake_font(args: BakeFont) -> io::Result<()> {
+    let tiles = bake_4bpp(Bake4BPP {
+        input: args.input.clone(),
+        swizzle: Some(String::from(FONT_8X16_SWIZZLE)),
+        output: args.output.clone(),
+    })?;
+
+    let mut widths: Vec<u8> = Vec::with_capacity(tiles.len() / 2);
+
+    for i in 0..tiles.len() / 2 {
+        let width = width_of_char(&tiles[i * 2])
+            .max(width_of_char(&tiles[i * 2 + 1]));
+        widths.push(width);
+    }
+
+    let mut out_width = PathBuf::from(&args.output);
+    out_width.set_extension("width");
+    std::fs::write(out_width, serialize(widths.as_slice()))?;
+
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
     match opts.sub_cmd {
-        SubCommand::Bake4BPP(args) => bake_4bpp(args),
-        SubCommand::BakeTileMap(args) => bake_tilemap(args)
+        SubCommand::Bake4BPP(args) => bake_4bpp(args).map(|_x| ()),
+        SubCommand::BakeTileMap(args) => bake_tilemap(args),
+        SubCommand::BakeFont(args) => bake_font(args),
     }
 }

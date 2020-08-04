@@ -6,6 +6,7 @@
 #include "game/input.h"
 #include "game/screen.h"
 #include "game/debug_font.h"
+#include "game/font.h"
 
 static volatile bool run_update = true;
 static struct vec2 bg_scroll = { 0 };
@@ -16,12 +17,23 @@ static sprite_handle pointer = { 0 };
 static sprite_handle soldiers[4] = { 0 };
 static sprite_handle height_msg = { 0 };
 struct map_render_params map_render_params = { .char_block = 3,
-					       .screen_block_low = 10,
-					       .screen_block_high = 11 };
+					       .screen_low = 10,
+					       .screen_high = 11 };
 static struct debug_font demo_font = {
 	.characters = debug_font_4bpp,
 	.palette = &debug_font_pal,
 };
+
+extern struct char_4bpp bismuth_font_4bpp[];
+extern uint8_t bismuth_font_width[];
+static struct font bismuth = {
+	.characters = bismuth_font_4bpp,
+	.widths = bismuth_font_width,
+	.tall = true,
+};
+extern struct palette bismuth_font_pal;
+
+extern struct palette tile_cursor_pal;
 
 static struct sprite_object_def height_msg_objs[1] = { {
 	.x_offset = 0,
@@ -175,12 +187,12 @@ void game_main(void)
 
 	*reg_bg_control(BG0) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
-		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_low) |
+		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_low) |
 		PREP(BGCNT_PRIORITY, 3);
 
 	*reg_bg_control(BG1) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
-		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_block_high) |
+		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_high) |
 		PREP(BGCNT_PRIORITY, 2);
 
 	*reg_bg_control(BG2) = PREP(BGCNT_SCREEN_BLOCK, 8) |
@@ -189,13 +201,13 @@ void game_main(void)
 	*reg_bg_control(BG3) = PREP(BGCNT_SCREEN_BLOCK, 9) |
 			       PREP(BGCNT_PRIORITY, 2);
 
-	REG_BLDCNT = BLDCNT_1ST_TARGET_BG0 | BLDCNT_1ST_TARGET_BG1 |
-		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BG1 |
-		     BLDCNT_2ND_TARGET_BG2 | BLDCNT_2ND_TARGET_BG3 |
-		     BLDCNT_2ND_TARGET_OBJ | BLDCNT_2ND_TARGET_BD |
-		     PREP(BLDCNT_EFFECT, BLEND_ALPHA);
-	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 5) |
-		       PREP(BLDALPHA_2ND_WEIGHT, 11);
+	//	REG_BLDCNT = BLDCNT_1ST_TARGET_BG0 | BLDCNT_1ST_TARGET_BG1 |
+	//		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BG1 |
+	//		     BLDCNT_2ND_TARGET_BG2 | BLDCNT_2ND_TARGET_BG3 |
+	//		     BLDCNT_2ND_TARGET_OBJ | BLDCNT_2ND_TARGET_BD |
+	//		     PREP(BLDCNT_EFFECT, BLEND_ALPHA);
+	//	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 5) |
+	//		       PREP(BLDALPHA_2ND_WEIGHT, 11);
 
 	demo_init();
 
@@ -222,7 +234,30 @@ void game_main(void)
 		}
 	}
 
-	demo_render_tile_highlights(&demo_map, &map_render_params, &highlights);
+	struct text_settings bismuth_settings = {
+		.chars = char_block_begin(map_render_params.char_block) + 2,
+		.screen = screen_block_begin(map_render_params.screen_high) + 1,
+		.char_block = map_render_params.char_block,
+		.palette = 2
+	};
+
+	write_palette(&bismuth_font_pal, bg_palette(2));
+	bg_palette(2)->color[0] = color(31, 31, 31);
+	text_render(&bismuth, &bismuth_settings, "fighill, babe!");
+
+	struct char_4bpp b = { 0 };
+	for (size_t i = 0; i < ARRAY_SIZE(b.lines); ++i) {
+		b.lines[i] = 0x33333333;
+	}
+	write_4bpp(&b, char_block_begin(map_render_params.char_block) + 1);
+	volatile uint16_t *scr =
+		screen_block_begin(map_render_params.screen_low);
+	for (size_t i = 0; i < 10; ++i) {
+		*(scr + 32) = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, 2);
+		*scr++ = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, 2);
+	}
+
+	//	demo_render_tile_highlights(&demo_map, &map_render_params, &highlights);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 

@@ -232,7 +232,13 @@ struct object_attribute_mem {
 	struct oam_entry entries[128];
 };
 
-volatile struct char_4bpp *nonnull character_block_begin(uint32_t char_block);
+volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block);
+
+/*
+ * TODO: Revisit, not sure if this is the best API?
+ */
+uint32_t char_name(uint32_t char_block,
+			    volatile struct char_4bpp *nonnull character);
 
 volatile struct palette *nonnull bg_palette(uint32_t palette_idx);
 
@@ -281,6 +287,10 @@ size_t tiles_in_object(enum obj_shape shape, enum obj_size size);
 
 void char_4bpp_bitwise_or(struct char_4bpp *restrict nonnull self,
 			  const struct char_4bpp *restrict nonnull other);
+
+void char_4bpp_shift_left(struct char_4bpp *nonnull self, uint32_t amount);
+
+void char_4bpp_shift_right(struct char_4bpp *nonnull self, uint32_t amount);
 
 void char_4bpp_flip_vertical(struct char_4bpp *nonnull self);
 

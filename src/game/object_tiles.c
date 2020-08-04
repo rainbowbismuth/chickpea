@@ -120,7 +120,7 @@ volatile struct char_4bpp *nonnull obj_tiles_vram(obj_tiles_handle handle)
 {
 	assert(obj_tiles_exists(handle));
 	size_t start = allocs[handle.index].start;
-	return &character_block_begin(4)[start];
+	return &char_block_begin(4)[start];
 }
 
 static_assert(sizeof(used_tiles) % 4 == 0, "needed for cpu_fast_fill/set");

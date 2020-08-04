@@ -91,7 +91,7 @@ void demo_init(void)
 			     &tile_highlight_4bpp[1]);
 
 	// TODO: Should determine how many tiles there are ;)
-	write_4bpp_n(demo_map_4bpp, character_block_begin(0), 128);
+	write_4bpp_n(demo_map_4bpp, char_block_begin(0), 128);
 	write_palette(&demo_map_pal, bg_palette(0));
 	cpu_fast_set(&demo_map_low, (void *)screen_block_begin(8),
 		     sizeof(demo_map_low) / 4);
@@ -184,14 +184,13 @@ void demo_render_tile_highlights(struct map *nonnull map,
 				 struct map_bit_vec *nonnull highlights)
 {
 	volatile uint16_t *screen_low =
-		screen_block_begin(params->screen_block_low);
+		screen_block_begin(params->screen_low);
 	volatile uint16_t *screen_high =
-		screen_block_begin(params->screen_block_high);
+		screen_block_begin(params->screen_high);
 	cpu_fast_fill(0, (void *)screen_low, (16 * 32 * 32) / 4);
 	cpu_fast_fill(0, (void *)screen_high, (16 * 32 * 32) / 4);
 
-	volatile struct char_4bpp *chars =
-		character_block_begin(params->char_block);
+	volatile struct char_4bpp *chars = char_block_begin(params->char_block);
 
 	/*
 	 * Ideally this wouldn't go here of course
