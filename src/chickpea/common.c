@@ -103,7 +103,7 @@ size_t tiles_in_object(enum obj_shape shape, enum obj_size size)
 	return size_table[size][shape];
 }
 
-void char_4bpp_bitwise_or(struct char_4bpp *restrict nonnull self,
+void ch4bpp_bitor(struct char_4bpp *restrict nonnull self,
 			  const struct char_4bpp *restrict nonnull other)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
@@ -122,18 +122,38 @@ void char_4bpp_shift_left(struct char_4bpp *nonnull self, uint32_t amount)
 	}
 }
 
-void char_4bpp_shift_right(struct char_4bpp *nonnull self, uint32_t amount)
+void ch4bpp_bitor_shl(struct char_4bpp *restrict nonnull dst,
+			 struct char_4bpp *restrict nonnull src,
+			 uint32_t pixels)
 {
-	if (amount == 0) {
+	if (pixels == 0) {
 		return;
 	}
+	uint32_t amount = pixels * 4;
+	for (size_t i = 0; i < ARRAY_SIZE(dst->lines); ++i) {
+		dst->lines[i] |= src->lines[i] >> amount;
+	}
+}
+
+void char_4bpp_shift_right(struct char_4bpp *nonnull self, uint32_t amount)
+{
 	amount *= 4;
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
 		self->lines[i] <<= amount;
 	}
 }
 
-void char_4bpp_flip_vertical(struct char_4bpp *nonnull self)
+void ch4bpp_bitor_shr(struct char_4bpp *restrict nonnull dst,
+			 struct char_4bpp *restrict nonnull src,
+			 uint32_t pixels)
+{
+	uint32_t amount = pixels * 4;
+	for (size_t i = 0; i < ARRAY_SIZE(dst->lines); ++i) {
+		dst->lines[i] |= src->lines[i] << amount;
+	}
+}
+
+void ch4bpp_flip_vertical(struct char_4bpp *nonnull self)
 {
 	struct char_4bpp copy = *self;
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
@@ -141,17 +161,17 @@ void char_4bpp_flip_vertical(struct char_4bpp *nonnull self)
 	}
 }
 
-void char_4bpp_flip_horizontal(struct char_4bpp *nonnull self)
+void ch4bpp_flip_horizontal(struct char_4bpp *nonnull self)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
 		self->lines[i] = reverse_nibbles(self->lines[i]);
 	}
 }
 
-void char_4bpp_flip_both(struct char_4bpp *nonnull self)
+void ch4bpp_flip_both(struct char_4bpp *nonnull self)
 {
-	char_4bpp_flip_vertical(self);
-	char_4bpp_flip_horizontal(self);
+	ch4bpp_flip_vertical(self);
+	ch4bpp_flip_horizontal(self);
 }
 
 void debug_put_u32(uint32_t n)

@@ -81,14 +81,14 @@ void demo_init(void)
 	tile_highlight_gfx.top_left[1] = tile_highlight_4bpp[1];
 
 	tile_highlight_gfx.top_left_together[0] = tile_highlight_4bpp[1];
-	char_4bpp_flip_both(&tile_highlight_gfx.top_left_together[0]);
-	char_4bpp_bitwise_or(&tile_highlight_gfx.top_left_together[0],
-			     &tile_highlight_4bpp[0]);
+	ch4bpp_flip_both(&tile_highlight_gfx.top_left_together[0]);
+	ch4bpp_bitor(&tile_highlight_gfx.top_left_together[0],
+		     &tile_highlight_4bpp[0]);
 
 	tile_highlight_gfx.top_left_together[1] = tile_highlight_4bpp[0];
-	char_4bpp_flip_both(&tile_highlight_gfx.top_left_together[1]);
-	char_4bpp_bitwise_or(&tile_highlight_gfx.top_left_together[1],
-			     &tile_highlight_4bpp[1]);
+	ch4bpp_flip_both(&tile_highlight_gfx.top_left_together[1]);
+	ch4bpp_bitor(&tile_highlight_gfx.top_left_together[1],
+		     &tile_highlight_4bpp[1]);
 
 	// TODO: Should determine how many tiles there are ;)
 	write_4bpp_n(demo_map_4bpp, char_block_begin(0), 128);

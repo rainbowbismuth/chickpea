@@ -71,25 +71,19 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 	uint32_t idx = renderer->i / 8;
 	uint32_t end_idx = (renderer->i + width) / 8;
 	uint32_t offset = renderer->i % 8;
-	struct char_4bpp pix = *lookup_char(renderer, ch, 0);
-	char_4bpp_shift_right(&pix, offset);
-	char_4bpp_bitwise_or(out_char(renderer, idx, 0), &pix);
+	struct char_4bpp *ch0 = lookup_char(renderer, ch, 0);
+	struct char_4bpp *ch1 = NULL;
+	ch4bpp_bitor_shr(out_char(renderer, idx, 0), ch0, offset);
 	if (renderer->font->tall) {
-		pix = *lookup_char(renderer, ch, 1);
-		char_4bpp_shift_right(&pix, offset);
-		char_4bpp_bitwise_or(out_char(renderer, idx, 1), &pix);
+		ch1 = lookup_char(renderer, ch, 1);
+		ch4bpp_bitor_shr(out_char(renderer, idx, 1), ch1, offset);
 	}
 	if (idx != end_idx && offset != 0) {
-		pix = *lookup_char(renderer, ch, 0);
 		offset = 8 - offset;
-		char_4bpp_shift_left(&pix, offset);
-		char_4bpp_bitwise_or(out_char(renderer, end_idx, 0), &pix);
-
+		ch4bpp_bitor_shl(out_char(renderer, end_idx, 0), ch0, offset);
 		if (renderer->font->tall) {
-			pix = *lookup_char(renderer, ch, 1);
-			char_4bpp_shift_left(&pix, offset);
-			char_4bpp_bitwise_or(out_char(renderer, end_idx, 1),
-					     &pix);
+			ch4bpp_bitor_shl(out_char(renderer, end_idx, 1), ch1,
+					 offset);
 		}
 	}
 	renderer->i += width;

@@ -42,7 +42,7 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer);
  * Render an entire message.
  */
 void text_render(const struct font *nonnull font,
-			  const struct text_settings *nonnull settings,
-			  const char *nonnull message);
+		 const struct text_settings *nonnull settings,
+		 const char *nonnull message);
 
 #endif // CHICKPEA_FONT_H
