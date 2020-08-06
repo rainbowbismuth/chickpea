@@ -79,7 +79,7 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 		char_4bpp_shift_right(&pix, offset);
 		char_4bpp_bitwise_or(out_char(renderer, idx, 1), &pix);
 	}
-	if (idx != end_idx) {
+	if (idx != end_idx && offset != 0) {
 		pix = *lookup_char(renderer, ch, 0);
 		offset = 8 - offset;
 		char_4bpp_shift_left(&pix, offset);
