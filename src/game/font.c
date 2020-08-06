@@ -99,7 +99,7 @@ void text_render(const struct font *nonnull font,
 	/*
 	 * FIXME: Temporarily cheating here...
 	 */
-	for (size_t i = 0; i < 15; ++i) {
+	for (size_t i = 0; i < 20; ++i) {
 		add_to_screen(
 			&renderer,
 			&renderer.chars[i * (renderer.font->tall ? 2 : 1)],

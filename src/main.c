@@ -244,7 +244,7 @@ void game_main(void)
 
 	write_palette(&bismuth_font_pal, bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
-	text_render(&bismuth, &bismuth_settings, "zig! 256");
+	text_render(&bismuth, &bismuth_settings, "MagicBottle NICE");
 
 	struct char_4bpp b = { 0 };
 	for (size_t i = 0; i < ARRAY_SIZE(b.lines); ++i) {
@@ -253,7 +253,7 @@ void game_main(void)
 	write_4bpp(&b, char_block_begin(map_render_params.char_block) + 1);
 	volatile uint16_t *scr =
 		screen_block_begin(map_render_params.screen_low);
-	for (size_t i = 0; i < 10; ++i) {
+	for (size_t i = 0; i < 15; ++i) {
 		*(scr + 32) = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, 2);
 		*scr++ = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, 2);
 	}
