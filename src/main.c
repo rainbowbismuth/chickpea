@@ -29,6 +29,7 @@ extern uint8_t bismuth_font_width[];
 static struct font bismuth = {
 	.characters = bismuth_font_4bpp,
 	.widths = bismuth_font_width,
+	.letter_spacing = 1,
 	.tall = true,
 };
 extern struct palette bismuth_font_pal;
@@ -243,7 +244,7 @@ void game_main(void)
 
 	write_palette(&bismuth_font_pal, bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
-	text_render(&bismuth, &bismuth_settings, "magicbottle!");
+	text_render(&bismuth, &bismuth_settings, "quickly now!");
 
 	struct char_4bpp b = { 0 };
 	for (size_t i = 0; i < ARRAY_SIZE(b.lines); ++i) {

@@ -13,23 +13,23 @@ void text_renderer_init(struct text_renderer *nonnull renderer,
 	renderer->i = 0;
 }
 
-static struct char_4bpp *nonnull lookup_char(
-	struct text_renderer *nonnull renderer, uint32_t ch, uint32_t offset)
+static struct char_4bpp *nonnull
+lookup_char(struct text_renderer *nonnull renderer, uint32_t ch)
 {
 	if (renderer->font->tall) {
-		return &renderer->font->characters[ch * 2 + offset];
+		return &renderer->font->characters[ch * 2];
 	} else {
-		return &renderer->font->characters[ch + offset];
+		return &renderer->font->characters[ch];
 	}
 }
 
-static struct char_4bpp *nonnull out_char(
-	struct text_renderer *nonnull renderer, uint32_t index, uint32_t offset)
+static struct char_4bpp *nonnull
+out_char(struct text_renderer *nonnull renderer, uint32_t index)
 {
 	if (renderer->font->tall) {
-		return (struct char_4bpp *)&renderer->chars[index * 2 + offset];
+		return (struct char_4bpp *)&renderer->chars[index * 2];
 	} else {
-		return (struct char_4bpp *)&renderer->chars[index + offset];
+		return (struct char_4bpp *)&renderer->chars[index];
 	}
 }
 
@@ -71,22 +71,21 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 	uint32_t idx = renderer->i / 8;
 	uint32_t end_idx = (renderer->i + width) / 8;
 	uint32_t offset = renderer->i % 8;
-	struct char_4bpp *ch0 = lookup_char(renderer, ch, 0);
-	struct char_4bpp *ch1 = NULL;
-	ch4bpp_bitor_shr(out_char(renderer, idx, 0), ch0, offset);
+	struct char_4bpp *ch_gfx = lookup_char(renderer, ch);
+	struct char_4bpp *out = out_char(renderer, idx);
+	ch4bpp_bitor_shr(out, ch_gfx, offset);
 	if (renderer->font->tall) {
-		ch1 = lookup_char(renderer, ch, 1);
-		ch4bpp_bitor_shr(out_char(renderer, idx, 1), ch1, offset);
+		ch4bpp_bitor_shr(out + 1, ch_gfx + 1, offset);
 	}
 	if (idx != end_idx && offset != 0) {
 		offset = 8 - offset;
-		ch4bpp_bitor_shl(out_char(renderer, end_idx, 0), ch0, offset);
+		out = out_char(renderer, end_idx);
+		ch4bpp_bitor_shl(out, ch_gfx, offset);
 		if (renderer->font->tall) {
-			ch4bpp_bitor_shl(out_char(renderer, end_idx, 1), ch1,
-					 offset);
+			ch4bpp_bitor_shl(out + 1, ch_gfx + 1, offset);
 		}
 	}
-	renderer->i += width;
+	renderer->i += width + renderer->font->letter_spacing;
 	return true;
 }
 

@@ -7,6 +7,7 @@
 struct font {
 	struct char_4bpp *nonnull characters;
 	uint8_t *nullable widths;
+	uint8_t letter_spacing;
 	bool tall;
 };
 
