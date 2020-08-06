@@ -244,7 +244,7 @@ void game_main(void)
 
 	write_palette(&bismuth_font_pal, bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
-	text_render(&bismuth, &bismuth_settings, "quickly now!");
+	text_render(&bismuth, &bismuth_settings, "zig! 256");
 
 	struct char_4bpp b = { 0 };
 	for (size_t i = 0; i < ARRAY_SIZE(b.lines); ++i) {
