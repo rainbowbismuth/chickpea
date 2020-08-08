@@ -40,8 +40,8 @@ uint32_t ticks_previous = 0;
 uint32_t ticks_lag = 0;
 uint64_t frame_counter = 0;
 
-uint32_t real_win_width = GBA_WIDTH * 2;
-uint32_t real_win_height = GBA_HEIGHT * 2;
+uint32_t real_win_width = GBA_WIDTH * 3;
+uint32_t real_win_height = GBA_HEIGHT * 3;
 
 uint16_t screen_color[GBA_HEIGHT][GBA_WIDTH] = { 0 };
 uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH] = { 0 };
@@ -204,6 +204,57 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 	}
 }
 
+static void draw_line_256(uint32_t x, uint32_t y, uint64_t line,
+			  const uint16_t *nonnull palette, uint16_t priority)
+{
+	if (line == 0) {
+		return;
+	}
+	uint16_t blend_control = REG_BLDCNT;
+
+	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA &&
+	    GET(PRIORITY_2ND_TARGET, priority)) {
+		struct blend_alpha_params params = {
+			.src_weight = GET(BLDALPHA_1ST_WEIGHT, REG_BLDALPHA),
+			.dst_weight = GET(BLDALPHA_2ND_WEIGHT, REG_BLDALPHA)
+		};
+
+		for (size_t i = 0; i < 8; ++i) {
+			size_t col_index = (line >> (i * 8)) & 0xFF;
+			if (col_index == 0) {
+				continue;
+			}
+			uint16_t color = palette[col_index];
+			uint32_t new_x = (x + i) & 0x1FF;
+			if (new_x >= GBA_WIDTH) {
+				continue;
+			}
+			draw_pixel_blend_alpha(new_x, y, color, priority,
+					       &params);
+		}
+	} else {
+		assert(GET(BLDCNT_EFFECT, blend_control) !=
+			       BLEND_BRIGHTNESS_DECREASE &&
+		       "effect not implemented");
+		assert(GET(BLDCNT_EFFECT, blend_control) !=
+			       BLEND_BRIGHTNESS_INCREASE &&
+		       "effect not implemented");
+
+		for (size_t i = 0; i < 8; ++i) {
+			size_t col_index = (line >> (i * 8)) & 0xFF;
+			if (col_index == 0) {
+				continue;
+			}
+			uint16_t color = palette[col_index];
+			uint32_t new_x = (x + i) & 0x1FF;
+			if (new_x >= GBA_WIDTH) {
+				continue;
+			}
+			draw_pixel(new_x, y, color, priority);
+		}
+	}
+}
+
 static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {
 	if ((GET(DISPCNT_SCREEN_BG_ENABLED, REG_DISPCNT) & (1 << bg)) == 0) {
@@ -287,10 +338,19 @@ static void sort_backgrounds_by_priority(struct background_array *arr)
 	}
 }
 
+static uint64_t reverse_bytes(uint64_t n)
+{
+	n = (n & 0x00FF00FF00FF00FF) << 8 | (n & 0xFF00FF00FF00FF00) >> 8;
+	n = (n & 0x0000FFFF0000FFFF) << 16 | (n & 0xFFFF0000FFFF0000) >> 16;
+	n = (n & 0x00000000FFFFFFFF) << 32 | (n & 0xFFFFFFFF00000000) >> 32;
+	return n;
+}
+
 static void draw_obj_char(uint32_t y, struct char_4bpp *nonnull character,
 			  struct palette *nonnull pal, uint16_t priority,
 			  uint32_t start_x, uint32_t start_y,
-			  bool vertical_flip, bool horizontal_flip)
+			  bool vertical_flip, bool horizontal_flip,
+			  bool colors_256)
 {
 	if (start_y + 8 <= 0xFF) {
 		if (y < start_y || y >= start_y + 8) {
@@ -307,12 +367,20 @@ static void draw_obj_char(uint32_t y, struct char_4bpp *nonnull character,
 		line_y = 7 - line_y;
 	}
 
-	uint32_t line = character->lines[line_y];
-	if (horizontal_flip) {
-		line = reverse_nibbles(line);
+	if (colors_256) {
+		uint64_t line = ((struct char_8bpp *)character)->lines[line_y];
+		if (horizontal_flip) {
+			line = reverse_bytes(line);
+		}
+		draw_line_256(start_x, y, line, (uint16_t *)obj_pallete_ram,
+			      priority);
+	} else {
+		uint32_t line = character->lines[line_y];
+		if (horizontal_flip) {
+			line = reverse_nibbles(line);
+		}
+		draw_line(start_x, y, line, pal, priority);
 	}
-
-	draw_line(start_x, y, line, pal, priority);
 }
 
 static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
@@ -321,8 +389,9 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 		return;
 	}
 
-	uint32_t start_y = GET(OBJA0_Y, obj->attr_0);
-	uint32_t start_x = GET(OBJA1_X, obj->attr_1);
+	// TODO: Still not sure why everything is off by 1 pix?
+	uint16_t start_y = GET(OBJA0_Y, obj->attr_0) - 1;
+	uint16_t start_x = GET(OBJA1_X, obj->attr_1);
 
 	// Only handling mode 0 right now.
 	struct char_4bpp *char_block = (struct char_4bpp *)char_block_begin(4);
@@ -345,6 +414,7 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 	enum obj_size size = GET(OBJA1_SIZE, obj->attr_1);
 	bool vertical_flip = GET(OBJA1_VERTICAL_FLIP, obj->attr_1);
 	bool horizontal_flip = GET(OBJA1_HORIZONTAL_FLIP, obj->attr_1);
+	bool colors_256 = GET(OBJA0_256_COLORS, obj->attr_0);
 
 	size_t width = object_width(shape, size);
 	size_t height = object_height(shape, size);
@@ -353,15 +423,15 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 	//   and not do this silly looping business
 
 	// TODO: The flipping
-	for (size_t i = 0; i < width; ++i) {
-		for (size_t j = 0; j < height; ++j) {
-			uint32_t obj_x = (start_x + i * 8) & 0x1FF;
-			uint32_t obj_y = (start_y + j * 8) & 0xFF;
+	for (size_t i = 0; i < height; ++i) {
+		for (size_t j = 0; j < width; ++j) {
+			uint32_t obj_x = (start_x + j * 8) & 0x1FF;
+			uint32_t obj_y = (start_y + i * 8) & 0xFF;
 			draw_obj_char(y, &char_block[char_name], palette,
 				      priority, obj_x, obj_y, vertical_flip,
-				      horizontal_flip);
+				      horizontal_flip, colors_256);
 
-			char_name++;
+			char_name += colors_256 ? 2 : 1;
 		}
 	}
 }
