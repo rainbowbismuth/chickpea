@@ -27,3 +27,6 @@ _\name:
     include_bin bismuth_font_4bpp, "../baked/fonts/bismuth_font.4bpp"
     include_bin bismuth_font_width, "../baked/fonts/bismuth_font.width"
     include_bin bismuth_font_pal, "../baked/fonts/bismuth_font.pal"
+
+    include_bin speech_bubble_4bpp, "../baked/interface/speech_bubble.4bpp"
+    include_bin speech_bubble_tiles, "../baked/interface/speech_bubble.tiles"

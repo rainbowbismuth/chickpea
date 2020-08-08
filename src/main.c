@@ -7,6 +7,7 @@
 #include "game/screen.h"
 #include "game/debug_font.h"
 #include "game/font.h"
+#include "game/text_box.h"
 
 static volatile bool run_update = true;
 static struct vec2 bg_scroll = { 0 };
@@ -48,6 +49,15 @@ static struct sprite_template height_msg_template = {
 	.mode = OBJ_MODE_NORMAL,
 	.num_objects = ARRAY_SIZE(height_msg_objs),
 	.objects = height_msg_objs
+};
+
+extern struct char_4bpp speech_bubble_4bpp[];
+extern uint16_t speech_bubble_tiles[];
+
+static struct text_box_graphics speech_bubble_gfx = {
+	.chars = speech_bubble_4bpp,
+	.tiles = speech_bubble_tiles,
+	.height = 8,
 };
 
 void move_cursor_pos_bounded(int16_t x, int16_t y)
@@ -189,12 +199,12 @@ void game_main(void)
 	*reg_bg_control(BG0) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
 		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_low) |
-		PREP(BGCNT_PRIORITY, 3);
+		PREP(BGCNT_PRIORITY, 1);
 
 	*reg_bg_control(BG1) =
 		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
 		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_high) |
-		PREP(BGCNT_PRIORITY, 2);
+		PREP(BGCNT_PRIORITY, 0);
 
 	*reg_bg_control(BG2) = PREP(BGCNT_SCREEN_BLOCK, 8) |
 			       PREP(BGCNT_PRIORITY, 3);
@@ -236,27 +246,27 @@ void game_main(void)
 	}
 
 	struct text_settings bismuth_settings = {
-		.chars = char_block_begin(map_render_params.char_block) + 2,
-		.screen = screen_block_begin(map_render_params.screen_high) + 1,
+		.chars = char_block_begin(map_render_params.char_block) + 32,
+		.screen = screen_block_begin(map_render_params.screen_high) +
+			  (32 * 3) + 8,
 		.char_block = map_render_params.char_block,
 		.palette = 2
 	};
 
 	write_palette(&bismuth_font_pal, bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
-	text_render(&bismuth, &bismuth_settings, "MagicBottle NICE");
 
-	struct char_4bpp b = { 0 };
-	for (size_t i = 0; i < ARRAY_SIZE(b.lines); ++i) {
-		b.lines[i] = 0x33333333;
-	}
-	write_4bpp(&b, char_block_begin(map_render_params.char_block) + 1);
-	volatile uint16_t *scr =
-		screen_block_begin(map_render_params.screen_low);
-	for (size_t i = 0; i < 15; ++i) {
-		*(scr + 32) = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, 2);
-		*scr++ = PREP(TILE_CHAR, 1) | PREP(TILE_PALETTE, 2);
-	}
+	struct text_box_settings text_box = {
+		.gfx = &speech_bubble_gfx,
+		.from_top = 2,
+		.palette = 2,
+		.char_block = map_render_params.char_block,
+		.screen_block = map_render_params.screen_low,
+		.align_right = false,
+		.width = 24,
+	};
+	text_box_draw(&text_box);
+	text_render(&bismuth, &bismuth_settings, "MagicBottle, NICE!");
 
 	//	demo_render_tile_highlights(&demo_map, &map_render_params, &highlights);
 

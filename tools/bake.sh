@@ -14,3 +14,4 @@ $BAKE 4bpp -i assets/map/tile_cursor.png -o baked/map/tile_cursor
 $BAKE 4bpp -i assets/map/tile_pointer.png -o baked/map/tile_pointer
 $BAKE 4bpp -s $CHARACTER -i assets/characters/soldier.png -o baked/characters/soldier
 $BAKE map -i assets/map/demo/map -t assets/map/demo/tileset.png -o baked/map/demo/map
+$BAKE bg -i assets/interface/speech_bubble.png -o baked/interface/speech_bubble

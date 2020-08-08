@@ -1,0 +1,57 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "/Users/emilyb/Downloads/demo_tilemap.tmx": {
+            "scale": 3,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 257.1666666666667,
+                "y": 263.5
+            }
+        },
+        "/Users/emilyb/Downloads/untitled.tmx": {
+            "scale": 2,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 160,
+                "y": 159.75
+            }
+        },
+        "speech_bubble.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "map.fixedSize": true,
+    "map.height": 8,
+    "map.lastUsedExportFilter": "CSV files (*.csv)",
+    "map.lastUsedFormat": "tmx",
+    "map.orientation": 1,
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "map.width": 3,
+    "openFiles": [
+    ],
+    "project": "chickpea.tiled-project",
+    "recentFiles": [
+        "interface/speech_bubble.tmx",
+        "speech_bubble.tsx"
+    ],
+    "tileset.embedInMap": false,
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    },
+    "tileset.transparentColor": "#ff00ff",
+    "tileset.type": 0,
+    "tileset.useTransparentColor": false
+}

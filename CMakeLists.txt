@@ -9,13 +9,13 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c
         src/test_suites.c src/chickpea/nano_unit.c src/chickpea/bit_vec.c
         src/game/map.c src/game/sprite.c src/game/object_tiles.c
-        src/game/input.c src/game/random.c src/game/font.c)
+        src/game/input.c src/game/random.c src/game/font.c src/game/text_box.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/game/debug_font.h
         include/chickpea/nano_unit.h include/chickpea/bit_vec.h
         include/game/map.h include/chickpea/vec2.h include/game/sprite.h
         include/game/object_tiles.h include/game/input.h include/game/random.h
-        include/game/screen.h include/game/font.h)
+        include/game/screen.h include/game/font.h include/game/text_box.h)
 
 file(GLOB BAKED_ASSETS "baked/**/*")
 

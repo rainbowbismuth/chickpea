@@ -281,6 +281,9 @@ enum SubCommand {
 
     #[clap(name = "font")]
     BakeFont(BakeFont),
+
+    #[clap(name = "bg")]
+    BakeBackground(BakeBackground),
 }
 
 #[derive(Clap)]
@@ -309,6 +312,15 @@ struct BakeTileMap {
 
 #[derive(Clap)]
 struct BakeFont {
+    #[clap(short = 'i')]
+    input: String,
+
+    #[clap(short = 'o')]
+    output: String,
+}
+
+#[derive(Clap)]
+struct BakeBackground {
     #[clap(short = 'i')]
     input: String,
 
@@ -596,6 +608,33 @@ fn bake_font(args: BakeFont) -> io::Result<()> {
     Ok(())
 }
 
+fn bake_background(args: BakeBackground) -> io::Result<()> {
+    let img = Image::load_png(&args.input);
+    let mut tile_set = TileSet::new();
+    for (i, character) in img.tiles.iter().enumerate() {
+        tile_set.add(i as isize, character);
+    }
+
+    let mut map = Vec::with_capacity(img.tiles.len());
+    for i in 0..img.tiles.len() {
+        map.push(i as isize);
+    }
+    let tile_map = tile_map_with_tile_set(&tile_set, &map);
+
+    let mut out_4bpp = PathBuf::from(&args.output);
+    out_4bpp.set_extension("4bpp");
+    let mut out_pal = PathBuf::from(&args.output);
+    out_pal.set_extension("pal");
+    std::fs::write(out_4bpp, serialize(tile_set.tiles.as_slice()))?;
+    std::fs::write(out_pal, serialize(&img.palette))?;
+
+    let mut out_tiles = PathBuf::from(&args.output);
+    out_tiles.set_extension("tiles");
+    std::fs::write(out_tiles, serialize(tile_map.as_slice()))?;
+    
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
@@ -603,5 +642,6 @@ fn main() -> io::Result<()> {
         SubCommand::Bake4BPP(args) => bake_4bpp(args).map(|_x| ()),
         SubCommand::BakeTileMap(args) => bake_tilemap(args),
         SubCommand::BakeFont(args) => bake_font(args),
+        SubCommand::BakeBackground(args) => bake_background(args)
     }
 }
