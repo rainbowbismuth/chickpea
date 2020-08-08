@@ -5,7 +5,21 @@ IFS=$'\n\t'
 BAKE=tools/bake/target/debug/bake
 
 # Tile swizzle patterns
-CHARACTER="01012323"
+CHARACTER="01\
+           01\
+           23\
+           23"
+
+PORTRAIT="000011\
+          000011\
+          000011\
+          000011\
+          000022\
+          000022\
+          000022\
+          000022\
+          333344\
+          333344"
 
 $BAKE 4bpp -i assets/fonts/CGA8x8thin.png -o baked/fonts/debug_font
 $BAKE font -i assets/fonts/bismuth.png -o baked/fonts/bismuth_font
@@ -15,3 +29,4 @@ $BAKE 4bpp -i assets/map/tile_pointer.png -o baked/map/tile_pointer
 $BAKE 4bpp -s $CHARACTER -i assets/characters/soldier.png -o baked/characters/soldier
 $BAKE map -i assets/map/demo/map -t assets/map/demo/tileset.png -o baked/map/demo/map
 $BAKE bg -i assets/interface/speech_bubble.png -o baked/interface/speech_bubble
+$BAKE 8bpp -i assets/portraits/Bjin.png -s $PORTRAIT --offset=6 -o baked/portraits/Bjin

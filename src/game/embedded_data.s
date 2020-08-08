@@ -30,3 +30,6 @@ _\name:
 
     include_bin speech_bubble_4bpp, "../baked/interface/speech_bubble.4bpp"
     include_bin speech_bubble_tiles, "../baked/interface/speech_bubble.tiles"
+
+    include_bin portrait_bjin_8bpp, "../baked/portraits/Bjin.8bpp"
+    include_bin portrait_bjin_pals, "../baked/portraits/Bjin.pals"

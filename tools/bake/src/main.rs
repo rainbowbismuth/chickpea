@@ -64,7 +64,6 @@ impl Character4BPP {
         self.0[y]
     }
 
-
     pub fn flip_vertical(&self) -> Self {
         Self([
             self.0[7], self.0[6], self.0[5], self.0[4], self.0[3], self.0[2], self.0[1], self.0[0],
@@ -91,6 +90,21 @@ impl Character4BPP {
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(transparent)]
+/// An 8x8 character, with eight bits per pixel.
+pub struct Character8BPP(pub [u64; 8]);
+
+impl Character8BPP {
+    pub const fn new(data: [u64; 8]) -> Self {
+        Self(data)
+    }
+
+    pub const fn blank() -> Self {
+        Self([0; 8])
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(transparent)]
 /// A sixteen color, RGB palette.
 pub struct Palette(pub [Color; 16]);
 
@@ -103,11 +117,19 @@ impl Palette {
 }
 
 #[derive(Clone)]
-pub struct Image {
+pub struct Image4BPP {
     pub width: u32,
     pub height: u32,
     pub palette: Palette,
     pub tiles: Vec<Character4BPP>,
+}
+
+#[derive(Clone)]
+pub struct Image8BPP {
+    pub width: u32,
+    pub height: u32,
+    pub palettes: Vec<Palette>,
+    pub tiles: Vec<Character8BPP>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -139,12 +161,12 @@ impl Vec2 {
 }
 
 
-impl Image {
-    pub fn load_png<P: AsRef<Path>>(path: P) -> Image {
+impl Image4BPP {
+    pub fn load_png<P: AsRef<Path>>(path: P) -> Self {
         Self::load_png_impl(path.as_ref())
     }
 
-    fn load_png_impl(path: &Path) -> Image {
+    fn load_png_impl(path: &Path) -> Self {
         let data = std::fs::File::open(path).expect("couldn't find image");
         let mut decoder = png::Decoder::new(data);
         decoder.set_transformations(png::Transformations::IDENTITY);
@@ -197,10 +219,80 @@ impl Image {
             }
         }
 
-        Image {
+        Self {
             width,
             height,
             palette,
+            tiles,
+        }
+    }
+}
+
+impl Image8BPP {
+    pub fn load_png<P: AsRef<Path>>(path: P, offset: usize) -> Self {
+        Self::load_png_impl(path.as_ref(), offset)
+    }
+
+    fn load_png_impl(path: &Path, offset: usize) -> Self {
+        let data = std::fs::File::open(path).expect("couldn't find image");
+        let mut decoder = png::Decoder::new(data);
+        decoder.set_transformations(png::Transformations::IDENTITY);
+        let (output_info, mut reader) = decoder.read_info().unwrap();
+
+        let info = reader.info();
+        assert_eq!(info.color_type, ColorType::Indexed);
+        assert_eq!(info.bit_depth, BitDepth::Eight);
+        let png_palette = info.palette.to_owned().expect("image must have a palette");
+        let width = info.width;
+        let height = info.height;
+        assert_eq!(width % 8, 0);
+        assert_eq!(height % 8, 0);
+        let mut png_pixels = vec![0; output_info.buffer_size()];
+        reader.next_frame(&mut png_pixels).unwrap();
+
+        let mut palettes = vec![Palette::ALL_BLACK];
+        let colors = png_palette.len() / 3;
+        assert!(colors <= 256 - offset * 16);
+
+        for i in 0..colors {
+            if i != 0 && i % 16 == 0 {
+                palettes.push(Palette::ALL_BLACK);
+            }
+            let r = png_palette[i * 3 + 0];
+            let g = png_palette[i * 3 + 1];
+            let b = png_palette[i * 3 + 2];
+            let color = rgb8(r, g, b);
+            palettes[i / 16].0[i % 16] = color;
+        }
+
+        let mut tiles = vec![];
+        let pitch = width as usize;
+        let tiles_y = height / 8;
+        let tiles_x = width / 8;
+        for y in 0..tiles_y {
+            let y_base = (y * 8) as usize;
+            for x in 0..tiles_x {
+                let x_base = (x * 8) as usize;
+                let mut gfx = Character8BPP::blank();
+                for i in 0..8 {
+                    for j in 0..8 {
+                        let img_x = x_base + j as usize;
+                        let img_y = y_base + i as usize;
+                        if png_pixels[img_x + img_y * pitch] == 0 {
+                            continue;
+                        }
+                        gfx.0[i as usize] |=
+                            (((png_pixels[img_x + img_y * pitch] + offset as u8 * 16) & 0xFF) as u64) << (j * 8);
+                    }
+                }
+                tiles.push(gfx);
+            }
+        }
+
+        Self {
+            width,
+            height,
+            palettes,
             tiles,
         }
     }
@@ -232,6 +324,19 @@ impl Serialize for u32 {
     }
 }
 
+impl Serialize for u64 {
+    fn write(&self, out: &mut Vec<u8>) {
+        out.push(*self as u8);
+        out.push((*self >> 8) as u8);
+        out.push((*self >> 16) as u8);
+        out.push((*self >> 24) as u8);
+        out.push((*self >> 32) as u8);
+        out.push((*self >> 40) as u8);
+        out.push((*self >> 48) as u8);
+        out.push((*self >> 56) as u8);
+    }
+}
+
 impl Serialize for Color {
     fn write(&self, out: &mut Vec<u8>) {
         self.0.write(out);
@@ -258,6 +363,12 @@ impl Serialize for Character4BPP {
     }
 }
 
+impl Serialize for Character8BPP {
+    fn write(&self, out: &mut Vec<u8>) {
+        self.0.as_ref().write(out);
+    }
+}
+
 pub fn serialize<T: Serialize + ?Sized>(val: &T) -> Vec<u8> {
     let mut out = vec![];
     val.write(&mut out);
@@ -275,6 +386,9 @@ struct Opts {
 enum SubCommand {
     #[clap(name = "4bpp")]
     Bake4BPP(Bake4BPP),
+
+    #[clap(name = "8bpp")]
+    Bake8BPP(Bake8BPP),
 
     #[clap(name = "map")]
     BakeTileMap(BakeTileMap),
@@ -296,6 +410,21 @@ struct Bake4BPP {
 
     #[clap(short = 'o')]
     output: String,
+}
+
+#[derive(Clap)]
+struct Bake8BPP {
+    #[clap(short = 'i')]
+    input: String,
+
+    #[clap(short = 's')]
+    swizzle: Option<String>,
+
+    #[clap(short = 'o')]
+    output: String,
+
+    #[clap(long = "offset")]
+    offset: usize,
 }
 
 #[derive(Clap)]
@@ -329,7 +458,9 @@ struct BakeBackground {
 }
 
 fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
-    let pattern: Vec<usize> = swizzle.chars().map(|c| c.to_digit(16).unwrap() as usize).collect();
+    let pattern: Vec<usize> = swizzle.chars()
+        .filter(|c| c.is_alphanumeric())
+        .map(|c| c.to_digit(16).unwrap() as usize).collect();
     let mut counts = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     for idx in &pattern {
         counts[*idx] += 1usize;
@@ -350,7 +481,7 @@ fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
 }
 
 fn bake_4bpp(args: Bake4BPP) -> io::Result<Vec<Character4BPP>> {
-    let img = Image::load_png(&args.input);
+    let img = Image4BPP::load_png(&args.input);
 
     let out_tiles = if let Some(swizzle) = args.swizzle {
         let pattern = swizzle_to_pattern(swizzle);
@@ -377,6 +508,37 @@ fn bake_4bpp(args: Bake4BPP) -> io::Result<Vec<Character4BPP>> {
     std::fs::write(out_pal, serialize(&img.palette))?;
 
     Ok(out_tiles)
+}
+
+fn bake_8bpp(args: Bake8BPP) -> io::Result<()> {
+    let img = Image8BPP::load_png(&args.input, args.offset);
+
+    let out_tiles = if let Some(swizzle) = args.swizzle {
+        let pattern = swizzle_to_pattern(swizzle);
+
+        let mut swizzled_tiles = vec![Character8BPP::blank(); img.tiles.len()];
+        let mut chunk_offset = 0;
+        for chunk in img.tiles.chunks_exact(pattern.len()) {
+            for (tile_i, pattern_i) in pattern.iter().enumerate() {
+                swizzled_tiles[chunk_offset + *pattern_i] = chunk[tile_i];
+            }
+            chunk_offset += pattern.len();
+        }
+        swizzled_tiles
+    } else {
+        img.tiles
+    };
+
+    let mut out_4bpp = PathBuf::from(&args.output);
+    out_4bpp.set_extension("8bpp");
+    let mut out_pal = PathBuf::from(&args.output);
+    out_pal.set_extension("pals");
+
+    std::fs::write(out_4bpp, serialize(out_tiles.as_slice()))?;
+    std::fs::write(out_pal, serialize(img.palettes.as_slice()))?;
+
+
+    Ok(())
 }
 
 #[derive(Copy, Clone)]
@@ -524,7 +686,7 @@ fn compute_attribute_map(walk: &[isize], occlude: &[isize], height_map: &[isize]
 
 
 fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
-    let img = Image::load_png(&args.tile_set);
+    let img = Image4BPP::load_png(&args.tile_set);
     let mut tile_set = TileSet::new();
     for (i, character) in img.tiles.iter().enumerate() {
         tile_set.add(i as isize, character);
@@ -609,7 +771,7 @@ fn bake_font(args: BakeFont) -> io::Result<()> {
 }
 
 fn bake_background(args: BakeBackground) -> io::Result<()> {
-    let img = Image::load_png(&args.input);
+    let img = Image4BPP::load_png(&args.input);
     let mut tile_set = TileSet::new();
     for (i, character) in img.tiles.iter().enumerate() {
         tile_set.add(i as isize, character);
@@ -631,7 +793,7 @@ fn bake_background(args: BakeBackground) -> io::Result<()> {
     let mut out_tiles = PathBuf::from(&args.output);
     out_tiles.set_extension("tiles");
     std::fs::write(out_tiles, serialize(tile_map.as_slice()))?;
-    
+
     Ok(())
 }
 
@@ -640,6 +802,7 @@ fn main() -> io::Result<()> {
 
     match opts.sub_cmd {
         SubCommand::Bake4BPP(args) => bake_4bpp(args).map(|_x| ()),
+        SubCommand::Bake8BPP(args) => bake_8bpp(args),
         SubCommand::BakeTileMap(args) => bake_tilemap(args),
         SubCommand::BakeFont(args) => bake_font(args),
         SubCommand::BakeBackground(args) => bake_background(args)

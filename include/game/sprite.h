@@ -19,6 +19,7 @@ struct sprite_template {
 	uint8_t num_objects;
 	uint8_t palette;
 	enum obj_mode mode;
+	bool colors_256;
 };
 
 typedef struct sprite_handle_s {

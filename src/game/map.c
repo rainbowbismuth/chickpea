@@ -183,8 +183,7 @@ void demo_render_tile_highlights(struct map *nonnull map,
 				 struct map_render_params *nonnull params,
 				 struct map_bit_vec *nonnull highlights)
 {
-	volatile uint16_t *screen_low =
-		screen_block_begin(params->screen_low);
+	volatile uint16_t *screen_low = screen_block_begin(params->screen_low);
 	volatile uint16_t *screen_high =
 		screen_block_begin(params->screen_high);
 	cpu_fast_fill(0, (void *)screen_low, (16 * 32 * 32) / 4);

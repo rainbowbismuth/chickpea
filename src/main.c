@@ -60,6 +60,39 @@ static struct text_box_graphics speech_bubble_gfx = {
 	.height = 8,
 };
 
+extern struct char_8bpp portrait_bjin_8bpp[];
+extern struct palette portrait_bjin_pals[];
+
+static struct sprite_object_def portrait_objs[5] = {
+	{ .x_offset = 0,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_64 },
+	{ .x_offset = 32,
+	  .y_offset = 0,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_32 },
+	{ .x_offset = 32,
+	  .y_offset = 32,
+	  .shape = OBJ_SHAPE_VERTICAL,
+	  .size = OBJ_SIZE_32 },
+	{ .x_offset = 0,
+	  .y_offset = 64,
+	  .shape = OBJ_SHAPE_HORIZONTAL,
+	  .size = OBJ_SIZE_32 },
+	{ .x_offset = 32,
+	  .y_offset = 64,
+	  .shape = OBJ_SHAPE_SQUARE,
+	  .size = OBJ_SIZE_16 },
+};
+
+static struct sprite_template portrait_template = {
+	.mode = OBJ_MODE_NORMAL,
+	.num_objects = ARRAY_SIZE(portrait_objs),
+	.objects = portrait_objs,
+	.colors_256 = true,
+};
+
 void move_cursor_pos_bounded(int16_t x, int16_t y)
 {
 	uint8_t attr = demo_map.attributes->bytes[y][x];
@@ -130,7 +163,7 @@ void demo_on_horizontal_blank(void)
 	if (vcount == 160) {
 		vcount = 0;
 	}
-	bg_palette(0)->color[0] = color(((vcount >> 4) & 0b1111), 5, 10);
+	bg_palette(0)->color[0] = color(((vcount >> 4) & 0b1111) + 16, 15, 25);
 }
 
 void demo_on_vertical_blank(void)
@@ -232,6 +265,15 @@ void game_main(void)
 		soldiers[i] = demo_alloc_soldier();
 		sprite_ref(soldiers[i])->enabled = true;
 	}
+
+	sprite_handle bjin = sprite_alloc(&portrait_template);
+	for (size_t i = 0; i < 3; ++i) {
+		write_palette(&portrait_bjin_pals[i], obj_palette(6 + i));
+	}
+	sprite_ref(bjin)->enabled = true;
+	sprite_ref(bjin)->pos.y -= 4;
+	sprite_queue_frame_copy(bjin, (struct char_4bpp *)portrait_bjin_8bpp);
+
 	sprite_execute_frame_copies();
 
 	for (size_t y = 0; y < MAP_HEIGHT; ++y) {
@@ -266,7 +308,7 @@ void game_main(void)
 		.width = 24,
 	};
 	text_box_draw(&text_box);
-	text_render(&bismuth, &bismuth_settings, "MagicBottle, NICE!");
+	text_render(&bismuth, &bismuth_settings, "Portraits, huh?");
 
 	//	demo_render_tile_highlights(&demo_map, &map_render_params, &highlights);
 

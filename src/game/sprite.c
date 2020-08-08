@@ -111,6 +111,9 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 		const struct sprite_object_def *obj_def = &template->objects[i];
 		tiles += tiles_in_object(obj_def->shape, obj_def->size);
 	}
+	if (template->colors_256) {
+		tiles *= 2;
+	}
 	sprite->tile_handle = obj_tiles_alloc(tiles);
 
 	allocated++;
@@ -162,12 +165,14 @@ static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,
 
 	entry->attr_0 = PREP_WRAP(OBJA0_Y, (uint16_t)pos.y) |
 			PREP(OBJA0_MODE, sprite->pub.mode) |
-			PREP(OBJA0_SHAPE, object->shape);
+			PREP(OBJA0_SHAPE, object->shape) |
+			PREP(OBJA0_256_COLORS, sprite->template.colors_256);
 	entry->attr_1 = PREP_WRAP(OBJA1_X, (uint16_t)pos.x) |
 			PREP(OBJA1_SIZE, object->size) | flip_bits;
 	entry->attr_2 = PREP(OBJA2_CHAR, tile_start) |
 			PREP(OBJA2_PALETTE, sprite->pub.palette) |
 			PREP(OBJA2_PRIORITY, priority);
+	assert(!sprite->template.colors_256 || tile_start % 2 == 0);
 	entry->_rotation_scaling_padding = 0;
 
 	objs_in_buf++;
@@ -187,8 +192,13 @@ static void add_sprite_to_buffer(const struct sprite_priv *nonnull sprite)
 		size_t priority = sprite->pub.priority[i];
 		add_object_to_buffer(sprite, &sprite->template.objects[i],
 				     offset, priority);
-		offset += tiles_in_object(sprite->template.objects[i].shape,
-					  sprite->template.objects[i].size);
+		size_t offset_by =
+			tiles_in_object(sprite->template.objects[i].shape,
+					sprite->template.objects[i].size);
+		if (sprite->template.colors_256) {
+			offset_by *= 2;
+		}
+		offset += offset_by;
 	}
 }
 

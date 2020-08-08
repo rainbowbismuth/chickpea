@@ -104,7 +104,7 @@ size_t tiles_in_object(enum obj_shape shape, enum obj_size size)
 }
 
 void ch4bpp_bitor(struct char_4bpp *restrict nonnull self,
-			  const struct char_4bpp *restrict nonnull other)
+		  const struct char_4bpp *restrict nonnull other)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
 		self->lines[i] |= other->lines[i];
@@ -123,8 +123,7 @@ void char_4bpp_shift_left(struct char_4bpp *nonnull self, uint32_t amount)
 }
 
 void ch4bpp_bitor_shl(struct char_4bpp *restrict nonnull dst,
-			 struct char_4bpp *restrict nonnull src,
-			 uint32_t pixels)
+		      struct char_4bpp *restrict nonnull src, uint32_t pixels)
 {
 	if (pixels == 0) {
 		return;
@@ -144,8 +143,7 @@ void char_4bpp_shift_right(struct char_4bpp *nonnull self, uint32_t amount)
 }
 
 void ch4bpp_bitor_shr(struct char_4bpp *restrict nonnull dst,
-			 struct char_4bpp *restrict nonnull src,
-			 uint32_t pixels)
+		      struct char_4bpp *restrict nonnull src, uint32_t pixels)
 {
 	uint32_t amount = pixels * 4;
 	for (size_t i = 0; i < ARRAY_SIZE(dst->lines); ++i) {

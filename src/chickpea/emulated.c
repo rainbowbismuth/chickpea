@@ -325,8 +325,7 @@ static void draw_object(uint32_t y, const struct oam_entry *nonnull obj)
 	uint32_t start_x = GET(OBJA1_X, obj->attr_1);
 
 	// Only handling mode 0 right now.
-	struct char_4bpp *char_block =
-		(struct char_4bpp *)char_block_begin(4);
+	struct char_4bpp *char_block = (struct char_4bpp *)char_block_begin(4);
 
 	uint32_t char_name = GET(OBJA2_CHAR, obj->attr_2);
 	struct palette *palette =

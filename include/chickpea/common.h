@@ -217,6 +217,10 @@ struct char_4bpp {
 	uint32_t lines[8];
 };
 
+struct char_8bpp {
+	uint64_t lines[8];
+};
+
 struct palette {
 	uint16_t color[16];
 };
