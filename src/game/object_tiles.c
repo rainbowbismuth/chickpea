@@ -1,7 +1,7 @@
+#include "game/object_tiles.h"
 #include "chickpea.h"
 #include "chickpea/bit_vec.h"
 #include "chickpea/nano_unit.h"
-#include "game/object_tiles.h"
 
 #define OBJ_TILES 1024
 static uint8_t used_tiles[OBJ_TILES / 8] = { 0 };
@@ -21,8 +21,8 @@ static struct object_tiles_alloc allocs[MAX_OBJECTS] = { 0 };
 bool obj_tiles_exists(obj_tiles_handle handle)
 {
 	// TODO: Remove the obj_tiles_enabled part.
-	return allocs[handle.index].generation == handle.generation &&
-	       GET(OBJ_TILES_ENABLED, allocs[handle.index].attr);
+	return allocs[handle.index].generation == handle.generation
+	    && GET(OBJ_TILES_ENABLED, allocs[handle.index].attr);
 }
 
 static size_t find_disabled_alloc_idx(void)

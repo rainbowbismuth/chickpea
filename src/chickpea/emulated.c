@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include "chickpea.h"
-#include "chickpea/nano_unit.h"
 #include "SDL.h"
 #include "SDL_timer.h"
+#include "chickpea.h"
+#include "chickpea/nano_unit.h"
+#include <stdio.h>
 
 #define PRIORITY_2ND_TARGET BIT(0)
 #define PRIORITY_1ST_TARGET BIT(1)
@@ -74,8 +74,8 @@ int main(int argc, const char *nonnull argv[])
 	assert(window != NULL);
 
 	renderer = SDL_CreateRenderer(window, -1,
-				      SDL_RENDERER_ACCELERATED |
-					      SDL_RENDERER_PRESENTVSYNC);
+				      SDL_RENDERER_ACCELERATED
+					      | SDL_RENDERER_PRESENTVSYNC);
 	assert(renderer != NULL);
 
 	surface = SDL_CreateRGBSurfaceWithFormat(0, GBA_WIDTH, GBA_HEIGHT, 16,
@@ -101,9 +101,9 @@ static void clear_line(uint16_t bg_color, uint16_t y)
 	}
 	for (size_t i = 0; i < ARRAY_SIZE(screen_color[0]); ++i) {
 		screen_color[y][i] = bg_color;
-		screen_priority[y][i] = PREP(PRIORITY_UPPER, 0x3) |
-					PREP(PRIORITY_LAYER, 1 << 5) |
-					blend_target_bits;
+		screen_priority[y][i] = PREP(PRIORITY_UPPER, 0x3)
+				      | PREP(PRIORITY_LAYER, 1 << 5)
+				      | blend_target_bits;
 	}
 }
 
@@ -133,19 +133,19 @@ draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
 {
 	uint16_t current = screen_priority[y][x];
 	if (priority >= current) {
-		if (current & PRIORITY_1ST_TARGET &&
-		    priority & PRIORITY_2ND_TARGET) {
+		if (current & PRIORITY_1ST_TARGET
+		    && priority & PRIORITY_2ND_TARGET) {
 			color = additive_blend(screen_color[y][x],
 					       params->src_weight, color,
 					       params->dst_weight);
 			screen_priority[y][x] =
-				priority &
-				~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
+				priority
+				& ~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 		} else {
 			color = screen_color[y][x];
 			screen_priority[y][x] =
-				current &
-				~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
+				current
+				& ~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 		}
 	} else {
 		screen_priority[y][x] = priority & ~PRIORITY_2ND_TARGET;
@@ -161,8 +161,8 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 	}
 	uint16_t blend_control = REG_BLDCNT;
 
-	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA &&
-	    GET(PRIORITY_2ND_TARGET, priority)) {
+	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA
+	    && GET(PRIORITY_2ND_TARGET, priority)) {
 		struct blend_alpha_params params = {
 			.src_weight = GET(BLDALPHA_1ST_WEIGHT, REG_BLDALPHA),
 			.dst_weight = GET(BLDALPHA_2ND_WEIGHT, REG_BLDALPHA)
@@ -182,12 +182,12 @@ static void draw_line(uint32_t x, uint32_t y, uint32_t line,
 					       &params);
 		}
 	} else {
-		assert(GET(BLDCNT_EFFECT, blend_control) !=
-			       BLEND_BRIGHTNESS_DECREASE &&
-		       "effect not implemented");
-		assert(GET(BLDCNT_EFFECT, blend_control) !=
-			       BLEND_BRIGHTNESS_INCREASE &&
-		       "effect not implemented");
+		assert(GET(BLDCNT_EFFECT, blend_control)
+			       != BLEND_BRIGHTNESS_DECREASE
+		       && "effect not implemented");
+		assert(GET(BLDCNT_EFFECT, blend_control)
+			       != BLEND_BRIGHTNESS_INCREASE
+		       && "effect not implemented");
 
 		for (size_t i = 0; i < 8; ++i) {
 			size_t col_index = (line >> (i * 4)) & 0xF;
@@ -212,8 +212,8 @@ static void draw_line_256(uint32_t x, uint32_t y, uint64_t line,
 	}
 	uint16_t blend_control = REG_BLDCNT;
 
-	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA &&
-	    GET(PRIORITY_2ND_TARGET, priority)) {
+	if (GET(BLDCNT_EFFECT, blend_control) == BLEND_ALPHA
+	    && GET(PRIORITY_2ND_TARGET, priority)) {
 		struct blend_alpha_params params = {
 			.src_weight = GET(BLDALPHA_1ST_WEIGHT, REG_BLDALPHA),
 			.dst_weight = GET(BLDALPHA_2ND_WEIGHT, REG_BLDALPHA)
@@ -233,12 +233,12 @@ static void draw_line_256(uint32_t x, uint32_t y, uint64_t line,
 					       &params);
 		}
 	} else {
-		assert(GET(BLDCNT_EFFECT, blend_control) !=
-			       BLEND_BRIGHTNESS_DECREASE &&
-		       "effect not implemented");
-		assert(GET(BLDCNT_EFFECT, blend_control) !=
-			       BLEND_BRIGHTNESS_INCREASE &&
-		       "effect not implemented");
+		assert(GET(BLDCNT_EFFECT, blend_control)
+			       != BLEND_BRIGHTNESS_DECREASE
+		       && "effect not implemented");
+		assert(GET(BLDCNT_EFFECT, blend_control)
+			       != BLEND_BRIGHTNESS_INCREASE
+		       && "effect not implemented");
 
 		for (size_t i = 0; i < 8; ++i) {
 			size_t col_index = (line >> (i * 8)) & 0xFF;
@@ -320,15 +320,15 @@ static void sort_backgrounds_by_priority(struct background_array *arr)
 		size_t j = i;
 
 		/* (╯°□°)╯︵ ┻━┻ sorry for huge conditional */
-		while (j > 0 &&
-		       (PREP(PRIORITY_UPPER,
-			     GET(BGCNT_PRIORITY,
-				 *reg_bg_control(arr->bgs[j - 1]))) |
-			PREP(PRIORITY_LAYER, arr->bgs[j - 1])) >
-			       (PREP(PRIORITY_UPPER,
-				     GET(BGCNT_PRIORITY,
-					 *reg_bg_control(arr->bgs[j]))) |
-				PREP(PRIORITY_LAYER, arr->bgs[j]))) {
+		while (j > 0
+		       && (PREP(PRIORITY_UPPER,
+				GET(BGCNT_PRIORITY,
+				    *reg_bg_control(arr->bgs[j - 1])))
+			   | PREP(PRIORITY_LAYER, arr->bgs[j - 1]))
+				  > (PREP(PRIORITY_UPPER,
+					  GET(BGCNT_PRIORITY,
+					      *reg_bg_control(arr->bgs[j])))
+				     | PREP(PRIORITY_LAYER, arr->bgs[j]))) {
 			enum background tmp = arr->bgs[j - 1];
 			arr->bgs[j - 1] = arr->bgs[j];
 			arr->bgs[j] = tmp;
@@ -465,8 +465,8 @@ static void render_entire_line(uint32_t y)
 
 		uint16_t bg_control = *reg_bg_control(bg);
 		uint16_t bg_priority = GET(BGCNT_PRIORITY, bg_control);
-		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority) |
-				    (1 << bg);
+		uint16_t priority = PREP(PRIORITY_UPPER, bg_priority)
+				  | (1 << bg);
 
 		if (GET(BLDCNT_1ST_TARGET, REG_BLDCNT) & (1 << bg)) {
 			priority |= PRIORITY_1ST_TARGET;
@@ -509,9 +509,9 @@ static void update_surface_from_screen(void)
 	for (size_t y = 0; y < GBA_HEIGHT; ++y) {
 		for (size_t x = 0; x < GBA_WIDTH; ++x) {
 			uint16_t col = screen_color[y][x];
-			uint16_t rotated = GET(COL_RED, col) << 10 |
-					   GET(COL_GREEN, col) << 5 |
-					   GET(COL_BLUE, col);
+			uint16_t rotated = GET(COL_RED, col) << 10
+					 | GET(COL_GREEN, col) << 5
+					 | GET(COL_BLUE, col);
 			*pixels++ = rotated;
 		}
 	}
@@ -708,16 +708,16 @@ void halt()
 	while (--steps_left) {
 		step_emulated_hardware();
 
-		if (GET(INT_HORIZONTAL_BLANK, REG_IE) &&
-		    GET(DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED, REG_DISPSTAT) &&
-		    GET(DISPSTAT_HORIZONTAL_BLANK, REG_DISPSTAT)) {
+		if (GET(INT_HORIZONTAL_BLANK, REG_IE)
+		    && GET(DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED, REG_DISPSTAT)
+		    && GET(DISPSTAT_HORIZONTAL_BLANK, REG_DISPSTAT)) {
 			REG_IF |= INT_HORIZONTAL_BLANK;
 		}
 
-		if (GET(INT_VERTICAL_BLANK, REG_IE) &&
-		    GET(DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED, REG_DISPSTAT) &&
-		    GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT) &&
-		    trigger_vertical_blank) {
+		if (GET(INT_VERTICAL_BLANK, REG_IE)
+		    && GET(DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED, REG_DISPSTAT)
+		    && GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT)
+		    && trigger_vertical_blank) {
 			REG_IF |= INT_VERTICAL_BLANK;
 			trigger_vertical_blank = false;
 		}
@@ -726,8 +726,8 @@ void halt()
 		while (REG_IF && --steps_left) {
 			irq_handler();
 		}
-		assert(steps_left &&
-		       "irq_handler() loop, not acknowledging interrupt?");
+		assert(steps_left
+		       && "irq_handler() loop, not acknowledging interrupt?");
 		if (done) {
 			return;
 		}

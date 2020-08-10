@@ -21,4 +21,4 @@ static inline struct vec2 v2_add_xy(struct vec2 pos, int16_t x, int16_t y)
 	return pos;
 }
 
-#endif //CHICKPEA_VEC2_H
+#endif // CHICKPEA_VEC2_H

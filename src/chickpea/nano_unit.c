@@ -1,5 +1,5 @@
-#include "chickpea/common.h"
 #include "chickpea/nano_unit.h"
+#include "chickpea/common.h"
 
 static uint32_t count_tests_in_suites(struct nano_unit_suite *nonnull suites)
 {

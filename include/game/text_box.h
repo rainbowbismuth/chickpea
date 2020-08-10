@@ -22,4 +22,4 @@ struct text_box_settings {
 
 void text_box_draw(const struct text_box_settings *settings);
 
-#endif //CHICKPEA_TEXT_BOX_H
+#endif // CHICKPEA_TEXT_BOX_H

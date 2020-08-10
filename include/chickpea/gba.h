@@ -36,4 +36,4 @@
 
 #define OAM (*((volatile struct object_attribute_mem *)0x07000000))
 
-#endif //CHICKPEA_GBA_H
+#endif // CHICKPEA_GBA_H

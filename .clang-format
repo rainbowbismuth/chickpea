@@ -45,10 +45,10 @@ BraceWrapping:
   SplitEmptyFunction: true # Unknown to clang-format-4.0
   SplitEmptyRecord: true # Unknown to clang-format-4.0
   SplitEmptyNamespace: true # Unknown to clang-format-4.0
-BreakBeforeBinaryOperators: None
+BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 BreakBeforeInheritanceComma: false # Unknown to clang-format-4.0
-BreakBeforeTernaryOperators: false
+BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeComma # Unknown to clang-format-4.0
 BreakAfterJavaFieldAnnotations: false
@@ -99,8 +99,8 @@ PenaltyExcessCharacter: 100
 PenaltyReturnTypeOnItsOwnLine: 60
 
 PointerAlignment: Right
-ReflowComments: false
-SortIncludes: false
+ReflowComments: true
+SortIncludes: true
 SortUsingDeclarations: false # Unknown to clang-format-4.0
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: true
@@ -116,6 +116,6 @@ SpacesInContainerLiterals: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: c++03
+Standard: c++20
 TabWidth: 8
 UseTab: Always

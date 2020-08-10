@@ -1,5 +1,5 @@
-#include "chickpea.h"
 #include "chickpea/bit_vec.h"
+#include "chickpea.h"
 #include "chickpea/nano_unit.h"
 
 void bit_vec_set(uint8_t *nonnull vec, size_t length, size_t n)

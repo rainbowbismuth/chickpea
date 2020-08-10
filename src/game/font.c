@@ -39,13 +39,13 @@ static void add_to_screen(const struct text_renderer *renderer,
 {
 	uint16_t pal = PREP(TILE_PALETTE, renderer->settings->palette);
 	*screen = PREP(TILE_CHAR,
-		       char_name(renderer->settings->char_block, chars)) |
-		  pal;
+		       char_name(renderer->settings->char_block, chars))
+		| pal;
 	if (renderer->font->tall) {
 		*(screen + 32) = PREP(TILE_CHAR,
 				      char_name(renderer->settings->char_block,
-						chars + 1)) |
-				 pal;
+						chars + 1))
+			       | pal;
 	}
 }
 

@@ -11,4 +11,4 @@ struct screen {
 
 extern struct screen *nonnull current_screen;
 
-#endif //CHICKPEA_SCREEN_H
+#endif // CHICKPEA_SCREEN_H

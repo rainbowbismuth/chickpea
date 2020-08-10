@@ -1,9 +1,9 @@
 #ifndef CHICKPEA_COMMON_H
 #define CHICKPEA_COMMON_H
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /*
  * Attributes for pointers that declare if they're nullable or not.
@@ -31,9 +31,9 @@
  * The size of the passed in array, with a test to fail compilation if `arr`
  * is a pointer.
  */
-#define ARRAY_SIZE(arr)                   \
-	(sizeof(arr) / sizeof((arr)[0]) + \
-	 BUILD_CHECK(                     \
+#define ARRAY_SIZE(arr)                 \
+	(sizeof(arr) / sizeof((arr)[0]) \
+	 + BUILD_CHECK(                 \
 		 __builtin_types_compatible_p(typeof(arr), typeof(&arr[0]))))
 
 /*
@@ -308,4 +308,4 @@ void interrupt_acknowledge(uint16_t int_flag);
 
 extern void (*nonnull volatile irq_handler)(void);
 
-#endif //CHICKPEA_COMMON_H
+#endif // CHICKPEA_COMMON_H

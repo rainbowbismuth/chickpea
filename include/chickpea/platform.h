@@ -7,4 +7,4 @@
 #include "chickpea/emulated.h"
 #endif
 
-#endif //CHICKPEA_PLATFORM_H
+#endif // CHICKPEA_PLATFORM_H

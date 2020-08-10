@@ -67,23 +67,21 @@ struct map demo_map;
 
 void demo_init(void);
 
-void demo_render_tile_highlights(struct map *nonnull map,
-				 struct map_render_params *nonnull params,
+void demo_render_tile_highlights(struct map *nonnull map, struct map_render_params *nonnull params,
 				 struct map_bit_vec *nonnull highlights);
 void demo_rotate_highlight_palette(uint32_t offset);
 
 sprite_handle demo_alloc_cursor(void);
 sprite_handle demo_alloc_pointer(void);
 
-void demo_move_cursor(struct map *nonnull map, sprite_handle cursor,
-		      struct vec2 pos, struct vec2 scroll);
-void demo_move_pointer(struct map *nonnull map, sprite_handle pointer,
-		       struct vec2 pos, struct vec2 scroll, uint32_t frame);
+void demo_move_cursor(struct map *nonnull map, sprite_handle cursor, struct vec2 pos,
+		      struct vec2 scroll);
+void demo_move_pointer(struct map *nonnull map, sprite_handle pointer, struct vec2 pos,
+		       struct vec2 scroll, uint32_t frame);
 
 sprite_handle demo_alloc_soldier(void);
-void demo_move_soldier(struct map *nonnull map, sprite_handle soldier,
-		       struct vec2 pos, struct vec2 scroll);
-void demo_soldier_frame(sprite_handle soldier, enum facing facing,
-			uint32_t frame);
+void demo_move_soldier(struct map *nonnull map, sprite_handle soldier, struct vec2 pos,
+		       struct vec2 scroll);
+void demo_soldier_frame(sprite_handle soldier, enum facing facing, uint32_t frame);
 
-#endif //CHICKPEA_MAP_H
+#endif // CHICKPEA_MAP_H

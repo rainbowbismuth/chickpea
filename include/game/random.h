@@ -15,4 +15,4 @@ void random_init(struct random *random);
 uint32_t random_next(struct random *random);
 uint32_t random_global(void);
 
-#endif //CHICKPEA_RANDOM_H
+#endif // CHICKPEA_RANDOM_H

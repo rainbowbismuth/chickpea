@@ -37,4 +37,4 @@ extern struct object_attribute_mem obj_attr_mem;
 
 #define OAM (obj_attr_mem)
 
-#endif //CHICKPEA_EMULATED_H
+#endif // CHICKPEA_EMULATED_H

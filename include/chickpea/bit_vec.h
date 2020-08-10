@@ -13,4 +13,4 @@ bool bit_vec_test(uint8_t *nonnull vec, size_t length, size_t n);
 #define BIT_ARRAY_TOGGLE(arr, n) bit_vec_toggle(arr, ARRAY_SIZE(arr), n)
 #define BIT_ARRAY_TEST(arr, n)	 bit_vec_test(arr, ARRAY_SIZE(arr), n)
 
-#endif //CHICKPEA_BIT_VEC_H
+#endif // CHICKPEA_BIT_VEC_H

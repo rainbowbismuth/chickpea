@@ -19,15 +19,15 @@ void text_box_draw(const struct text_box_settings *settings)
 	for (size_t x = 0; x < settings->width - BOX_GFX_WIDTH_M1; ++x) {
 		for (size_t y = 0; y < settings->gfx->height; ++y) {
 			screen[y * 32 + x] =
-				settings->gfx->tiles[y * BOX_GFX_WIDTH] |
-				PREP(TILE_PALETTE, settings->palette);
+				settings->gfx->tiles[y * BOX_GFX_WIDTH]
+				| PREP(TILE_PALETTE, settings->palette);
 		}
 	}
 	for (size_t y = 0; y < settings->gfx->height; ++y) {
 		for (size_t x = 1; x < BOX_GFX_WIDTH; ++x) {
 			screen[y * 32 + x + (settings->width - BOX_GFX_WIDTH)] =
-				settings->gfx->tiles[y * BOX_GFX_WIDTH + x] |
-				PREP(TILE_PALETTE, settings->palette);
+				settings->gfx->tiles[y * BOX_GFX_WIDTH + x]
+				| PREP(TILE_PALETTE, settings->palette);
 		}
 	}
 }

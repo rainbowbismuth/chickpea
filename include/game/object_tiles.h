@@ -19,4 +19,4 @@ volatile struct char_4bpp *nonnull obj_tiles_vram(obj_tiles_handle handle);
 
 void obj_tiles_reset(void);
 
-#endif //CHICKPEA_OBJECT_TILES_H
+#endif // CHICKPEA_OBJECT_TILES_H

@@ -1,8 +1,8 @@
 #include "game/sprite.h"
 #include "game/object_tiles.h"
 
-struct sprite_priv {
-	struct sprite pub;
+struct sprite_private {
+	struct sprite public;
 	uint8_t generation;
 	bool used;
 	struct sprite_template template;
@@ -17,7 +17,7 @@ struct sprite_frame_copy {
 };
 
 static size_t allocated = 0;
-static struct sprite_priv sprites[MAX_SPRITES] = { 0 };
+static struct sprite_private sprites[MAX_SPRITES] = { 0 };
 static uint8_t sorted_sprites[MAX_SPRITES] = { 0 };
 
 static size_t objs_in_buf = 0;
@@ -34,14 +34,14 @@ size_t sprite_allocated(void)
 bool sprite_exists(sprite_handle handle)
 {
 	assert(handle.index < MAX_SPRITES);
-	return sprites[handle.index].generation == handle.generation &&
-	       sprites[handle.index].used;
+	return sprites[handle.index].generation == handle.generation
+	    && sprites[handle.index].used;
 }
 
 struct sprite *nonnull sprite_ref(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
-	return &sprites[handle.index].pub;
+	return &sprites[handle.index].public;
 }
 
 static size_t find_first_unused(void)
@@ -54,7 +54,7 @@ static size_t find_first_unused(void)
 	assert(false && "no disabled sprites");
 }
 
-static struct vec2 calculate_center(const struct sprite_priv *nonnull sprite)
+static struct vec2 calculate_center(const struct sprite_private *nonnull sprite)
 {
 	int32_t min_x = 0xFFFF, min_y = 0xFFFF;
 	int32_t max_x = -0xFFFF, max_y = -0xFFFF;
@@ -68,13 +68,13 @@ static struct vec2 calculate_center(const struct sprite_priv *nonnull sprite)
 		if (obj_def->y_offset < min_y) {
 			min_y = obj_def->y_offset;
 		}
-		int32_t x_extent = obj_def->x_offset +
-				   object_width(obj_def->shape, obj_def->size);
+		int32_t x_extent = obj_def->x_offset
+				 + object_width(obj_def->shape, obj_def->size);
 		if (x_extent > max_x) {
 			max_x = x_extent;
 		}
-		int32_t y_extent = obj_def->y_offset +
-				   object_height(obj_def->shape, obj_def->size);
+		int32_t y_extent = obj_def->y_offset
+				 + object_height(obj_def->shape, obj_def->size);
 		if (y_extent > max_y) {
 			max_y = y_extent;
 		}
@@ -90,7 +90,7 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 	assert(template->num_objects < MAX_SPRITE_OBJECTS);
 
 	size_t index = find_first_unused();
-	struct sprite_priv *sprite = &sprites[index];
+	struct sprite_private *sprite = &sprites[index];
 
 	// Skip over zero on allocation so that { 0 } is never a valid handle
 	if (sprite->generation == 0) {
@@ -100,10 +100,10 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 	sprite_handle handle = { .index = index,
 				 .generation = sprite->generation };
 	sprite->used = true;
-	cpu_fast_fill(0, &sprite->pub, sizeof(sprite->pub) / 4);
+	cpu_fast_fill(0, &sprite->public, sizeof(sprite->public) / 4);
 	sprite->template = *template;
-	sprite->pub.palette = template->palette;
-	sprite->pub.mode = template->mode;
+	sprite->public.palette = template->palette;
+	sprite->public.mode = template->mode;
 	sprite->center = calculate_center(sprite);
 
 	size_t tiles = 0;
@@ -123,28 +123,28 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
-	struct sprite_priv *sprite = &sprites[handle.index];
+	struct sprite_private *sprite = &sprites[handle.index];
 	return obj_tiles_vram(sprite->tile_handle);
 }
 
 size_t sprite_num_tiles(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
-	struct sprite_priv *sprite = &sprites[handle.index];
+	struct sprite_private *sprite = &sprites[handle.index];
 	return obj_tiles_count(sprite->tile_handle);
 }
 
 void sprite_drop(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
-	struct sprite_priv *sprite = &sprites[handle.index];
+	struct sprite_private *sprite = &sprites[handle.index];
 	sprite->generation++;
 	sprite->used = false;
 	obj_tiles_drop(sprite->tile_handle);
 	allocated--;
 }
 
-static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,
+static void add_object_to_buffer(const struct sprite_private *nonnull sprite,
 				 const struct sprite_object_def *nonnull object,
 				 size_t tile_start, size_t priority)
 {
@@ -153,43 +153,43 @@ static void add_object_to_buffer(const struct sprite_priv *nonnull sprite,
 	int32_t x_offset = object->x_offset;
 	int32_t y_offset = object->y_offset;
 	uint32_t flip_bits = 0;
-	if (sprite->pub.flip_horizontal) {
+	if (sprite->public.flip_horizontal) {
 		flip_bits |= OBJA1_HORIZONTAL_FLIP;
 		x_offset = -(x_offset - sprite->center.x) + sprite->center.x;
 	}
-	if (sprite->pub.flip_vertical) {
+	if (sprite->public.flip_vertical) {
 		flip_bits |= OBJA1_VERTICAL_FLIP;
 		y_offset = -(y_offset - sprite->center.y) + sprite->center.y;
 	}
-	struct vec2 pos = v2_add_xy(sprite->pub.pos, x_offset, y_offset);
+	struct vec2 pos = v2_add_xy(sprite->public.pos, x_offset, y_offset);
 
-	entry->attr_0 = PREP_WRAP(OBJA0_Y, (uint16_t)pos.y) |
-			PREP(OBJA0_MODE, sprite->pub.mode) |
-			PREP(OBJA0_SHAPE, object->shape) |
-			PREP(OBJA0_256_COLORS, sprite->template.colors_256);
-	entry->attr_1 = PREP_WRAP(OBJA1_X, (uint16_t)pos.x) |
-			PREP(OBJA1_SIZE, object->size) | flip_bits;
-	entry->attr_2 = PREP(OBJA2_CHAR, tile_start) |
-			PREP(OBJA2_PALETTE, sprite->pub.palette) |
-			PREP(OBJA2_PRIORITY, priority);
+	entry->attr_0 = PREP_WRAP(OBJA0_Y, (uint16_t)pos.y)
+		      | PREP(OBJA0_MODE, sprite->public.mode)
+		      | PREP(OBJA0_SHAPE, object->shape)
+		      | PREP(OBJA0_256_COLORS, sprite->template.colors_256);
+	entry->attr_1 = PREP_WRAP(OBJA1_X, (uint16_t)pos.x)
+		      | PREP(OBJA1_SIZE, object->size) | flip_bits;
+	entry->attr_2 = PREP(OBJA2_CHAR, tile_start)
+		      | PREP(OBJA2_PALETTE, sprite->public.palette)
+		      | PREP(OBJA2_PRIORITY, priority);
 	assert(!sprite->template.colors_256 || tile_start % 2 == 0);
 	entry->_rotation_scaling_padding = 0;
 
 	objs_in_buf++;
 }
 
-static void add_sprite_to_buffer(const struct sprite_priv *nonnull sprite)
+static void add_sprite_to_buffer(const struct sprite_private *nonnull sprite)
 {
-	if (!sprite->pub.enabled) {
+	if (!sprite->public.enabled) {
 		return;
 	}
 
-	assert(sprite->template.num_objects + objs_in_buf <
-	       ARRAY_SIZE(oam_buf.entries));
+	assert(sprite->template.num_objects + objs_in_buf
+	       < ARRAY_SIZE(oam_buf.entries));
 
 	size_t offset = obj_tiles_start(sprite->tile_handle);
 	for (size_t i = 0; i < sprite->template.num_objects; ++i) {
-		size_t priority = sprite->pub.priority[i];
+		size_t priority = sprite->public.priority[i];
 		add_object_to_buffer(sprite, &sprite->template.objects[i],
 				     offset, priority);
 		size_t offset_by =
@@ -215,8 +215,9 @@ static void sort_sprites_by_priority(void)
 	assert(sprite_n == allocated);
 	for (size_t i = 1; i < sprite_n; ++i) {
 		size_t j = i;
-		while (j > 0 && sprites[sorted_sprites[j - 1]].pub.order >
-					sprites[sorted_sprites[j]].pub.order) {
+		while (j > 0
+		       && sprites[sorted_sprites[j - 1]].public.order
+				  > sprites[sorted_sprites[j]].public.order) {
 			uint8_t tmp = sorted_sprites[j];
 			sorted_sprites[j] = sorted_sprites[j - 1];
 			sorted_sprites[j - 1] = tmp;

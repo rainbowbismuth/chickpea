@@ -1,5 +1,5 @@
-#include "chickpea.h"
 #include "game/debug_font.h"
+#include "chickpea.h"
 
 void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 		     uint32_t screen_block, uint32_t palette, uint32_t tile_x,
@@ -23,8 +23,8 @@ void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 
 		write_4bpp(&font->characters[(size_t)*msg], &character[i]);
 		uint32_t index = tile_y * 32 + tile_x;
-		tile[index] = PREP(TILE_CHAR, i + 1) |
-			      PREP(TILE_PALETTE, palette);
+		tile[index] = PREP(TILE_CHAR, i + 1)
+			    | PREP(TILE_PALETTE, palette);
 	}
 }
 

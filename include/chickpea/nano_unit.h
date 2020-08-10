@@ -12,9 +12,9 @@
  * format to stdout.
  */
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct nano_unit_case {
 	void (*nullable run)(struct nano_unit_case *nonnull test);
@@ -75,4 +75,4 @@ bool nano_unit_run_suites(struct nano_unit_suite *nonnull suites);
 		}                              \
 	} while (0)
 
-#endif //CHICKPEA_NANO_UNIT_H
+#endif // CHICKPEA_NANO_UNIT_H

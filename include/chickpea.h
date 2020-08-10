@@ -6,4 +6,4 @@
 
 void game_main(void);
 
-#endif //CHICKPEA_H
+#endif // CHICKPEA_H

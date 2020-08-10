@@ -117,10 +117,10 @@ void demo_render_one_highlight(volatile uint16_t *screen,
 		screen[tile_1_idx] =
 			REPLACE(TILE_CHAR, tile_1, top_left_together[0]);
 	} else {
-		screen[tile_0_idx] = PREP(TILE_CHAR, top_left[0]) |
-				     PREP(TILE_PALETTE, pal);
-		screen[tile_1_idx] = PREP(TILE_CHAR, top_left[1]) |
-				     PREP(TILE_PALETTE, pal);
+		screen[tile_0_idx] = PREP(TILE_CHAR, top_left[0])
+				   | PREP(TILE_PALETTE, pal);
+		screen[tile_1_idx] = PREP(TILE_CHAR, top_left[1])
+				   | PREP(TILE_PALETTE, pal);
 	}
 
 	size_t tile_2_idx = tile_to_screen(v2_add_x(tile_0_pos, 2));
@@ -133,49 +133,49 @@ void demo_render_one_highlight(volatile uint16_t *screen,
 		screen[tile_3_idx] =
 			REPLACE(TILE_CHAR, tile_3, top_left_together[1]);
 	} else {
-		screen[tile_2_idx] = PREP(TILE_CHAR, top_left[1]) |
-				     PREP(TILE_PALETTE, pal) |
-				     TILE_HORIZONTAL_FLIP;
-		screen[tile_3_idx] = PREP(TILE_CHAR, top_left[0]) |
-				     PREP(TILE_PALETTE, pal) |
-				     TILE_HORIZONTAL_FLIP;
+		screen[tile_2_idx] = PREP(TILE_CHAR, top_left[1])
+				   | PREP(TILE_PALETTE, pal)
+				   | TILE_HORIZONTAL_FLIP;
+		screen[tile_3_idx] = PREP(TILE_CHAR, top_left[0])
+				   | PREP(TILE_PALETTE, pal)
+				   | TILE_HORIZONTAL_FLIP;
 	}
 
 	screen[tile_to_screen(v2_add_xy(tile_0_pos, 0, 1))] =
-		PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal) |
-		TILE_VERTICAL_FLIP;
+		PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal)
+		| TILE_VERTICAL_FLIP;
 	screen[tile_to_screen(v2_add_xy(tile_0_pos, 1, 1))] =
-		PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal) |
-		TILE_VERTICAL_FLIP;
+		PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal)
+		| TILE_VERTICAL_FLIP;
 	screen[tile_to_screen(v2_add_xy(tile_0_pos, 2, 1))] =
-		PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal) |
-		TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
+		PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal)
+		| TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
 	screen[tile_to_screen(v2_add_xy(tile_0_pos, 3, 1))] =
-		PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal) |
-		TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
+		PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal)
+		| TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
 }
 
 void demo_gross_fix_up_step(struct map *nonnull map,
 			    volatile uint16_t *screen_high, struct vec2 t_0_pos)
 {
-	if (map->upper->tiles[t_0_pos.y][t_0_pos.x] &&
-	    map->upper->tiles[t_0_pos.y][t_0_pos.x + 1] &&
-	    !map->upper->tiles[t_0_pos.y + 1][t_0_pos.x] &&
-	    !map->upper->tiles[t_0_pos.y][t_0_pos.x + 2]) {
+	if (map->upper->tiles[t_0_pos.y][t_0_pos.x]
+	    && map->upper->tiles[t_0_pos.y][t_0_pos.x + 1]
+	    && !map->upper->tiles[t_0_pos.y + 1][t_0_pos.x]
+	    && !map->upper->tiles[t_0_pos.y][t_0_pos.x + 2]) {
 		screen_high[tile_to_screen(t_0_pos)] =
 			PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal);
 		screen_high[tile_to_screen(t_0_pos) + 1] =
 			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal);
-	} else if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2] &&
-		   map->upper->tiles[t_0_pos.y][t_0_pos.x + 3] &&
-		   !map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2] &&
-		   !map->upper->tiles[t_0_pos.y][t_0_pos.x + 1]) {
+	} else if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2]
+		   && map->upper->tiles[t_0_pos.y][t_0_pos.x + 3]
+		   && !map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2]
+		   && !map->upper->tiles[t_0_pos.y][t_0_pos.x + 1]) {
 		screen_high[tile_to_screen(t_0_pos) + 2] =
-			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal) |
-			TILE_HORIZONTAL_FLIP;
+			PREP(TILE_CHAR, top_left[1]) | PREP(TILE_PALETTE, pal)
+			| TILE_HORIZONTAL_FLIP;
 		screen_high[tile_to_screen(t_0_pos) + 3] =
-			PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal) |
-			TILE_HORIZONTAL_FLIP;
+			PREP(TILE_CHAR, top_left[0]) | PREP(TILE_PALETTE, pal)
+			| TILE_HORIZONTAL_FLIP;
 	}
 }
 
@@ -211,12 +211,12 @@ void demo_render_tile_highlights(struct map *nonnull map,
 			struct vec2 t_0_pos = to_tile_coord(pos);
 			t_0_pos.y -= map->height->bytes[y][x];
 
-			if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2] &&
-			    map->upper->tiles[t_0_pos.y][t_0_pos.x + 3] &&
-			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x] &&
-			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 1] &&
-			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2] &&
-			    map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 3]) {
+			if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2]
+			    && map->upper->tiles[t_0_pos.y][t_0_pos.x + 3]
+			    && map->upper->tiles[t_0_pos.y + 1][t_0_pos.x]
+			    && map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 1]
+			    && map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2]
+			    && map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 3]) {
 				demo_render_one_highlight(screen_high, t_0_pos);
 			} else {
 				demo_render_one_highlight(screen_low, t_0_pos);
@@ -310,8 +310,9 @@ void demo_move_pointer(struct map *nonnull map, sprite_handle pointer,
 	screen_coords.y -= scroll.y;
 	screen_coords.x += 12;
 	screen_coords.y -= 32;
-	screen_coords.y += pointer_bounce_anim[(frame >> 1) %
-					       ARRAY_SIZE(pointer_bounce_anim)];
+	screen_coords.y +=
+		pointer_bounce_anim[(frame >> 1)
+				    % ARRAY_SIZE(pointer_bounce_anim)];
 
 	struct sprite *sprite = sprite_ref(pointer);
 	sprite->pos = screen_coords;
@@ -333,20 +334,20 @@ void demo_move_cursor(struct map *nonnull map, sprite_handle cursor,
 	struct vec2 t_0_pos = to_tile_coord(pos);
 	t_0_pos.y -= map->height->bytes[pos.y][pos.x];
 	uint8_t attr = map->attributes->bytes[pos.y][pos.x];
-	if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 1] &&
-	    ~attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
+	if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 1]
+	    && ~attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
 		sprite->priority[0] = 2;
 	}
-	if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2] &&
-	    ~attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
+	if (map->upper->tiles[t_0_pos.y][t_0_pos.x + 2]
+	    && ~attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
 		sprite->priority[1] = 2;
 	}
-	if (map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 1] &&
-	    ~attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
+	if (map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 1]
+	    && ~attr & MAP_ATTR_OCCLUDED_BOT_LEFT) {
 		sprite->priority[2] = 2;
 	}
-	if (map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2] &&
-	    ~attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
+	if (map->upper->tiles[t_0_pos.y + 1][t_0_pos.x + 2]
+	    && ~attr & MAP_ATTR_OCCLUDED_BOT_RIGHT) {
 		sprite->priority[3] = 2;
 	}
 }
@@ -418,8 +419,8 @@ void demo_soldier_frame(sprite_handle soldier, enum facing facing,
 			uint32_t frame)
 {
 	struct sprite *sprite = sprite_ref(soldier);
-	sprite->flip_horizontal = facing == FACING_NORTH ||
-				  facing == FACING_EAST;
+	sprite->flip_horizontal = facing == FACING_NORTH
+			       || facing == FACING_EAST;
 	uint32_t offset =
 		facing == FACING_SOUTH || facing == FACING_EAST ? 0 : 3 * 8;
 	offset += frame * 8;

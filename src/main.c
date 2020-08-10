@@ -1,12 +1,12 @@
-#include "stdint.h"
 #include "stddef.h"
+#include "stdint.h"
 
 #include "chickpea.h"
-#include "game/map.h"
-#include "game/input.h"
-#include "game/screen.h"
 #include "game/debug_font.h"
 #include "game/font.h"
+#include "game/input.h"
+#include "game/map.h"
+#include "game/screen.h"
 #include "game/text_box.h"
 
 static volatile bool run_update = true;
@@ -168,10 +168,10 @@ void demo_on_horizontal_blank(void)
 
 void demo_on_vertical_blank(void)
 {
-//	set_bg_scroll_x(BG0, bg_scroll.x);
-//	set_bg_scroll_y(BG0, bg_scroll.y);
-//	set_bg_scroll_x(BG1, bg_scroll.x);
-//	set_bg_scroll_y(BG1, bg_scroll.y);
+	//	set_bg_scroll_x(BG0, bg_scroll.x);
+	//	set_bg_scroll_y(BG0, bg_scroll.y);
+	//	set_bg_scroll_x(BG1, bg_scroll.x);
+	//	set_bg_scroll_y(BG1, bg_scroll.y);
 	set_bg_scroll_x(BG2, bg_scroll.x);
 	set_bg_scroll_y(BG2, bg_scroll.y);
 	set_bg_scroll_x(BG3, bg_scroll.x);
@@ -202,8 +202,8 @@ struct screen *nonnull current_screen = &(struct screen){
 
 void our_irq_handler(void)
 {
-	if (REG_IF & INT_HORIZONTAL_BLANK &&
-	    current_screen->on_horizontal_blank) {
+	if (REG_IF & INT_HORIZONTAL_BLANK
+	    && current_screen->on_horizontal_blank) {
 		current_screen->on_horizontal_blank();
 		interrupt_acknowledge(INT_HORIZONTAL_BLANK);
 		return;
@@ -221,29 +221,28 @@ static struct map_bit_vec highlights = { 0 };
 
 void game_main(void)
 {
-	REG_DISPCNT = DISPCNT_FORCED_BLANK |
-		      DISPCNT_OBJ_ONE_DIMENSIONAL_MAPPING |
-		      DISPCNT_SCREEN_DISPLAY_BG0 | DISPCNT_SCREEN_DISPLAY_BG1 |
-		      DISPCNT_SCREEN_DISPLAY_BG2 | DISPCNT_SCREEN_DISPLAY_BG3 |
-		      DISPCNT_SCREEN_DISPLAY_OBJ;
+	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_OBJ_ONE_DIMENSIONAL_MAPPING
+		    | DISPCNT_SCREEN_DISPLAY_BG0 | DISPCNT_SCREEN_DISPLAY_BG1
+		    | DISPCNT_SCREEN_DISPLAY_BG2 | DISPCNT_SCREEN_DISPLAY_BG3
+		    | DISPCNT_SCREEN_DISPLAY_OBJ;
 
 	bg_palette(0)->color[0] = color(10, 5, 31);
 
 	*reg_bg_control(BG0) =
-		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
-		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_low) |
-		PREP(BGCNT_PRIORITY, 1);
+		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block)
+		| PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_low)
+		| PREP(BGCNT_PRIORITY, 1);
 
 	*reg_bg_control(BG1) =
-		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block) |
-		PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_high) |
-		PREP(BGCNT_PRIORITY, 0);
+		PREP(BGCNT_CHAR_BLOCK, map_render_params.char_block)
+		| PREP(BGCNT_SCREEN_BLOCK, map_render_params.screen_high)
+		| PREP(BGCNT_PRIORITY, 0);
 
-	*reg_bg_control(BG2) = PREP(BGCNT_SCREEN_BLOCK, 8) |
-			       PREP(BGCNT_PRIORITY, 3);
+	*reg_bg_control(BG2) = PREP(BGCNT_SCREEN_BLOCK, 8)
+			     | PREP(BGCNT_PRIORITY, 3);
 
-	*reg_bg_control(BG3) = PREP(BGCNT_SCREEN_BLOCK, 9) |
-			       PREP(BGCNT_PRIORITY, 2);
+	*reg_bg_control(BG3) = PREP(BGCNT_SCREEN_BLOCK, 9)
+			     | PREP(BGCNT_PRIORITY, 2);
 
 	//	REG_BLDCNT = BLDCNT_1ST_TARGET_BG0 | BLDCNT_1ST_TARGET_BG1 |
 	//		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BG1 |
@@ -289,8 +288,8 @@ void game_main(void)
 
 	struct text_settings bismuth_settings = {
 		.chars = char_block_begin(map_render_params.char_block) + 32,
-		.screen = screen_block_begin(map_render_params.screen_high) +
-			  (32 * 3) + 8,
+		.screen = screen_block_begin(map_render_params.screen_high)
+			+ (32 * 3) + 8,
 		.char_block = map_render_params.char_block,
 		.palette = 2
 	};
@@ -310,13 +309,14 @@ void game_main(void)
 	text_box_draw(&text_box);
 	text_render(&bismuth, &bismuth_settings, "Portraits, huh?");
 
-	//	demo_render_tile_highlights(&demo_map, &map_render_params, &highlights);
+	//	demo_render_tile_highlights(&demo_map, &map_render_params,
+	//&highlights);
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 
 	REG_IME = 0;
-	REG_DISPSTAT |= DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED |
-			DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED;
+	REG_DISPSTAT |= DISPSTAT_HORIZONTAL_BLANK_IRQ_ENABLED
+		      | DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED;
 	REG_IE |= INT_HORIZONTAL_BLANK | INT_VERTICAL_BLANK;
 	REG_IME = 1;
 

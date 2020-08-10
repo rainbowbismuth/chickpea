@@ -43,20 +43,20 @@ void __aeabi_memcpy(uint8_t *restrict nonnull dest,
 
 volatile struct palette *nonnull bg_palette(uint32_t palette_idx)
 {
-	return (volatile struct palette *)(size_t)(BG_PALETTE_RAM +
-						   palette_idx * 0x20);
+	return (volatile struct palette *)(size_t)(BG_PALETTE_RAM
+						   + palette_idx * 0x20);
 }
 
 volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
 {
-	return (volatile struct palette *)(size_t)(OBJ_PALETTE_RAM +
-						   palette_idx * 0x20);
+	return (volatile struct palette *)(size_t)(OBJ_PALETTE_RAM
+						   + palette_idx * 0x20);
 }
 
 volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block)
 {
-	return (volatile struct char_4bpp *)(size_t)(VRAM_BEGIN +
-						     char_block * 0x4000);
+	return (volatile struct char_4bpp *)(size_t)(VRAM_BEGIN
+						     + char_block * 0x4000);
 }
 
 volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block)

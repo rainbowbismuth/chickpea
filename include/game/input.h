@@ -8,4 +8,4 @@ bool input_held(uint32_t button);
 bool input_pressed(uint32_t button);
 bool input_release(uint32_t button);
 
-#endif //CHICKPEA_INPUT_H
+#endif // CHICKPEA_INPUT_H
