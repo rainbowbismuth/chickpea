@@ -238,9 +238,6 @@ struct object_attribute_mem {
 
 volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block);
 
-/*
- * TODO: Revisit, not sure if this is the best API?
- */
 uint32_t char_name(uint32_t char_block,
 		   volatile struct char_4bpp *nonnull character);
 

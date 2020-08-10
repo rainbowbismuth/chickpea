@@ -286,7 +286,7 @@ void game_main(void)
 		}
 	}
 
-	struct text_settings bismuth_settings = {
+	struct text_config bismuth_config = {
 		.chars = char_block_begin(map_render_params.char_block) + 32,
 		.screen = screen_block_begin(map_render_params.screen_high)
 			+ (32 * 3) + 8,
@@ -297,7 +297,7 @@ void game_main(void)
 	write_palette(&bismuth_font_pal, bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
 
-	struct text_box_settings text_box = {
+	struct text_box_config text_box = {
 		.gfx = &speech_bubble_gfx,
 		.from_top = 2,
 		.palette = 2,
@@ -307,7 +307,7 @@ void game_main(void)
 		.width = 24,
 	};
 	text_box_draw(&text_box);
-	text_render(&bismuth, &bismuth_settings, "Portraits, huh?");
+	text_render(&bismuth, &bismuth_config, "Portraits, huh?");
 
 	//	demo_render_tile_highlights(&demo_map, &map_render_params,
 	//&highlights);

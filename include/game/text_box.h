@@ -10,7 +10,7 @@ struct text_box_graphics {
 	uint8_t width;
 };
 
-struct text_box_settings {
+struct text_box_config {
 	const struct text_box_graphics *gfx;
 	uint8_t char_block;
 	uint8_t screen_block;
@@ -20,6 +20,6 @@ struct text_box_settings {
 	bool align_right;
 };
 
-void text_box_draw(const struct text_box_settings *settings);
+void text_box_draw(const struct text_box_config *config);
 
 #endif // CHICKPEA_TEXT_BOX_H

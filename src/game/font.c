@@ -2,14 +2,14 @@
 
 void text_renderer_init(struct text_renderer *nonnull renderer,
 			const struct font *nonnull font,
-			const struct text_settings *nonnull settings,
+			const struct text_config *nonnull config,
 			const char *nonnull message)
 {
 	renderer->font = font;
 	renderer->message = message;
-	renderer->settings = settings;
-	renderer->chars = settings->chars;
-	renderer->screen = settings->screen;
+	renderer->config = config;
+	renderer->chars = config->chars;
+	renderer->screen = config->screen;
 	renderer->i = 0;
 }
 
@@ -37,13 +37,13 @@ static void add_to_screen(const struct text_renderer *renderer,
 			  volatile struct char_4bpp *chars,
 			  volatile uint16_t *screen)
 {
-	uint16_t pal = PREP(TILE_PALETTE, renderer->settings->palette);
+	uint16_t pal = PREP(TILE_PALETTE, renderer->config->palette);
 	*screen = PREP(TILE_CHAR,
-		       char_name(renderer->settings->char_block, chars))
+		       char_name(renderer->config->char_block, chars))
 		| pal;
 	if (renderer->font->tall) {
 		*(screen + 32) = PREP(TILE_CHAR,
-				      char_name(renderer->settings->char_block,
+				      char_name(renderer->config->char_block,
 						chars + 1))
 			       | pal;
 	}
@@ -90,11 +90,11 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 }
 
 void text_render(const struct font *nonnull font,
-		 const struct text_settings *nonnull settings,
+		 const struct text_config *nonnull config,
 		 const char *nonnull message)
 {
 	struct text_renderer renderer = { 0 };
-	text_renderer_init(&renderer, font, settings, message);
+	text_renderer_init(&renderer, font, config, message);
 
 	/*
 	 * FIXME: Temporarily cheating here...

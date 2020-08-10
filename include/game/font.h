@@ -11,7 +11,7 @@ struct font {
 	bool tall;
 };
 
-struct text_settings {
+struct text_config {
 	volatile struct char_4bpp *nonnull chars;
 	volatile uint16_t *nonnull screen;
 	uint8_t char_block;
@@ -20,7 +20,7 @@ struct text_settings {
 
 struct text_renderer {
 	const struct font *nonnull font;
-	const struct text_settings *nonnull settings;
+	const struct text_config *nonnull config;
 
 	volatile struct char_4bpp *nonnull chars;
 	volatile uint16_t *nonnull screen;
@@ -28,8 +28,10 @@ struct text_renderer {
 	uint32_t i;
 };
 
-void text_renderer_init(struct text_renderer *nonnull renderer, const struct font *nonnull font,
-			const struct text_settings *nonnull settings, const char *nonnull message);
+void text_renderer_init(struct text_renderer *nonnull renderer,
+			const struct font *nonnull font,
+			const struct text_config *nonnull config,
+			const char *nonnull message);
 
 /*
  * Renders the next character in the text_renderer, returns false
@@ -40,7 +42,8 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer);
 /*
  * Render an entire message.
  */
-void text_render(const struct font *nonnull font, const struct text_settings *nonnull settings,
+void text_render(const struct font *nonnull font,
+		 const struct text_config *nonnull config,
 		 const char *nonnull message);
 
 #endif // CHICKPEA_FONT_H
