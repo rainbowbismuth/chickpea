@@ -2,4 +2,5 @@
 .idea
 cmake-build-debug/
 cmake-build-debug-gba/
+cmake-build-emscripten/
 tools/bake/target/

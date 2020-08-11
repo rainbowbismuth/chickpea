@@ -30,3 +30,13 @@ $BAKE 4bpp -s $CHARACTER -i assets/characters/soldier.png -o baked/characters/so
 $BAKE map -i assets/map/demo/map -t assets/map/demo/tileset.png -o baked/map/demo/map
 $BAKE bg -i assets/interface/speech_bubble.png -o baked/interface/speech_bubble
 $BAKE 8bpp -i assets/portraits/Bjin.png -s $PORTRAIT --offset=6 -o baked/portraits/Bjin
+
+pushd baked > /dev/null
+echo "" > baked.c
+for file in **/*.* ; do
+  xxd -i $file >> baked.c
+done
+for file in map/**/*.* ; do
+  xxd -i $file >> baked.c
+done
+popd > /dev/null

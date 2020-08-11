@@ -9,15 +9,14 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c
         src/test_suites.c src/chickpea/nano_unit.c src/chickpea/bit_vec.c
         src/game/map.c src/game/sprite.c src/game/object_tiles.c
-        src/game/input.c src/game/random.c src/game/font.c src/game/text_box.c)
+        src/game/input.c src/game/random.c src/game/font.c src/game/text_box.c
+        baked/baked.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/game/debug_font.h
         include/chickpea/nano_unit.h include/chickpea/bit_vec.h
         include/game/map.h include/chickpea/vec2.h include/game/sprite.h
         include/game/object_tiles.h include/game/input.h include/game/random.h
         include/game/screen.h include/game/font.h include/game/text_box.h)
-
-file(GLOB BAKED_ASSETS "baked/**/*")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
@@ -26,17 +25,7 @@ if (BUILD_GBA)
     set(DEVKITARM_LIB /opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/10.1.0/)
     set(DEVKITPRO /opt/devkitpro/tools/bin)
     set(CHICKPEA_AS ${DEVKITARM}/arm-none-eabi-as)
-else ()
-    set(CHICKPEA_AS as)
 endif ()
-
-add_custom_command(
-        OUTPUT embedded_data.o
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s ${BAKED_ASSETS}
-        BYPRODUCTS embedded_data.o
-        COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/game/embedded_data.s
-        -o embedded_data.o
-)
 
 if (BUILD_GBA)
     set(CMAKE_C_LINK_EXECUTABLE "${DEVKITARM}/arm-none-eabi-ld <LINK_FLAGS>\
@@ -55,8 +44,7 @@ if (BUILD_GBA)
             COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
             -o crt0.o
     )
-    add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o
-            embedded_data.o)
+    add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o)
     set_target_properties(chickpea_c.elf
             PROPERTIES
             COMPILE_FLAGS "-Wall -Wextra -nostdlib -target arm-none-eabi\
@@ -78,11 +66,18 @@ else ()
 
     set(SRC_FILES ${SRC_FILES} src/chickpea/emulated.c)
     set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/emulated.h)
-    add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES} embedded_data.o)
-    set_target_properties(chickpea_c
-            PROPERTIES
-            COMPILE_FLAGS "-I/usr/local/include/SDL2 -D_THREAD_SAFE"
-            LINK_FLAGS "-L/usr/local/lib -lSDL2")
+
+    if (CMAKE_CXX_COMPILER MATCHES "/em\\+\\+(-[a-zA-Z0-9.])?$")
+        string(TIMESTAMP BUILD_DATE "%Y-%m-%d")
+        add_executable("${BUILD_DATE}_chickpea" ${SRC_FILES} ${INCLUDE_FILES})
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_SDL=2")
+    else ()
+        add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES})
+        set_target_properties(chickpea_c
+                PROPERTIES
+                COMPILE_FLAGS "-I/usr/local/include/SDL2 -D_THREAD_SAFE"
+                LINK_FLAGS "-L/usr/local/lib -lSDL2")
+    endif ()
 endif ()
 
 

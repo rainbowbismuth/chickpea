@@ -5,6 +5,9 @@
     },
     "activeFile": "",
     "expandedProjectPaths": [
+        "interface",
+        "map/demo",
+        "map"
     ],
     "fileStates": {
         "/Users/emilyb/Downloads/demo_tilemap.tmx": {

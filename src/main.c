@@ -11,7 +11,7 @@
 
 static volatile bool run_update = true;
 static struct vec2 bg_scroll = { 0 };
-static struct vec2 cursor_pos = { .x = 6, .y = 6 };
+static struct vec2 cursor_pos = { .x = 11, .y = 6 };
 static uint32_t frame = 0;
 static sprite_handle cursor = { 0 };
 static sprite_handle pointer = { 0 };
@@ -21,21 +21,21 @@ struct map_render_params map_render_params = { .char_block = 3,
 					       .screen_low = 10,
 					       .screen_high = 11 };
 static struct debug_font demo_font = {
-	.characters = debug_font_4bpp,
-	.palette = &debug_font_pal,
+	.characters = fonts_debug_font_4bpp,
+	.palette = &fonts_debug_font_pal,
 };
 
-extern struct char_4bpp bismuth_font_4bpp[];
-extern uint8_t bismuth_font_width[];
+extern struct char_4bpp fonts_bismuth_font_4bpp[];
+extern uint8_t fonts_bismuth_font_width[];
 static struct font bismuth = {
-	.characters = bismuth_font_4bpp,
-	.widths = bismuth_font_width,
+	.characters = fonts_bismuth_font_4bpp,
+	.widths = fonts_bismuth_font_width,
 	.letter_spacing = 1,
 	.tall = true,
 };
-extern struct palette bismuth_font_pal;
+extern struct palette fonts_bismuth_font_pal;
 
-extern struct palette tile_cursor_pal;
+extern struct palette map_tile_cursor_pal;
 
 static struct sprite_object_def height_msg_objs[1] = { {
 	.x_offset = 0,
@@ -51,17 +51,13 @@ static struct sprite_template height_msg_template = {
 	.objects = height_msg_objs
 };
 
-extern struct char_4bpp speech_bubble_4bpp[];
-extern uint16_t speech_bubble_tiles[];
+extern struct char_4bpp interface_speech_bubble_4bpp[];
+extern uint16_t interface_speech_bubble_tiles[];
 
-static struct text_box_graphics speech_bubble_gfx = {
-	.chars = speech_bubble_4bpp,
-	.tiles = speech_bubble_tiles,
-	.height = 8,
-};
+extern unsigned int interface_speech_bubble_4bpp_len;
 
-extern struct char_8bpp portrait_bjin_8bpp[];
-extern struct palette portrait_bjin_pals[];
+extern struct char_8bpp portraits_Bjin_8bpp[];
+extern struct palette portraits_Bjin_pals[];
 
 static struct sprite_object_def portrait_objs[5] = {
 	{ .x_offset = 0,
@@ -219,7 +215,7 @@ void (*volatile irq_handler)(void) = our_irq_handler;
 
 static struct map_bit_vec highlights = { 0 };
 
-void game_main(void)
+void game_init(void)
 {
 	REG_DISPCNT = DISPCNT_FORCED_BLANK | DISPCNT_OBJ_ONE_DIMENSIONAL_MAPPING
 		    | DISPCNT_SCREEN_DISPLAY_BG0 | DISPCNT_SCREEN_DISPLAY_BG1
@@ -267,11 +263,11 @@ void game_main(void)
 
 	sprite_handle bjin = sprite_alloc(&portrait_template);
 	for (size_t i = 0; i < 3; ++i) {
-		write_palette(&portrait_bjin_pals[i], obj_palette(6 + i));
+		write_palette(&portraits_Bjin_pals[i], obj_palette(6 + i));
 	}
 	sprite_ref(bjin)->enabled = true;
 	sprite_ref(bjin)->pos.y -= 4;
-	sprite_queue_frame_copy(bjin, (struct char_4bpp *)portrait_bjin_8bpp);
+	sprite_queue_frame_copy(bjin, (struct char_4bpp *)portraits_Bjin_8bpp);
 
 	sprite_execute_frame_copies();
 
@@ -294,8 +290,15 @@ void game_main(void)
 		.palette = 2
 	};
 
-	write_palette(&bismuth_font_pal, bg_palette(2));
+	write_palette(&fonts_bismuth_font_pal, bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
+
+	struct text_box_graphics speech_bubble_gfx = {
+		.chars = interface_speech_bubble_4bpp,
+		.length = interface_speech_bubble_4bpp_len,
+		.tiles = interface_speech_bubble_tiles,
+		.height = 8,
+	};
 
 	struct text_box_config text_box = {
 		.gfx = &speech_bubble_gfx,
@@ -306,6 +309,7 @@ void game_main(void)
 		.align_right = false,
 		.width = 24,
 	};
+
 	text_box_draw(&text_box);
 	text_render(&bismuth, &bismuth_config, "Portraits, huh?");
 
@@ -319,12 +323,16 @@ void game_main(void)
 		      | DISPSTAT_VERTICAL_BLANK_IRQ_ENABLED;
 	REG_IE |= INT_HORIZONTAL_BLANK | INT_VERTICAL_BLANK;
 	REG_IME = 1;
+}
 
-	while (1) {
-		if (REG_VCOUNT == 0 && run_update && current_screen->update) {
-			current_screen->update();
-			run_update = false;
-		}
-		halt();
+bool game_update(void)
+{
+	bool updated = false;
+	if (REG_VCOUNT == 0 && run_update && current_screen->update) {
+		current_screen->update();
+		run_update = false;
+		updated = true;
 	}
+	halt();
+	return updated;
 }

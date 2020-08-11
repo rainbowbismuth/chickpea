@@ -57,46 +57,48 @@ static const size_t pal = 9;
 static const size_t top_left[2] = { 1, 2 };
 static const size_t top_left_together[2] = { 3, 4 };
 
-extern struct char_4bpp tile_highlight_4bpp[2];
-extern struct palette tile_highlight_pal;
+extern struct char_4bpp map_tile_highlight_4bpp[2];
+extern struct palette map_tile_highlight_pal;
 
-extern struct map_tiles demo_map_low;
-extern struct map_tiles demo_map_high;
-extern struct map_byte_vec demo_map_height;
-extern struct map_byte_vec demo_map_attributes;
-extern struct char_4bpp demo_map_4bpp[];
-extern struct palette demo_map_pal;
+extern struct map_tiles map_demo_map_low;
+extern struct map_tiles map_demo_map_high;
+extern struct map_byte_vec map_demo_map_height;
+extern struct map_byte_vec map_demo_map_attributes;
+extern struct char_4bpp map_demo_map_4bpp[];
+extern struct palette map_demo_map_pal;
 
 struct map demo_map = {
-	.lower = &demo_map_low,
-	.upper = &demo_map_high,
-	.height = &demo_map_height,
-	.attributes = &demo_map_attributes,
+	.lower = &map_demo_map_low,
+	.upper = &map_demo_map_high,
+	.height = &map_demo_map_height,
+	.attributes = &map_demo_map_attributes,
 };
 
+extern unsigned int map_demo_map_4bpp_len;
 void demo_init(void)
 {
-	tile_highlight_gfx.palette = tile_highlight_pal;
-	tile_highlight_gfx.top_left[0] = tile_highlight_4bpp[0];
-	tile_highlight_gfx.top_left[1] = tile_highlight_4bpp[1];
+	tile_highlight_gfx.palette = map_tile_highlight_pal;
+	tile_highlight_gfx.top_left[0] = map_tile_highlight_4bpp[0];
+	tile_highlight_gfx.top_left[1] = map_tile_highlight_4bpp[1];
 
-	tile_highlight_gfx.top_left_together[0] = tile_highlight_4bpp[1];
+	tile_highlight_gfx.top_left_together[0] = map_tile_highlight_4bpp[1];
 	ch4bpp_flip_both(&tile_highlight_gfx.top_left_together[0]);
 	ch4bpp_bitor(&tile_highlight_gfx.top_left_together[0],
-		     &tile_highlight_4bpp[0]);
+		     &map_tile_highlight_4bpp[0]);
 
-	tile_highlight_gfx.top_left_together[1] = tile_highlight_4bpp[0];
+	tile_highlight_gfx.top_left_together[1] = map_tile_highlight_4bpp[0];
 	ch4bpp_flip_both(&tile_highlight_gfx.top_left_together[1]);
 	ch4bpp_bitor(&tile_highlight_gfx.top_left_together[1],
-		     &tile_highlight_4bpp[1]);
+		     &map_tile_highlight_4bpp[1]);
 
 	// TODO: Should determine how many tiles there are ;)
-	write_4bpp_n(demo_map_4bpp, char_block_begin(0), 128);
-	write_palette(&demo_map_pal, bg_palette(0));
-	cpu_fast_set(&demo_map_low, (void *)screen_block_begin(8),
-		     sizeof(demo_map_low) / 4);
-	cpu_fast_set(&demo_map_high, (void *)screen_block_begin(9),
-		     sizeof(demo_map_high) / 4);
+	write_4bpp_n(map_demo_map_4bpp, char_block_begin(0),
+		     (map_demo_map_4bpp_len / sizeof(*map_demo_map_4bpp)));
+	write_palette(&map_demo_map_pal, bg_palette(0));
+	cpu_fast_set(&map_demo_map_low, (void *)screen_block_begin(8),
+		     sizeof(map_demo_map_low) / 4);
+	cpu_fast_set(&map_demo_map_high, (void *)screen_block_begin(9),
+		     sizeof(map_demo_map_high) / 4);
 }
 
 size_t tile_to_screen(struct vec2 pos)
@@ -238,8 +240,9 @@ void demo_rotate_highlight_palette(uint32_t offset)
 	write_palette(&palette, bg_palette(pal));
 }
 
-extern struct char_4bpp tile_cursor_4bpp[8];
-extern struct palette tile_cursor_pal;
+extern struct char_4bpp map_tile_cursor_4bpp[8];
+extern struct palette map_tile_cursor_pal;
+extern struct palette map_tile_pointer_pal;
 
 const static struct sprite_object_def cursor_objs[4] = {
 	{ .x_offset = 0,
@@ -270,12 +273,12 @@ const static struct sprite_template cursor_template = {
 sprite_handle demo_alloc_cursor(void)
 {
 	sprite_handle h = sprite_alloc(&cursor_template);
-	sprite_queue_frame_copy(h, &tile_cursor_4bpp[0]);
-	write_palette(&tile_cursor_pal, obj_palette(1));
+	sprite_queue_frame_copy(h, &map_tile_cursor_4bpp[0]);
+	write_palette(&map_tile_pointer_pal, obj_palette(1));
 	return h;
 }
 
-extern struct char_4bpp tile_pointer_4bpp[2];
+extern struct char_4bpp map_tile_pointer_4bpp[2];
 
 const static struct sprite_object_def pointer_objs[1] = {
 	{ .x_offset = 0,
@@ -294,7 +297,7 @@ const static struct sprite_template pointer_template = {
 sprite_handle demo_alloc_pointer(void)
 {
 	sprite_handle h = sprite_alloc(&pointer_template);
-	sprite_queue_frame_copy(h, &tile_pointer_4bpp[0]);
+	sprite_queue_frame_copy(h, &map_tile_pointer_4bpp[0]);
 	return h;
 }
 
@@ -378,8 +381,8 @@ const static struct sprite_template soldier_template = {
 	.mode = OBJ_MODE_NORMAL,
 };
 
-extern struct char_4bpp soldier_4bpp[8 * 6];
-extern struct palette soldier_pal;
+extern struct char_4bpp characters_soldier_4bpp[8 * 6];
+extern struct palette characters_soldier_pal;
 
 sprite_handle demo_alloc_soldier(void)
 {
@@ -425,6 +428,6 @@ void demo_soldier_frame(sprite_handle soldier, enum facing facing,
 		facing == FACING_SOUTH || facing == FACING_EAST ? 0 : 3 * 8;
 	offset += frame * 8;
 
-	sprite_queue_frame_copy(soldier, &soldier_4bpp[offset]);
-	write_palette(&soldier_pal, obj_palette(sprite->palette));
+	sprite_queue_frame_copy(soldier, &characters_soldier_4bpp[offset]);
+	write_palette(&characters_soldier_pal, obj_palette(sprite->palette));
 }

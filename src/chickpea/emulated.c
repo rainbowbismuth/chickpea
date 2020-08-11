@@ -3,6 +3,12 @@
 #include "chickpea.h"
 #include "chickpea/nano_unit.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef EMSCRIPTEN
+#include "emscripten.h"
+#endif
 
 #define PRIORITY_2ND_TARGET BIT(0)
 #define PRIORITY_1ST_TARGET BIT(1)
@@ -59,6 +65,15 @@ bool flag_present(int argc, const char *nonnull argv[],
 	return false;
 }
 
+#ifdef EMSCRIPTEN
+static void emscripten_game_loop(void)
+{
+	while (!game_update()) {
+		;
+	}
+}
+#endif
+
 int main(int argc, const char *nonnull argv[])
 {
 	bool any_failures = nano_unit_run_suites(test_suites);
@@ -87,7 +102,15 @@ int main(int argc, const char *nonnull argv[])
 				    GBA_HEIGHT);
 	assert(texture != NULL);
 
-	game_main();
+	game_init();
+
+#ifdef EMSCRIPTEN
+	emscripten_set_main_loop(emscripten_game_loop, -1, 1);
+#else
+	while (1) {
+		game_update();
+	}
+#endif
 }
 
 static void clear_line(uint16_t bg_color, uint16_t y)
@@ -616,10 +639,12 @@ static void present_frame_and_handle_events(void)
 	while (ticks_lag > duration_per_frame) {
 		ticks_lag -= duration_per_frame;
 	}
+#ifndef EMSCRIPTEN
 	uint32_t time_left = duration_per_frame - ticks_lag;
 	if (time_left > 0) {
 		SDL_Delay(time_left);
 	}
+#endif
 }
 
 static bool trigger_vertical_blank = false;

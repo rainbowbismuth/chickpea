@@ -53,7 +53,9 @@ void text_box_draw(const struct text_box_config *config)
 	screen += 32 * config->from_top;
 
 	// FIXME: What's the actual... size? *sweat drop*
-	write_4bpp_n(config->gfx->chars, out, config->gfx->height * BOX_WIDTH);
+	assert(config->gfx->length != 0);
+	write_4bpp_n(config->gfx->chars, out,
+		     config->gfx->length / sizeof(*out));
 
 	assert(config->width > BOX_WIDTH_M1);
 

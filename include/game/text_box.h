@@ -4,10 +4,10 @@
 #include "chickpea.h"
 
 struct text_box_graphics {
+	size_t length;
 	const struct char_4bpp *chars;
 	const uint16_t *tiles;
 	uint8_t height;
-	uint8_t width;
 };
 
 struct text_box_config {

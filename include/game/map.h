@@ -63,7 +63,7 @@ enum facing { FACING_NORTH = 0, FACING_EAST, FACING_SOUTH, FACING_WEST };
  * A temporary function just to try rendering this out
  * @param highlights The currently highlighted tiles.
  */
-struct map demo_map;
+extern struct map demo_map;
 
 void demo_init(void);
 

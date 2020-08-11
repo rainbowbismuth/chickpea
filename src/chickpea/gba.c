@@ -116,12 +116,14 @@ void interrupt_acknowledge(uint16_t int_flag)
 
 extern struct nano_unit_suite test_suites[];
 
-int main(void)
+void main(void)
 {
 	*MGBA_DEBUG_ENABLE = 0xc0de;
 	debug_put_str("Hello, mGBA!\n");
 	nano_unit_run_suites(test_suites);
 
-	game_main();
-	return 0;
+	game_init();
+	while (1) {
+		game_update();
+	}
 }
