@@ -41,6 +41,7 @@ SDL_Renderer *renderer = NULL;
 SDL_Surface *surface = NULL;
 SDL_Texture *texture = NULL;
 SDL_GameController *nullable controller = NULL;
+const uint8_t *keyboard_state = NULL;
 
 uint32_t ticks_previous = 0;
 uint32_t ticks_lag = 0;
@@ -101,6 +102,9 @@ int main(int argc, const char *nonnull argv[])
 				    SDL_TEXTUREACCESS_STREAMING, GBA_WIDTH,
 				    GBA_HEIGHT);
 	assert(texture != NULL);
+
+	keyboard_state = SDL_GetKeyboardState(NULL);
+	assert(keyboard_state != NULL);
 
 	game_init();
 
@@ -565,12 +569,42 @@ static void find_game_controller_if_none(void)
 	}
 }
 
-static void update_game_controller(void)
+static size_t SCANCODE_BUTTON_A = SDL_SCANCODE_C;
+static size_t SCANCODE_BUTTON_B = SDL_SCANCODE_X;
+static size_t SCANCODE_SELECT = SDL_SCANCODE_S;
+static size_t SCANCODE_START = SDL_SCANCODE_D;
+static size_t SCANCODE_RIGHT = SDL_SCANCODE_RIGHT;
+static size_t SCANCODE_LEFT = SDL_SCANCODE_LEFT;
+static size_t SCANCODE_UP = SDL_SCANCODE_UP;
+static size_t SCANCODE_DOWN = SDL_SCANCODE_DOWN;
+static size_t SCANCODE_BUTTON_L = SDL_SCANCODE_A;
+static size_t SCANCODE_BUTTON_R = SDL_SCANCODE_F;
+static size_t SCANCODE_BUTTON_X = SDL_SCANCODE_W;
+static size_t SCANCODE_BUTTON_Y = SDL_SCANCODE_E;
+
+static uint16_t read_keyboard(void)
+{
+	uint16_t input = 0;
+	input |= PREP(KEYINPUT_BUTTON_A, keyboard_state[SCANCODE_BUTTON_A]);
+	input |= PREP(KEYINPUT_BUTTON_B, keyboard_state[SCANCODE_BUTTON_B]);
+	input |= PREP(KEYINPUT_SELECT, keyboard_state[SCANCODE_SELECT]);
+	input |= PREP(KEYINPUT_START, keyboard_state[SCANCODE_START]);
+	input |= PREP(KEYINPUT_RIGHT, keyboard_state[SCANCODE_RIGHT]);
+	input |= PREP(KEYINPUT_LEFT, keyboard_state[SCANCODE_LEFT]);
+	input |= PREP(KEYINPUT_UP, keyboard_state[SCANCODE_UP]);
+	input |= PREP(KEYINPUT_DOWN, keyboard_state[SCANCODE_DOWN]);
+	input |= PREP(KEYINPUT_BUTTON_L, keyboard_state[SCANCODE_BUTTON_L]);
+	input |= PREP(KEYINPUT_BUTTON_R, keyboard_state[SCANCODE_BUTTON_R]);
+	input |= PREP(KEYINPUT_BUTTON_X, keyboard_state[SCANCODE_BUTTON_X]);
+	input |= PREP(KEYINPUT_BUTTON_Y, keyboard_state[SCANCODE_BUTTON_Y]);
+	return ~input;
+}
+
+static uint16_t read_game_controller(void)
 {
 	find_game_controller_if_none();
 	if (!controller) {
-		REG_KEYINPUT = ~0;
-		return;
+		return ~0;
 	}
 	/*
 	 * The SDL buttons are as on X-BOX like controller, so the A/B X/Y are
@@ -613,7 +647,7 @@ static void update_game_controller(void)
 	input |= PREP(KEYINPUT_BUTTON_Y,
 		      SDL_GameControllerGetButton(controller,
 						  SDL_CONTROLLER_BUTTON_X));
-	REG_KEYINPUT = ~input;
+	return ~input;
 }
 
 static void present_frame_and_handle_events(void)
@@ -628,7 +662,8 @@ static void present_frame_and_handle_events(void)
 	while (SDL_PollEvent(&event)) {
 		handle_sdl_event(&event);
 	}
-	update_game_controller();
+	
+	REG_KEYINPUT = read_game_controller() & read_keyboard();
 
 	update_surface_from_screen();
 	SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
