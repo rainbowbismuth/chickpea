@@ -70,7 +70,7 @@ else ()
     if (CMAKE_CXX_COMPILER MATCHES "/em\\+\\+(-[a-zA-Z0-9.])?$")
         string(TIMESTAMP BUILD_DATE "%Y-%m-%d")
         add_executable("${BUILD_DATE}_chickpea" ${SRC_FILES} ${INCLUDE_FILES})
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_SDL=2")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_SDL=2 -s FILESYSTEM=0 -flto=thin")
     else ()
         add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES})
         set_target_properties(chickpea_c
