@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 set(HAVE_FLAG_SEARCH_PATHS_FIRST 0)
-project(chickpea_c C)
+project(chickpea C)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -44,8 +44,8 @@ if (BUILD_GBA)
             COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
             -o crt0.o
     )
-    add_executable(chickpea_c.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o)
-    set_target_properties(chickpea_c.elf
+    add_executable(chickpea.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o)
+    set_target_properties(chickpea.elf
             PROPERTIES
             COMPILE_FLAGS "-Wall -Wextra -nostdlib -target arm-none-eabi\
                 -mcpu=arm7tdmi -mthumb -ffreestanding"
@@ -53,12 +53,12 @@ if (BUILD_GBA)
             )
 
     add_custom_target(
-            chickpea_c.gba ALL
-            DEPENDS chickpea_c.elf
-            COMMAND ${DEVKITARM}/arm-none-eabi-objcopy -O binary chickpea_c.elf
-            chickpea_c.gba
-            COMMAND ${DEVKITPRO}/gbafix chickpea_c.gba
-            BYPRODUCTS chickpea_c.gba
+            chickpea.gba ALL
+            DEPENDS chickpea.elf
+            COMMAND ${DEVKITARM}/arm-none-eabi-objcopy -O binary chickpea.elf
+            chickpea.gba
+            COMMAND ${DEVKITPRO}/gbafix chickpea.gba
+            BYPRODUCTS chickpea.gba
     )
 else ()
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address \
@@ -72,8 +72,8 @@ else ()
         add_executable("${BUILD_DATE}_chickpea" ${SRC_FILES} ${INCLUDE_FILES})
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_SDL=2 -s FILESYSTEM=0 -flto=thin")
     else ()
-        add_executable(chickpea_c ${SRC_FILES} ${INCLUDE_FILES})
-        set_target_properties(chickpea_c
+        add_executable(chickpea ${SRC_FILES} ${INCLUDE_FILES})
+        set_target_properties(chickpea
                 PROPERTIES
                 COMPILE_FLAGS "-I/usr/local/include/SDL2 -D_THREAD_SAFE"
                 LINK_FLAGS "-L/usr/local/lib -lSDL2")

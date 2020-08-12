@@ -84,7 +84,7 @@ int main(int argc, const char *nonnull argv[])
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 	atexit(SDL_Quit);
-	window = SDL_CreateWindow("chickpea", SDL_WINDOWPOS_CENTERED,
+	window = SDL_CreateWindow("Chickpea", SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED, real_win_width,
 				  real_win_height, SDL_WINDOW_ALLOW_HIGHDPI);
 	assert(window != NULL);
