@@ -51,7 +51,7 @@ uint32_t real_win_width = GBA_WIDTH * 3;
 uint32_t real_win_height = GBA_HEIGHT * 3;
 
 uint16_t screen_color[GBA_HEIGHT][GBA_WIDTH] = { 0 };
-uint16_t screen_priority[GBA_HEIGHT][GBA_WIDTH] = { 0 };
+uint16_t screen_priority[GBA_WIDTH] = { 0 };
 
 extern struct nano_unit_suite test_suites[];
 
@@ -128,22 +128,22 @@ static void clear_line(uint16_t bg_color, uint16_t y)
 	}
 	for (size_t i = 0; i < ARRAY_SIZE(screen_color[0]); ++i) {
 		screen_color[y][i] = bg_color;
-		screen_priority[y][i] = PREP(PRIORITY_UPPER, 0x3)
-				      | PREP(PRIORITY_LAYER, 1 << 5)
-				      | blend_target_bits;
+		screen_priority[i] = PREP(PRIORITY_UPPER, 0x3)
+				   | PREP(PRIORITY_LAYER, 1 << 5)
+				   | blend_target_bits;
 	}
 }
 
 static void draw_pixel(uint32_t x, uint32_t y, uint16_t color,
 		       uint16_t priority)
 {
-	uint16_t current = screen_priority[y][x];
+	uint16_t current = screen_priority[x];
 	if (priority >= current) {
 		color = screen_color[y][x];
-		screen_priority[y][x] =
+		screen_priority[x] =
 			current & ~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 	} else {
-		screen_priority[y][x] = priority;
+		screen_priority[x] = priority;
 	}
 	screen_color[y][x] = color;
 }
@@ -158,24 +158,24 @@ draw_pixel_blend_alpha(uint32_t x, uint32_t y, uint16_t color,
 		       uint16_t priority,
 		       const struct blend_alpha_params *nonnull params)
 {
-	uint16_t current = screen_priority[y][x];
+	uint16_t current = screen_priority[x];
 	if (priority >= current) {
 		if (current & PRIORITY_1ST_TARGET
 		    && priority & PRIORITY_2ND_TARGET) {
 			color = additive_blend(screen_color[y][x],
 					       params->src_weight, color,
 					       params->dst_weight);
-			screen_priority[y][x] =
+			screen_priority[x] =
 				priority
 				& ~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 		} else {
 			color = screen_color[y][x];
-			screen_priority[y][x] =
+			screen_priority[x] =
 				current
 				& ~(PRIORITY_1ST_TARGET | PRIORITY_2ND_TARGET);
 		}
 	} else {
-		screen_priority[y][x] = priority & ~PRIORITY_2ND_TARGET;
+		screen_priority[x] = priority & ~PRIORITY_2ND_TARGET;
 	}
 	screen_color[y][x] = color;
 }
@@ -662,7 +662,7 @@ static void present_frame_and_handle_events(void)
 	while (SDL_PollEvent(&event)) {
 		handle_sdl_event(&event);
 	}
-	
+
 	REG_KEYINPUT = read_game_controller() & read_keyboard();
 
 	update_surface_from_screen();
