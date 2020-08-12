@@ -355,7 +355,7 @@ void demo_move_cursor(struct map *nonnull map, sprite_handle cursor,
 	}
 }
 
-const static struct sprite_object_def soldier_objs[4] = {
+const static struct sprite_object_def character_objs[4] = {
 	{ .x_offset = 0,
 	  .y_offset = 0,
 	  .shape = OBJ_SHAPE_VERTICAL,
@@ -374,30 +374,30 @@ const static struct sprite_object_def soldier_objs[4] = {
 	  .size = OBJ_SIZE_8 },
 };
 
-const static struct sprite_template soldier_template = {
-	.objects = soldier_objs,
-	.num_objects = ARRAY_SIZE(soldier_objs),
+const static struct sprite_template character_template = {
+	.objects = character_objs,
+	.num_objects = ARRAY_SIZE(character_objs),
 	.palette = 2,
 	.mode = OBJ_MODE_NORMAL,
 };
 
-extern struct char_4bpp characters_soldier_4bpp[8 * 6];
-extern struct palette characters_soldier_pal;
+extern struct char_4bpp characters_bjin_4bpp[8 * 6];
+extern struct palette characters_bjin_pal;
 
-sprite_handle demo_alloc_soldier(void)
+sprite_handle demo_alloc_character(void)
 {
-	return sprite_alloc(&soldier_template);
+	return sprite_alloc(&character_template);
 }
 
-void demo_move_soldier(struct map *nonnull map, sprite_handle soldier,
-		       struct vec2 pos, struct vec2 scroll)
+void demo_move_character(struct map *nonnull map, sprite_handle character,
+			 struct vec2 pos, struct vec2 scroll)
 {
 	struct vec2 screen_coords = to_screen_coord(map->height, pos);
 	screen_coords.x -= scroll.x;
 	screen_coords.y -= scroll.y;
 	screen_coords.x += 8;
 	screen_coords.y -= (32 - 11);
-	struct sprite *sprite = sprite_ref(soldier);
+	struct sprite *sprite = sprite_ref(character);
 	sprite->pos = screen_coords;
 	sprite->order = ((32 - pos.y) << 8) + ((32 - pos.x) << 2);
 	for (size_t i = 0; i < 4; ++i) {
@@ -418,16 +418,16 @@ void demo_move_soldier(struct map *nonnull map, sprite_handle soldier,
 	}
 }
 
-void demo_soldier_frame(sprite_handle soldier, enum facing facing,
-			uint32_t frame)
+void demo_character_frame(sprite_handle character, enum facing facing,
+			  uint32_t frame)
 {
-	struct sprite *sprite = sprite_ref(soldier);
+	struct sprite *sprite = sprite_ref(character);
 	sprite->flip_horizontal = facing == FACING_NORTH
 			       || facing == FACING_EAST;
 	uint32_t offset =
 		facing == FACING_SOUTH || facing == FACING_EAST ? 0 : 3 * 8;
 	offset += frame * 8;
 
-	sprite_queue_frame_copy(soldier, &characters_soldier_4bpp[offset]);
-	write_palette(&characters_soldier_pal, obj_palette(sprite->palette));
+	sprite_queue_frame_copy(character, &characters_bjin_4bpp[offset]);
+	write_palette(&characters_bjin_pal, obj_palette(sprite->palette));
 }

@@ -79,9 +79,9 @@ void demo_move_cursor(struct map *nonnull map, sprite_handle cursor, struct vec2
 void demo_move_pointer(struct map *nonnull map, sprite_handle pointer, struct vec2 pos,
 		       struct vec2 scroll, uint32_t frame);
 
-sprite_handle demo_alloc_soldier(void);
-void demo_move_soldier(struct map *nonnull map, sprite_handle soldier, struct vec2 pos,
+sprite_handle demo_alloc_character(void);
+void demo_move_character(struct map *nonnull map, sprite_handle character, struct vec2 pos,
 		       struct vec2 scroll);
-void demo_soldier_frame(sprite_handle soldier, enum facing facing, uint32_t frame);
+void demo_character_frame(sprite_handle character, enum facing facing, uint32_t frame);
 
 #endif // CHICKPEA_MAP_H

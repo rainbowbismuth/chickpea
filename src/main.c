@@ -131,21 +131,21 @@ void demo_update(void)
 	demo_move_cursor(&demo_map, cursor, cursor_pos, bg_scroll);
 	demo_move_pointer(&demo_map, pointer, cursor_pos, bg_scroll, frame);
 
-	demo_move_soldier(&demo_map, soldiers[0],
-			  (struct vec2){ .x = 8, .y = 9 }, bg_scroll);
-	demo_move_soldier(&demo_map, soldiers[1],
-			  (struct vec2){ .x = 13, .y = 9 }, bg_scroll);
-	demo_move_soldier(&demo_map, soldiers[2],
-			  (struct vec2){ .x = 7, .y = 10 }, bg_scroll);
-	demo_move_soldier(&demo_map, soldiers[3],
-			  (struct vec2){ .x = 11, .y = 11 }, bg_scroll);
+	demo_move_character(&demo_map, soldiers[0],
+			    (struct vec2){ .x = 8, .y = 9 }, bg_scroll);
+	demo_move_character(&demo_map, soldiers[1],
+			    (struct vec2){ .x = 13, .y = 9 }, bg_scroll);
+	demo_move_character(&demo_map, soldiers[2],
+			    (struct vec2){ .x = 7, .y = 10 }, bg_scroll);
+	demo_move_character(&demo_map, soldiers[3],
+			    (struct vec2){ .x = 11, .y = 11 }, bg_scroll);
 
 	uint32_t walk_c[4] = { 0, 1, 2, 1 };
-	uint32_t unit_frame = walk_c[(frame / 12) % ARRAY_SIZE(walk_c)];
-	demo_soldier_frame(soldiers[0], FACING_EAST, unit_frame);
-	demo_soldier_frame(soldiers[1], FACING_SOUTH, unit_frame);
-	demo_soldier_frame(soldiers[2], FACING_NORTH, unit_frame);
-	demo_soldier_frame(soldiers[3], FACING_WEST, unit_frame);
+	uint32_t unit_frame = walk_c[(frame / 14) % ARRAY_SIZE(walk_c)];
+	demo_character_frame(soldiers[0], FACING_EAST, unit_frame);
+	demo_character_frame(soldiers[1], FACING_SOUTH, unit_frame);
+	demo_character_frame(soldiers[2], FACING_NORTH, unit_frame);
+	demo_character_frame(soldiers[3], FACING_WEST, unit_frame);
 
 	sprite_build_oam_buffer();
 }
@@ -257,7 +257,7 @@ void game_init(void)
 	sprite_ref(pointer)->enabled = true;
 
 	for (size_t i = 0; i < ARRAY_SIZE(soldiers); ++i) {
-		soldiers[i] = demo_alloc_soldier();
+		soldiers[i] = demo_alloc_character();
 		sprite_ref(soldiers[i])->enabled = true;
 	}
 
