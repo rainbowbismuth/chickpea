@@ -82,7 +82,7 @@ int main(int argc, const char *nonnull argv[])
 		return any_failures;
 	}
 
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 	atexit(SDL_Quit);
 	window = SDL_CreateWindow("chickpea-c", SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED, real_win_width,
