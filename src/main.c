@@ -141,7 +141,7 @@ void demo_update(void)
 			    (struct vec2){ .x = 11, .y = 11 }, bg_scroll);
 
 	uint32_t walk_c[4] = { 0, 1, 2, 1 };
-	uint32_t unit_frame = walk_c[(frame / 14) % ARRAY_SIZE(walk_c)];
+	uint32_t unit_frame = walk_c[(frame / 20) % ARRAY_SIZE(walk_c)];
 	demo_character_frame(soldiers[0], FACING_EAST, unit_frame);
 	demo_character_frame(soldiers[1], FACING_SOUTH, unit_frame);
 	demo_character_frame(soldiers[2], FACING_NORTH, unit_frame);
