@@ -86,7 +86,7 @@ static struct vec2 calculate_center(const struct sprite_private *nonnull sprite)
 sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 {
 	assert(allocated < MAX_SPRITES);
-	assert(template->objects != NULL);
+	assert(template->objects);
 	assert(template->num_objects < MAX_SPRITE_OBJECTS);
 
 	size_t index = find_first_unused();

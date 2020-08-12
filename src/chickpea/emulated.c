@@ -87,24 +87,24 @@ int main(int argc, const char *nonnull argv[])
 	window = SDL_CreateWindow("Chickpea", SDL_WINDOWPOS_CENTERED,
 				  SDL_WINDOWPOS_CENTERED, real_win_width,
 				  real_win_height, SDL_WINDOW_ALLOW_HIGHDPI);
-	assert(window != NULL);
+	assert(window);
 
 	renderer = SDL_CreateRenderer(window, -1,
 				      SDL_RENDERER_ACCELERATED
 					      | SDL_RENDERER_PRESENTVSYNC);
-	assert(renderer != NULL);
+	assert(renderer);
 
 	surface = SDL_CreateRGBSurfaceWithFormat(0, GBA_WIDTH, GBA_HEIGHT, 16,
 						 SDL_PIXELFORMAT_RGB555);
-	assert(surface != NULL);
+	assert(surface);
 
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB555,
 				    SDL_TEXTUREACCESS_STREAMING, GBA_WIDTH,
 				    GBA_HEIGHT);
-	assert(texture != NULL);
+	assert(texture);
 
 	keyboard_state = SDL_GetKeyboardState(NULL);
-	assert(keyboard_state != NULL);
+	assert(keyboard_state);
 
 	game_init();
 
