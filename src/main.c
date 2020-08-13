@@ -6,6 +6,7 @@
 #include "game/font.h"
 #include "game/input.h"
 #include "game/map.h"
+#include "game/resource.h"
 #include "game/screen.h"
 #include "game/text_box.h"
 
@@ -20,22 +21,17 @@ static sprite_handle height_msg = { 0 };
 struct map_render_params map_render_params = { .char_block = 3,
 					       .screen_low = 10,
 					       .screen_high = 11 };
-static struct debug_font demo_font = {
-	.characters = fonts_debug_font_4bpp,
-	.palette = &fonts_debug_font_pal,
-};
+static struct debug_font demo_font = { 0 };
 
-extern struct char_4bpp fonts_bismuth_font_4bpp[];
-extern uint8_t fonts_bismuth_font_width[];
+extern struct resource fonts_bismuth_font_4bpp;
+extern struct resource fonts_bismuth_font_width;
 static struct font bismuth = {
-	.characters = fonts_bismuth_font_4bpp,
-	.widths = fonts_bismuth_font_width,
 	.letter_spacing = 1,
 	.tall = true,
 };
-extern struct palette fonts_bismuth_font_pal;
 
-extern struct palette map_tile_cursor_pal;
+extern struct resource fonts_bismuth_font_pal;
+extern struct resource map_tile_cursor_pal;
 
 static struct sprite_object_def height_msg_objs[1] = { {
 	.x_offset = 0,
@@ -51,13 +47,10 @@ static struct sprite_template height_msg_template = {
 	.objects = height_msg_objs
 };
 
-extern struct char_4bpp interface_speech_bubble_4bpp[];
-extern uint16_t interface_speech_bubble_tiles[];
-
-extern unsigned int interface_speech_bubble_4bpp_len;
-
-extern struct char_8bpp portraits_Bjin_8bpp[];
-extern struct palette portraits_Bjin_pals[];
+extern struct resource interface_speech_bubble_4bpp;
+extern struct resource interface_speech_bubble_tiles;
+extern struct resource portraits_Bjin_8bpp;
+extern struct resource portraits_Bjin_pals;
 
 static struct sprite_object_def portrait_objs[5] = {
 	{ .x_offset = 0,
@@ -248,6 +241,12 @@ void game_init(void)
 	//	REG_BLDALPHA = PREP(BLDALPHA_1ST_WEIGHT, 5) |
 	//		       PREP(BLDALPHA_2ND_WEIGHT, 11);
 
+	demo_font.characters = resource_data(&fonts_debug_font_4bpp);
+	demo_font.palette = resource_data(&fonts_debug_font_pal);
+
+	bismuth.characters = (struct char_4bpp*)resource_data(&fonts_bismuth_font_4bpp);
+	bismuth.widths = (uint8_t*)resource_data(&fonts_bismuth_font_width);
+
 	demo_init();
 
 	cursor = demo_alloc_cursor();
@@ -262,13 +261,12 @@ void game_init(void)
 	}
 
 	sprite_handle bjin = sprite_alloc(&portrait_template);
-	for (size_t i = 0; i < 3; ++i) {
-		write_palette(&portraits_Bjin_pals[i], obj_palette(6 + i));
-	}
+	resource_copy_to_vram(&portraits_Bjin_pals, (void *)obj_palette(6));
 	sprite_ref(bjin)->enabled = true;
 	sprite_ref(bjin)->pos.y -= 4;
-	sprite_queue_frame_copy(bjin, (struct char_4bpp *)portraits_Bjin_8bpp);
 
+	// TODO: This is a bit silly..
+	sprite_queue_frame_copy(bjin, resource_data(&portraits_Bjin_8bpp));
 	sprite_execute_frame_copies();
 
 	for (size_t y = 0; y < MAP_HEIGHT; ++y) {
@@ -290,13 +288,13 @@ void game_init(void)
 		.palette = 2
 	};
 
-	write_palette(&fonts_bismuth_font_pal, bg_palette(2));
+	resource_copy_to_vram(&fonts_bismuth_font_pal, (void *)bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
 
 	struct text_box_graphics speech_bubble_gfx = {
-		.chars = interface_speech_bubble_4bpp,
-		.length = interface_speech_bubble_4bpp_len,
-		.tiles = interface_speech_bubble_tiles,
+		.chars = resource_data(&interface_speech_bubble_4bpp),
+		.length = interface_speech_bubble_4bpp.length,
+		.tiles = resource_data(&interface_speech_bubble_tiles),
 		.height = 8,
 	};
 

@@ -32,6 +32,12 @@ SECTIONS {
         __bss_end = ABSOLUTE(.);
     } >iwram
 
+    .ewram_bss (NOLOAD): {
+        *(.ewram_bss .ewram_bss.*);
+        . = ALIGN(4);
+        __ewram_bss_end = ABSOLUTE(.);
+    } >ewram
+
     /* debugging sections */
     /* Stabs */
     .stab            0 : { *(.stab) }

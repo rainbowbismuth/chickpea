@@ -814,6 +814,59 @@ void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count)
 	}
 }
 
+static void gba_lz77_decompress(const uint8_t *restrict nonnull src,
+				uint8_t *restrict nonnull dst)
+{
+	uint32_t remaining = src[3] << 16 | src[2] << 8 | src[1];
+	src += 4;
+	uint8_t block_header = 0;
+	uint8_t blocks_remaining = 0;
+	const uint8_t *disp = 0;
+	uint32_t bytes = 0;
+	while (remaining > 0) {
+		if (blocks_remaining) {
+			if (block_header & 0x80) {
+				uint16_t block = src[1] | src[0] << 8;
+				src += 2;
+				disp = dst - (block & 0x0FFF) - 1;
+				bytes = (block >> 12) + 3;
+				while (bytes--) {
+					if (remaining) {
+						--remaining;
+					}
+					*dst++ = *disp++;
+				}
+			} else {
+				*dst++ = *src++;
+				--remaining;
+			}
+			block_header <<= 1;
+			--blocks_remaining;
+		} else {
+			block_header = *src++;
+			blocks_remaining = 8;
+		}
+	}
+}
+
+void decompress_lz77_wram(const void *restrict nonnull src,
+			  void *restrict nonnull dst)
+{
+	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	// TODO: Check to make sure dst is outside vram
+	gba_lz77_decompress(src, dst);
+}
+
+void decompress_lz77_vram(const void *restrict nonnull src,
+			  void *restrict nonnull dst)
+{
+	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	// TODO: Check to make sure dst is in vram
+	gba_lz77_decompress(src, dst);
+}
+
 void debug_put_char(char c)
 {
 	fputc(c, stdout);

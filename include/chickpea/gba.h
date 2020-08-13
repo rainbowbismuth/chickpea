@@ -36,4 +36,6 @@
 
 #define OAM (*((volatile struct object_attribute_mem *)0x07000000))
 
+#define EWRAM __attribute__((section(".ewram_bss")))
+
 #endif // CHICKPEA_GBA_H

@@ -305,4 +305,10 @@ void interrupt_acknowledge(uint16_t int_flag);
 
 extern void (*nonnull volatile irq_handler)(void);
 
+void decompress_lz77_wram(const void *restrict nonnull src,
+			  void *restrict nonnull dst);
+
+void decompress_lz77_vram(const void *restrict nonnull src,
+			  void *restrict nonnull dst);
+
 #endif // CHICKPEA_COMMON_H

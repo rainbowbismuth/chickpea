@@ -18,7 +18,7 @@ write_debug_msg_sprite(const struct debug_font *nonnull font,
 		       const struct sprite_template *nonnull template,
 		       const char *nonnull msg);
 
-extern const struct char_4bpp fonts_debug_font_4bpp[256];
-extern const struct palette fonts_debug_font_pal;
+extern struct resource fonts_debug_font_4bpp;
+extern struct resource fonts_debug_font_pal;
 
 #endif // CHICKPEA_DEBUG_FONT_H

@@ -5,6 +5,10 @@ use std::path::Path;
 use clap::Clap;
 use png::{BitDepth, ColorType};
 
+use lz77::encode_gba_lz77;
+
+mod lz77;
+
 pub fn reverse_nibbles(mut n: u32) -> u32 {
     n = (n & 0x0F0F0F0F) << 4 | (n & 0xF0F0F0F0) >> 4;
     n = (n & 0x00FF00FF) << 8 | (n & 0xFF00FF00) >> 8;
@@ -458,8 +462,19 @@ struct BakeBackground {
 }
 
 fn c_to_stdout(name: &str, data: &[u8]) {
-    println!("const uint8_t {}[] __attribute__((aligned(4))) = {{", name);
-    for chunk in data.chunks(12) {
+    let uncompressed_len = data.len();
+
+    let compressed = encode_gba_lz77(data);
+    let mut lz77_compressed = false;
+    let out_data = if compressed.len() < uncompressed_len {
+        lz77_compressed = true;
+        &compressed
+    } else {
+        data
+    };
+
+    println!("static const uint8_t {}_bytes[] __attribute__((aligned(4))) = {{", name);
+    for chunk in out_data.chunks(12) {
         print!("\t");
         for ch in chunk {
             print!("0x{:02X}, ", ch);
@@ -467,7 +482,13 @@ fn c_to_stdout(name: &str, data: &[u8]) {
         println!();
     }
     println!("}};");
-    println!("const uint32_t {}_len __attribute__((aligned(4))) = {};", name, data.len());
+    println!();
+    println!("struct resource {} = {{", name);
+    println!("\t.length = {},", uncompressed_len);
+    println!("\t.lz77 = {},", lz77_compressed);
+    println!("\t.data = {}_bytes,", name);
+    println!("}};");
+    println!();
 }
 
 fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
@@ -537,8 +558,10 @@ fn bake_8bpp(args: Bake8BPP) -> io::Result<()> {
         img.tiles
     };
 
-    c_to_stdout(&(args.output.clone() + "_8bpp"), &serialize(out_tiles.as_slice()));
-    c_to_stdout(&(args.output.clone() + "_pals"), &serialize(img.palettes.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_8bpp"),
+                &serialize(out_tiles.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_pals"),
+                &serialize(img.palettes.as_slice()));
 
     Ok(())
 }

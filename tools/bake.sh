@@ -21,7 +21,7 @@ PORTRAIT="000011\
           333344\
           333344"
 
-echo "#include <stdint.h>" > baked/baked.c
+echo "#include \"game/resource.h\"" > baked/baked.c
 
 $BAKE 4bpp -i assets/fonts/CGA8x8thin.png -o fonts_debug_font >> baked/baked.c
 $BAKE font -i assets/fonts/bismuth.png -o fonts_bismuth_font >> baked/baked.c

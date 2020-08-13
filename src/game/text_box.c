@@ -51,8 +51,7 @@ void text_box_draw(const struct text_box_config *config)
 	volatile struct char_4bpp *out = char_block_begin(config->char_block);
 	volatile uint16_t *screen = screen_block_begin(config->screen_block);
 	screen += 32 * config->from_top;
-
-	// FIXME: What's the actual... size? *sweat drop*
+	
 	assert(config->gfx->length != 0);
 	write_4bpp_n(config->gfx->chars, out,
 		     config->gfx->length / sizeof(*out));
