@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use clap::Clap;
 use png::{BitDepth, ColorType};
@@ -457,6 +457,19 @@ struct BakeBackground {
     output: String,
 }
 
+fn c_to_stdout(name: &str, data: &[u8]) {
+    println!("const uint8_t {}[] __attribute__((aligned(4))) = {{", name);
+    for chunk in data.chunks(12) {
+        print!("\t");
+        for ch in chunk {
+            print!("0x{:02X}, ", ch);
+        }
+        println!();
+    }
+    println!("}};");
+    println!("const uint32_t {}_len __attribute__((aligned(4))) = {};", name, data.len());
+}
+
 fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
     let pattern: Vec<usize> = swizzle.chars()
         .filter(|c| c.is_alphanumeric())
@@ -499,13 +512,8 @@ fn bake_4bpp(args: Bake4BPP) -> io::Result<Vec<Character4BPP>> {
         img.tiles
     };
 
-    let mut out_4bpp = PathBuf::from(&args.output);
-    out_4bpp.set_extension("4bpp");
-    let mut out_pal = PathBuf::from(&args.output);
-    out_pal.set_extension("pal");
-
-    std::fs::write(out_4bpp, serialize(out_tiles.as_slice()))?;
-    std::fs::write(out_pal, serialize(&img.palette))?;
+    c_to_stdout(&(args.output.clone() + "_4bpp"), &serialize(out_tiles.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_pal"), &serialize(&img.palette));
 
     Ok(out_tiles)
 }
@@ -529,14 +537,8 @@ fn bake_8bpp(args: Bake8BPP) -> io::Result<()> {
         img.tiles
     };
 
-    let mut out_4bpp = PathBuf::from(&args.output);
-    out_4bpp.set_extension("8bpp");
-    let mut out_pal = PathBuf::from(&args.output);
-    out_pal.set_extension("pals");
-
-    std::fs::write(out_4bpp, serialize(out_tiles.as_slice()))?;
-    std::fs::write(out_pal, serialize(img.palettes.as_slice()))?;
-
+    c_to_stdout(&(args.output.clone() + "_8bpp"), &serialize(out_tiles.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_pals"), &serialize(img.palettes.as_slice()));
 
     Ok(())
 }
@@ -692,13 +694,8 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
         tile_set.add(i as isize, character);
     }
 
-    let mut out_4bpp = PathBuf::from(&args.output);
-    out_4bpp.set_extension("4bpp");
-    let mut out_pal = PathBuf::from(&args.output);
-    out_pal.set_extension("pal");
-    std::fs::write(out_4bpp, serialize(tile_set.tiles.as_slice()))?;
-    std::fs::write(out_pal, serialize(&img.palette))?;
-
+    c_to_stdout(&(args.output.clone() + "_4bpp"), &serialize(tile_set.tiles.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_pal"), &serialize(&img.palette));
 
     let tile_map_low = parse_tile_map_csv(
         std::fs::read_to_string(&(args.input.clone() + "_low.csv"))?);
@@ -709,21 +706,14 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     let low_tiles = tile_map_with_tile_set(&tile_set, &tile_map_low);
     let high_tiles = tile_map_with_tile_set(&tile_set, &tile_map_high);
 
-    let mut out_low = PathBuf::from(&args.output);
-    out_low.set_extension("low");
-    std::fs::write(out_low, serialize(low_tiles.as_slice()))?;
-
-    let mut out_high = PathBuf::from(&args.output);
-    out_high.set_extension("high");
-    std::fs::write(out_high, serialize(high_tiles.as_slice()))?;
+    c_to_stdout(&(args.output.clone() + "_low"), &serialize(low_tiles.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_high"), &serialize(high_tiles.as_slice()));
 
     let tile_map_height = parse_tile_map_csv(
         std::fs::read_to_string(&(args.input.clone() + "_height.csv"))?);
     let height_map = compute_height_map(&tile_map_height);
 
-    let mut out_height = PathBuf::from(&args.output);
-    out_height.set_extension("height");
-    std::fs::write(out_height, serialize(height_map.as_slice()))?;
+    c_to_stdout(&(args.output.clone() + "_height"), &serialize(height_map.as_slice()));
 
     let tile_map_walk = parse_tile_map_csv(
         std::fs::read_to_string(&(args.input.clone() + "_walkable.csv"))?);
@@ -733,9 +723,7 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
 
     let attr_map = compute_attribute_map(&tile_map_walk, &tile_map_occlude, &tile_map_height);
 
-    let mut out_attr = PathBuf::from(&args.output);
-    out_attr.set_extension("attributes");
-    std::fs::write(out_attr, serialize(attr_map.as_slice()))?;
+    c_to_stdout(&(args.output.clone() + "_attributes"), &serialize(attr_map.as_slice()));
 
     Ok(())
 }
@@ -763,9 +751,7 @@ fn bake_font(args: BakeFont) -> io::Result<()> {
         widths.push(width);
     }
 
-    let mut out_width = PathBuf::from(&args.output);
-    out_width.set_extension("width");
-    std::fs::write(out_width, serialize(widths.as_slice()))?;
+    c_to_stdout(&(args.output.clone() + "_width"), &serialize(widths.as_slice()));
 
     Ok(())
 }
@@ -783,16 +769,9 @@ fn bake_background(args: BakeBackground) -> io::Result<()> {
     }
     let tile_map = tile_map_with_tile_set(&tile_set, &map);
 
-    let mut out_4bpp = PathBuf::from(&args.output);
-    out_4bpp.set_extension("4bpp");
-    let mut out_pal = PathBuf::from(&args.output);
-    out_pal.set_extension("pal");
-    std::fs::write(out_4bpp, serialize(tile_set.tiles.as_slice()))?;
-    std::fs::write(out_pal, serialize(&img.palette))?;
-
-    let mut out_tiles = PathBuf::from(&args.output);
-    out_tiles.set_extension("tiles");
-    std::fs::write(out_tiles, serialize(tile_map.as_slice()))?;
+    c_to_stdout(&(args.output.clone() + "_4bpp"), &serialize(tile_set.tiles.as_slice()));
+    c_to_stdout(&(args.output.clone() + "_pal"), &serialize(&img.palette));
+    c_to_stdout(&(args.output.clone() + "_tiles"), &serialize(tile_map.as_slice()));
 
     Ok(())
 }

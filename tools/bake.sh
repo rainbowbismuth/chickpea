@@ -21,22 +21,14 @@ PORTRAIT="000011\
           333344\
           333344"
 
-$BAKE 4bpp -i assets/fonts/CGA8x8thin.png -o baked/fonts/debug_font
-$BAKE font -i assets/fonts/bismuth.png -o baked/fonts/bismuth_font
-$BAKE 4bpp -i assets/map/tile_highlight.png -o baked/map/tile_highlight
-$BAKE 4bpp -i assets/map/tile_cursor.png -o baked/map/tile_cursor
-$BAKE 4bpp -i assets/map/tile_pointer.png -o baked/map/tile_pointer
-$BAKE 4bpp -s $CHARACTER -i assets/characters/bjin.png -o baked/characters/bjin
-$BAKE map -i assets/map/demo/map -t assets/map/demo/tileset.png -o baked/map/demo/map
-$BAKE bg -i assets/interface/speech_bubble.png -o baked/interface/speech_bubble
-$BAKE 8bpp -i assets/portraits/Bjin.png -s $PORTRAIT --offset=6 -o baked/portraits/Bjin
+echo "#include <stdint.h>" > baked/baked.c
 
-pushd baked > /dev/null
-echo "" > baked.c
-for file in **/*.* ; do
-  xxd -i $file >> baked.c
-done
-for file in map/**/*.* ; do
-  xxd -i $file >> baked.c
-done
-popd > /dev/null
+$BAKE 4bpp -i assets/fonts/CGA8x8thin.png -o fonts_debug_font >> baked/baked.c
+$BAKE font -i assets/fonts/bismuth.png -o fonts_bismuth_font >> baked/baked.c
+$BAKE 4bpp -i assets/map/tile_highlight.png -o map_tile_highlight >> baked/baked.c
+$BAKE 4bpp -i assets/map/tile_cursor.png -o map_tile_cursor >> baked/baked.c
+$BAKE 4bpp -i assets/map/tile_pointer.png -o map_tile_pointer >> baked/baked.c
+$BAKE 4bpp -s $CHARACTER -i assets/characters/bjin.png -o characters_bjin >> baked/baked.c
+$BAKE map -i assets/map/demo/map -t assets/map/demo/tileset.png -o map_demo_map >> baked/baked.c
+$BAKE bg -i assets/interface/speech_bubble.png -o interface_speech_bubble >> baked/baked.c
+$BAKE 8bpp -i assets/portraits/Bjin.png -s $PORTRAIT --offset=6 -o portraits_Bjin >> baked/baked.c
