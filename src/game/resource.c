@@ -8,7 +8,7 @@
 
 #define ARENA_SIZE (64 * 1024)
 static uint8_t arena[ARENA_SIZE] EWRAM = { 0 };
-static uint8_t *top = &arena[0];
+static uint8_t *top = &arena[ARENA_SIZE];
 
 struct resource_alloc {
 	const void *nullable data;
@@ -22,11 +22,9 @@ static struct resource_alloc allocs[MAX_ALLOCS] = { 0 };
 
 static void *arena_alloc(uint32_t bytes)
 {
-	bytes = (bytes + 3) & ~0x3;
-	void *alloc = top;
-	top += bytes;
-	assert(top < &arena[ARENA_SIZE - 1]);
-	return alloc;
+	top -= (bytes + 3) & ~0x3;
+	assert(top >= &arena[0]);
+	return top;
 }
 
 static bool alloc_exists(resource_handle handle)
@@ -67,7 +65,7 @@ const void *resource_data(struct resource *nonnull resource)
 	if (allocs[i].generation == 0) {
 		allocs[i].generation++;
 	}
-	
+
 	resource->allocation =
 		(resource_handle){ .index = i,
 				   .generation = allocs[i].generation };
@@ -87,7 +85,7 @@ void resource_copy_to_vram(const struct resource *nonnull resource,
 
 void resource_reset(void)
 {
-	top = &arena[0];
+	top = &arena[ARENA_SIZE];
 	for (size_t i = 0; i < MAX_ALLOCS; ++i) {
 		if (!allocs[i].used) {
 			continue;
