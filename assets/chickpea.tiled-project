@@ -4,8 +4,7 @@
     ],
     "extensionsPath": "extensions",
     "folders": [
-        "map",
-        "interface"
+        "map"
     ],
     "objectTypesFile": ""
 }
