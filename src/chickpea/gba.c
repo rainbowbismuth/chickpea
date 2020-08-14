@@ -117,27 +117,27 @@ void interrupt_acknowledge(uint16_t int_flag)
 void decompress_lz77_wram(const void *restrict nonnull src,
 			  void *restrict nonnull dst)
 {
-	// TODO: clobbers r3?
 	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
 	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
 	register size_t src_r asm("r0") = (size_t)src;
 	register size_t dst_r asm("r1") = (size_t)dst;
 	__asm__ volatile("swi 0x11"
 			 : /* no output */
-			 : "r"(src_r), "r"(dst_r));
+			 : "r"(src_r), "r"(dst_r)
+			 : "r3");
 }
 
 void decompress_lz77_vram(const void *restrict nonnull src,
 			  void *restrict nonnull dst)
 {
-	// TODO: clobbers r3?
 	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
 	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
 	register size_t src_r asm("r0") = (size_t)src;
 	register size_t dst_r asm("r1") = (size_t)dst;
 	__asm__ volatile("swi 0x12"
 			 : /* no output */
-			 : "r"(src_r), "r"(dst_r));
+			 : "r"(src_r), "r"(dst_r)
+			 : "r3");
 }
 
 extern struct nano_unit_suite test_suites[];
