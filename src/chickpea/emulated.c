@@ -822,7 +822,7 @@ static void gba_lz77_decompress(const uint8_t *restrict nonnull src,
 	uint8_t block_header = 0;
 	uint8_t blocks_remaining = 0;
 	const uint8_t *disp = 0;
-	uint32_t bytes = 0;
+	uint8_t bytes = 0;
 	while (remaining > 0) {
 		if (blocks_remaining) {
 			if (block_header & 0x80) {
