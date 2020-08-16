@@ -80,9 +80,3 @@ else ()
         target_link_libraries(chickpea ${SDL2_LIBRARIES})
     endif ()
 endif ()
-
-
-
-
-
-

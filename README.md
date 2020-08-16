@@ -4,6 +4,13 @@
 
 A multi-platform game written in C99, with build time asset utilities in Rust.
 
+# Building
+
+* **GBA** - Tell cmake `-DBUILD_GBA=1`. Requires devkitARM, relevant paths are currently hardcoded in [CMakeLists.txt]().
+* **Emscripten** - Should build without modification, doesn't build any supporting `.html` file though, just the `.js` and `.wasm` files.
+* **MacOS** - Should build without modification, when running cmake you will need to point the cmake prefix path towards the package configs for SDL2, as an example: `-DCMAKE_PREFIX_PATH="/usr/local/Cellar/sdl2/2.0.12_1/lib/cmake/SDL2"`.
+* **Linux** - Should build without modification with clang or gcc, requires SDL2 dev package to be installed.
+
 # Licenses
 
 All code is licensed under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.en.html) (see [LICENSE]()), with the following exceptions:
