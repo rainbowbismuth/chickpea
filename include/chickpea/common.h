@@ -8,8 +8,14 @@
 /*
  * Attributes for pointers that declare if they're nullable or not.
  */
+
+#ifdef __clang__s
 #define nonnull	 _Nonnull
 #define nullable _Nullable
+#else
+#define nonnull
+#define nullable
+#endif
 
 /*
  * Our own static assert, because we can't use assert.h

@@ -73,11 +73,11 @@ else ()
         add_executable("${BUILD_DATE}_chickpea" ${SRC_FILES} ${INCLUDE_FILES})
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_SDL=2 -s FILESYSTEM=0 -flto=thin")
     else ()
+        find_package(SDL2 REQUIRED)
+        include_directories(${SDL2_INCLUDE_DIRS})
+
         add_executable(chickpea ${SRC_FILES} ${INCLUDE_FILES})
-        set_target_properties(chickpea
-                PROPERTIES
-                COMPILE_FLAGS "-I/usr/local/include/SDL2 -D_THREAD_SAFE"
-                LINK_FLAGS "-L/usr/local/lib -lSDL2")
+        target_link_libraries(chickpea ${SDL2_LIBRARIES})
     endif ()
 endif ()
 
