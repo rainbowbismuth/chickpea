@@ -9,7 +9,7 @@
  * Attributes for pointers that declare if they're nullable or not.
  */
 
-#ifdef __clang__s
+#ifdef __clang__
 #define nonnull	 _Nonnull
 #define nullable _Nullable
 #else
