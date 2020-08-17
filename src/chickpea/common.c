@@ -2,8 +2,7 @@
 #include "chickpea.h"
 #include "chickpea/nano_unit.h"
 
-uint32_t char_name(uint32_t char_block,
-		   volatile struct char_4bpp *nonnull character)
+uint32_t char_name(uint32_t char_block, struct char_4bpp *nonnull character)
 {
 	volatile struct char_4bpp *start = char_block_begin(char_block);
 	uint32_t ret = character - start;
@@ -20,19 +19,19 @@ uint32_t reverse_nibbles(uint32_t n)
 }
 
 void write_4bpp(const struct char_4bpp *restrict nonnull src,
-		volatile struct char_4bpp *restrict nonnull dst)
+		struct char_4bpp *restrict nonnull dst)
 {
 	cpu_fast_set(src, (void *)dst, sizeof(*src) / 4);
 }
 
 void write_4bpp_n(const struct char_4bpp *restrict nonnull src,
-		  volatile struct char_4bpp *restrict nonnull dst, size_t n)
+		  struct char_4bpp *restrict nonnull dst, size_t n)
 {
 	cpu_fast_set(src, (void *)dst, (sizeof(*src) * n) / 4);
 }
 
 void write_palette(const struct palette *restrict nonnull src,
-		   volatile struct palette *restrict nonnull dst)
+		   struct palette *restrict nonnull dst)
 {
 	cpu_fast_set(src, (void *)dst, sizeof(*src) / 4);
 }
@@ -111,17 +110,6 @@ void ch4bpp_bitor(struct char_4bpp *restrict nonnull self,
 	}
 }
 
-void char_4bpp_shift_left(struct char_4bpp *nonnull self, uint32_t amount)
-{
-	if (amount == 0) {
-		return;
-	}
-	amount *= 4;
-	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
-		self->lines[i] >>= amount;
-	}
-}
-
 void ch4bpp_bitor_shl(struct char_4bpp *restrict nonnull dst,
 		      struct char_4bpp *restrict nonnull src, uint32_t pixels)
 {
@@ -131,14 +119,6 @@ void ch4bpp_bitor_shl(struct char_4bpp *restrict nonnull dst,
 	uint32_t amount = pixels * 4;
 	for (size_t i = 0; i < ARRAY_SIZE(dst->lines); ++i) {
 		dst->lines[i] |= src->lines[i] >> amount;
-	}
-}
-
-void char_4bpp_shift_right(struct char_4bpp *nonnull self, uint32_t amount)
-{
-	amount *= 4;
-	for (size_t i = 0; i < ARRAY_SIZE(self->lines); ++i) {
-		self->lines[i] <<= amount;
 	}
 }
 
@@ -245,8 +225,8 @@ exit:
 
 static void test_char_name(struct nano_unit_case *nonnull test)
 {
-	volatile struct char_4bpp *ch = char_block_begin(1);
-	volatile struct char_4bpp *ch5 = ch + 5;
+	struct char_4bpp *ch = char_block_begin(1);
+	struct char_4bpp *ch5 = ch + 5;
 	NANO_ASSERT(test, char_name(1, ch5) == 5, exit);
 exit:
 	return;

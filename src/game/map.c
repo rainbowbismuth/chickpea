@@ -108,8 +108,7 @@ size_t tile_to_screen(struct vec2 pos)
 	return (pos.x % MAP_WIDTH) + (pos.y % MAP_HEIGHT) * MAP_HEIGHT;
 }
 
-void demo_render_one_highlight(volatile uint16_t *screen,
-			       struct vec2 tile_0_pos)
+static void demo_render_one_highlight(uint16_t *screen, struct vec2 tile_0_pos)
 {
 	size_t tile_0_idx = tile_to_screen(tile_0_pos);
 	size_t tile_1_idx = tile_to_screen(v2_add_x(tile_0_pos, 1));
@@ -159,8 +158,8 @@ void demo_render_one_highlight(volatile uint16_t *screen,
 		| TILE_VERTICAL_FLIP | TILE_HORIZONTAL_FLIP;
 }
 
-void demo_gross_fix_up_step(struct map *nonnull map,
-			    volatile uint16_t *screen_high, struct vec2 t_0_pos)
+static void demo_gross_fix_up_step(struct map *nonnull map,
+				   uint16_t *screen_high, struct vec2 t_0_pos)
 {
 	if (map->upper->tiles[t_0_pos.y][t_0_pos.x]
 	    && map->upper->tiles[t_0_pos.y][t_0_pos.x + 1]
@@ -187,13 +186,12 @@ void demo_render_tile_highlights(struct map *nonnull map,
 				 struct map_render_params *nonnull params,
 				 struct map_bit_vec *nonnull highlights)
 {
-	volatile uint16_t *screen_low = screen_block_begin(params->screen_low);
-	volatile uint16_t *screen_high =
-		screen_block_begin(params->screen_high);
+	uint16_t *screen_low = screen_block_begin(params->screen_low);
+	uint16_t *screen_high = screen_block_begin(params->screen_high);
 	cpu_fast_fill(0, (void *)screen_low, (16 * 32 * 32) / 4);
 	cpu_fast_fill(0, (void *)screen_high, (16 * 32 * 32) / 4);
 
-	volatile struct char_4bpp *chars = char_block_begin(params->char_block);
+	struct char_4bpp *chars = char_block_begin(params->char_block);
 
 	/*
 	 * Ideally this wouldn't go here of course
@@ -243,7 +241,6 @@ void demo_rotate_highlight_palette(uint32_t offset)
 }
 
 extern struct resource map_tile_cursor_4bpp;
-extern struct resource map_tile_cursor_pal;
 extern struct resource map_tile_pointer_pal;
 
 const static struct sprite_object_def cursor_objs[4] = {

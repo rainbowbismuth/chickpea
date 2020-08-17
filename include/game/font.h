@@ -12,8 +12,8 @@ struct font {
 };
 
 struct text_config {
-	volatile struct char_4bpp *nonnull chars;
-	volatile uint16_t *nonnull screen;
+	struct char_4bpp *nonnull chars;
+	uint16_t *nonnull screen;
 	uint8_t char_block;
 	uint8_t palette;
 };
@@ -22,8 +22,8 @@ struct text_renderer {
 	const struct font *nonnull font;
 	const struct text_config *nonnull config;
 
-	volatile struct char_4bpp *nonnull chars;
-	volatile uint16_t *nonnull screen;
+	struct char_4bpp *nonnull chars;
+	uint16_t *nonnull screen;
 	const char *nonnull message;
 	uint32_t i;
 };

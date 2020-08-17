@@ -41,27 +41,24 @@ void __aeabi_memcpy(uint8_t *restrict nonnull dest,
 #define OBJ_PALETTE_RAM 0x05000200
 #define VRAM_BEGIN	0x06000000
 
-volatile struct palette *nonnull bg_palette(uint32_t palette_idx)
+struct palette *nonnull bg_palette(uint32_t palette_idx)
 {
-	return (volatile struct palette *)(size_t)(BG_PALETTE_RAM
-						   + palette_idx * 0x20);
+	return (struct palette *)(size_t)(BG_PALETTE_RAM + palette_idx * 0x20);
 }
 
-volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
+struct palette *nonnull obj_palette(uint32_t palette_idx)
 {
-	return (volatile struct palette *)(size_t)(OBJ_PALETTE_RAM
-						   + palette_idx * 0x20);
+	return (struct palette *)(size_t)(OBJ_PALETTE_RAM + palette_idx * 0x20);
 }
 
-volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block)
+struct char_4bpp *nonnull char_block_begin(uint32_t char_block)
 {
-	return (volatile struct char_4bpp *)(size_t)(VRAM_BEGIN
-						     + char_block * 0x4000);
+	return (struct char_4bpp *)(size_t)(VRAM_BEGIN + char_block * 0x4000);
 }
 
-volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block)
+uint16_t *nonnull screen_block_begin(uint32_t screen_block)
 {
-	return (volatile uint16_t *)(size_t)(VRAM_BEGIN + screen_block * 0x800);
+	return (uint16_t *)(size_t)(VRAM_BEGIN + screen_block * 0x800);
 }
 
 volatile uint16_t *nonnull reg_bg_control(enum background bg)

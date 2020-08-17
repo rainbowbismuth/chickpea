@@ -242,16 +242,15 @@ struct object_attribute_mem {
 	struct oam_entry entries[128];
 };
 
-volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block);
+struct char_4bpp *nonnull char_block_begin(uint32_t char_block);
 
-uint32_t char_name(uint32_t char_block,
-		   volatile struct char_4bpp *nonnull character);
+uint32_t char_name(uint32_t char_block, struct char_4bpp *nonnull character);
 
-volatile struct palette *nonnull bg_palette(uint32_t palette_idx);
+struct palette *nonnull bg_palette(uint32_t palette_idx);
 
-volatile struct palette *nonnull obj_palette(uint32_t palette_idx);
+struct palette *nonnull obj_palette(uint32_t palette_idx);
 
-volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block);
+uint16_t *nonnull screen_block_begin(uint32_t screen_block);
 
 volatile uint16_t *nonnull reg_bg_control(enum background bg);
 
@@ -269,13 +268,13 @@ void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count);
 uint32_t reverse_nibbles(uint32_t n);
 
 void write_4bpp(const struct char_4bpp *restrict nonnull src,
-		volatile struct char_4bpp *restrict nonnull dst);
+		struct char_4bpp *restrict nonnull dst);
 
 void write_4bpp_n(const struct char_4bpp *restrict nonnull src,
-		  volatile struct char_4bpp *restrict nonnull dst, size_t n);
+		  struct char_4bpp *restrict nonnull dst, size_t n);
 
 void write_palette(const struct palette *restrict nonnull src,
-		   volatile struct palette *restrict nonnull dst);
+		   struct palette *restrict nonnull dst);
 
 void debug_put_char(char c);
 

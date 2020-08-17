@@ -48,10 +48,10 @@ static void text_box_draw_right(const struct text_box_config *config,
 void text_box_draw(const struct text_box_config *config)
 {
 	// FIXME: Hard coded to be first in block..?
-	volatile struct char_4bpp *out = char_block_begin(config->char_block);
-	volatile uint16_t *screen = screen_block_begin(config->screen_block);
+	struct char_4bpp *out = char_block_begin(config->char_block);
+	uint16_t *screen = screen_block_begin(config->screen_block);
 	screen += 32 * config->from_top;
-	
+
 	assert(config->gfx->length != 0);
 	write_4bpp_n(config->gfx->chars, out,
 		     config->gfx->length / sizeof(*out));

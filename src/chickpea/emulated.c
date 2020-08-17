@@ -720,28 +720,28 @@ static void step_emulated_hardware(void)
 	}
 }
 
-volatile struct palette *nonnull bg_palette(uint32_t palette_idx)
+struct palette *nonnull bg_palette(uint32_t palette_idx)
 {
 	assert(palette_idx < ARRAY_SIZE(bg_pallete_ram));
-	return (volatile struct palette *)(&bg_pallete_ram[palette_idx]);
+	return &bg_pallete_ram[palette_idx];
 }
 
-volatile struct palette *nonnull obj_palette(uint32_t palette_idx)
+struct palette *nonnull obj_palette(uint32_t palette_idx)
 {
 	assert(palette_idx < ARRAY_SIZE(obj_pallete_ram));
-	return (volatile struct palette *)(&obj_pallete_ram[palette_idx]);
+	return &obj_pallete_ram[palette_idx];
 }
 
-volatile struct char_4bpp *nonnull char_block_begin(uint32_t char_block)
+struct char_4bpp *nonnull char_block_begin(uint32_t char_block)
 {
 	assert(char_block < 5);
-	return (volatile struct char_4bpp *)(&video_ram[char_block * 0x4000]);
+	return (struct char_4bpp *)&video_ram[char_block * 0x4000];
 }
 
-volatile uint16_t *nonnull screen_block_begin(uint32_t screen_block)
+uint16_t *nonnull screen_block_begin(uint32_t screen_block)
 {
 	assert(screen_block < 32);
-	return (volatile uint16_t *)(&video_ram[screen_block * 0x800]);
+	return (uint16_t *)(&video_ram[screen_block * 0x800]);
 }
 
 volatile uint16_t *nonnull reg_bg_control(enum background bg)

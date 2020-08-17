@@ -34,18 +34,17 @@ out_char(struct text_renderer *nonnull renderer, uint32_t index)
 }
 
 static void add_to_screen(const struct text_renderer *renderer,
-			  volatile struct char_4bpp *chars,
-			  volatile uint16_t *screen)
+			  struct char_4bpp *chars, uint16_t *screen)
 {
 	uint16_t pal = PREP(TILE_PALETTE, renderer->config->palette);
-	*screen = PREP(TILE_CHAR,
-		       char_name(renderer->config->char_block, chars))
+	*screen =
+		PREP(TILE_CHAR, char_name(renderer->config->char_block, chars))
 		| pal;
 	if (renderer->font->tall) {
-		*(screen + 32) = PREP(TILE_CHAR,
-				      char_name(renderer->config->char_block,
-						chars + 1))
-			       | pal;
+		*(screen + 32) =
+			PREP(TILE_CHAR,
+			     char_name(renderer->config->char_block, chars + 1))
+			| pal;
 	}
 }
 

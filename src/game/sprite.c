@@ -120,7 +120,7 @@ sprite_handle sprite_alloc(const struct sprite_template *nonnull template)
 	return handle;
 }
 
-volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle)
+struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle)
 {
 	assert(sprite_exists(handle));
 	struct sprite_private *sprite = &sprites[handle.index];

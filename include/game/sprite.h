@@ -43,11 +43,11 @@ size_t sprite_allocated(void);
 bool sprite_exists(sprite_handle handle);
 struct sprite *nonnull sprite_ref(sprite_handle handle);
 sprite_handle sprite_alloc(const struct sprite_template *nonnull template);
-volatile struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle);
+struct char_4bpp *nonnull sprite_obj_vram(sprite_handle handle);
 size_t sprite_num_tiles(sprite_handle handle);
 void sprite_drop(sprite_handle handle);
-
-void sprite_queue_frame_copy(sprite_handle handle, const struct char_4bpp *nonnull src);
+void sprite_queue_frame_copy(sprite_handle handle,
+			     const struct char_4bpp *nonnull src);
 void sprite_execute_frame_copies(void);
 
 /*

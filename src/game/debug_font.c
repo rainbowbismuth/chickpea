@@ -5,8 +5,8 @@ void write_debug_msg(const struct debug_font *nonnull font, uint32_t char_block,
 		     uint32_t screen_block, uint32_t palette, uint32_t tile_x,
 		     uint32_t tile_y, const char *nonnull msg)
 {
-	volatile struct char_4bpp *character = char_block_begin(char_block);
-	volatile uint16_t *tile = screen_block_begin(screen_block);
+	struct char_4bpp *character = char_block_begin(char_block);
+	uint16_t *tile = screen_block_begin(screen_block);
 
 	const struct char_4bpp empty = { 0 };
 	write_4bpp(&empty, character);
@@ -34,7 +34,7 @@ write_debug_msg_sprite(const struct debug_font *nonnull font,
 		       const char *nonnull msg)
 {
 	sprite_handle h = sprite_alloc(template);
-	volatile struct char_4bpp *vram = sprite_obj_vram(h);
+	struct char_4bpp *vram = sprite_obj_vram(h);
 	write_palette(font->palette, obj_palette(template->palette));
 	size_t num_tiles = sprite_num_tiles(h);
 	size_t count = 0;
