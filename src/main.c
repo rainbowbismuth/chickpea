@@ -244,8 +244,9 @@ void game_init(void)
 	demo_font.characters = resource_data(&fonts_debug_font_4bpp);
 	demo_font.palette = resource_data(&fonts_debug_font_pal);
 
-	bismuth.characters = (struct char_4bpp*)resource_data(&fonts_bismuth_font_4bpp);
-	bismuth.widths = (uint8_t*)resource_data(&fonts_bismuth_font_width);
+	bismuth.characters =
+		(struct char_4bpp *)resource_data(&fonts_bismuth_font_4bpp);
+	bismuth.widths = (uint8_t *)resource_data(&fonts_bismuth_font_width);
 
 	demo_init();
 
@@ -254,6 +255,7 @@ void game_init(void)
 
 	pointer = demo_alloc_pointer();
 	sprite_ref(pointer)->enabled = true;
+	sprite_ref(pointer)->priority[0] = 2;
 
 	for (size_t i = 0; i < ARRAY_SIZE(soldiers); ++i) {
 		soldiers[i] = demo_alloc_character();
