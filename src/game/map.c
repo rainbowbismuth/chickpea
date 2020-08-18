@@ -92,7 +92,7 @@ void demo_init(void)
 	resource_copy_to_vram(&map_demo_map_pal, (void *)bg_palette(0));
 	resource_copy_to_vram(&map_demo_map_low, (void *)screen_block_begin(8));
 	resource_copy_to_vram(&map_demo_map_high,
-			      (void *)screen_block_begin(9));
+			      (void *)screen_block_begin(10));
 
 	// TODO: Could just... make this point at VRAM for lower/upper?
 	demo_map = (struct map){

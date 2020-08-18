@@ -282,6 +282,34 @@ static void draw_line_256(uint32_t x, uint32_t y, uint64_t line,
 	}
 }
 
+static uint32_t bg_width_tiles(uint16_t bg_control)
+{
+	switch (GET(BGCNT_SCREEN_SIZE, bg_control)) {
+	case 1:
+	case 3:
+		return 64;
+	default:
+		assert(false && "not possible");
+	case 0:
+	case 2:
+		return 32;
+	}
+}
+
+static uint32_t bg_height_tiles(uint16_t bg_control)
+{
+	switch (GET(BGCNT_SCREEN_SIZE, bg_control)) {
+	case 2:
+	case 3:
+		return 64;
+	default:
+		assert(false && "not possible");
+	case 0:
+	case 1:
+		return 32;
+	}
+}
+
 static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 {
 	if ((GET(DISPCNT_SCREEN_BG_ENABLED, REG_DISPCNT) & (1 << bg)) == 0) {
@@ -291,24 +319,36 @@ static void draw_background(enum background bg, uint32_t y, uint16_t priority)
 	uint32_t scroll_x = reg_bg_scrolls_x[bg];
 	uint32_t scroll_y = 0xFFFF - reg_bg_scrolls_y[bg];
 
+	uint16_t bg_control = *reg_bg_control(bg);
+
+	uint32_t bg_width = bg_width_tiles(bg_control);
+	uint32_t bg_height = bg_height_tiles(bg_control);
+
 	uint32_t bg_y = y - scroll_y;
-	uint32_t tile_y = (bg_y / 8) % 32;
+	uint32_t tile_y = (bg_y / 8) % bg_height;
 	uint32_t tile_line = bg_y % 8;
 	uint32_t tile_x_min = scroll_x / 8;
 
-	uint16_t bg_control = *reg_bg_control(bg);
-
 	const uint16_t *screen_block = (uint16_t *)screen_block_begin(
 		GET(BGCNT_SCREEN_BLOCK, bg_control));
+
+	if (tile_y >= 32) {
+		screen_block += bg_width * 32;
+	}
 
 	const struct char_4bpp *char_block =
 		(struct char_4bpp *)char_block_begin(
 			GET(BGCNT_CHAR_BLOCK, bg_control));
 
 	for (size_t tile_x = tile_x_min; tile_x < tile_x_min + 32; ++tile_x) {
-		uint32_t wrapped_tile_x = tile_x % 32;
+		uint32_t wrapped_tile_x = tile_x % bg_width;
 		uint32_t screen_x = tile_x * 8 - scroll_x;
-		uint32_t tile_idx = wrapped_tile_x + tile_y * 32;
+		uint32_t tile_idx = (wrapped_tile_x % 32) + tile_y * 32;
+
+		if (wrapped_tile_x >= 32) {
+			tile_idx += 32 * 32;
+		}
+
 		uint16_t tile = screen_block[tile_idx];
 
 		uint32_t line_idx = tile_line;

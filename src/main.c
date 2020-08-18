@@ -19,8 +19,8 @@ static sprite_handle pointer = { 0 };
 static sprite_handle soldiers[4] = { 0 };
 static sprite_handle height_msg = { 0 };
 struct map_render_params map_render_params = { .char_block = 3,
-					       .screen_low = 10,
-					       .screen_high = 11 };
+					       .screen_low = 12,
+					       .screen_high = 13 };
 static struct debug_font demo_font = { 0 };
 
 extern struct resource fonts_bismuth_font_4bpp;
@@ -228,10 +228,12 @@ void game_init(void)
 		| PREP(BGCNT_PRIORITY, 0);
 
 	*reg_bg_control(BG2) = PREP(BGCNT_SCREEN_BLOCK, 8)
-			     | PREP(BGCNT_PRIORITY, 3);
+			     | PREP(BGCNT_PRIORITY, 3)
+			     | PREP(BGCNT_SCREEN_SIZE, 1);
 
-	*reg_bg_control(BG3) = PREP(BGCNT_SCREEN_BLOCK, 9)
-			     | PREP(BGCNT_PRIORITY, 2);
+	*reg_bg_control(BG3) = PREP(BGCNT_SCREEN_BLOCK, 10)
+			     | PREP(BGCNT_PRIORITY, 2)
+			     | PREP(BGCNT_SCREEN_SIZE, 1);
 
 	//	REG_BLDCNT = BLDCNT_1ST_TARGET_BG0 | BLDCNT_1ST_TARGET_BG1 |
 	//		     BLDCNT_2ND_TARGET_BG0 | BLDCNT_2ND_TARGET_BG1 |
