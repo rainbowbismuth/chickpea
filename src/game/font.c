@@ -126,6 +126,9 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 		renderer->screen_i += 4;
 		renderer->gfx_i += 4;
 		renderer->message++;
+	} else if (ch == '\06') {
+		renderer->message++;
+		return true;
 	}
 	render_normal_char(renderer);
 	return true;

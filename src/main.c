@@ -325,7 +325,9 @@ void game_init(void)
 
 	text_box_draw(&text_box);
 	text_renderer_init(&text_renderer, &bismuth, &bismuth_config,
-			   "Letter, by letter,\nI speak!");
+			   "Letter, by letter,\nI speak!\06\06\06"
+			   " No cute\nnoises though.\06");
+
 	//	demo_render_tile_highlights(&demo_map, &map_render_params,
 	//&highlights);
 
