@@ -73,7 +73,11 @@ impl<'a> GbaLz77Sink<'a> {
 
 impl<'a> Sink for GbaLz77Sink<'a> {
     fn consume(&mut self, code: Code) {
-        if let Code::Pointer { length, backward_distance: 1 } = &code {
+        if let Code::Pointer {
+            length,
+            backward_distance: 1,
+        } = &code
+        {
             self.codes.push(Code::Literal(self.input[self.i]));
             if *length - 1 < 3 {
                 self.codes.push(Code::Literal(self.input[self.i + 1]));
@@ -90,7 +94,10 @@ impl<'a> Sink for GbaLz77Sink<'a> {
 
         match &code {
             Code::Literal(_) => self.i += 1,
-            Code::Pointer { length, backward_distance: _ } => {
+            Code::Pointer {
+                length,
+                backward_distance: _,
+            } => {
                 self.i += *length as usize;
             }
         }

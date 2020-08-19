@@ -49,7 +49,6 @@ pub const fn rgb8(r: u8, g: u8, b: u8) -> Color {
     Color::new(r >> 3, g >> 3, b >> 3)
 }
 
-
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 /// An 8x8 character, with four bits per pixel. Each nibble indexes into a palette.
@@ -70,7 +69,8 @@ impl Character4BPP {
 
     pub fn flip_vertical(&self) -> Self {
         Self([
-            self.0[7], self.0[6], self.0[5], self.0[4], self.0[3], self.0[2], self.0[1], self.0[0],
+            self.0[7], self.0[6], self.0[5], self.0[4], self.0[3], self.0[2],
+            self.0[1], self.0[0],
         ])
     }
 
@@ -164,7 +164,6 @@ impl Vec2 {
     }
 }
 
-
 impl Image4BPP {
     pub fn load_png<P: AsRef<Path>>(path: P) -> Self {
         Self::load_png_impl(path.as_ref())
@@ -179,7 +178,8 @@ impl Image4BPP {
         let info = reader.info();
         assert_eq!(info.color_type, ColorType::Indexed);
         assert_eq!(info.bit_depth, BitDepth::Eight);
-        let png_palette = info.palette.to_owned().expect("image must have a palette");
+        let png_palette =
+            info.palette.to_owned().expect("image must have a palette");
         let width = info.width;
         let height = info.height;
         assert_eq!(width % 8, 0);
@@ -216,7 +216,8 @@ impl Image4BPP {
                         let img_x = x_base + j as usize;
                         let img_y = y_base + i as usize;
                         gfx.0[i as usize] |=
-                            ((png_pixels[img_x + img_y * pitch] & 0xF) as u32) << (j * 4);
+                            ((png_pixels[img_x + img_y * pitch] & 0xF) as u32)
+                                << (j * 4);
                     }
                 }
                 tiles.push(gfx);
@@ -246,7 +247,8 @@ impl Image8BPP {
         let info = reader.info();
         assert_eq!(info.color_type, ColorType::Indexed);
         assert_eq!(info.bit_depth, BitDepth::Eight);
-        let png_palette = info.palette.to_owned().expect("image must have a palette");
+        let png_palette =
+            info.palette.to_owned().expect("image must have a palette");
         let width = info.width;
         let height = info.height;
         assert_eq!(width % 8, 0);
@@ -286,7 +288,10 @@ impl Image8BPP {
                             continue;
                         }
                         gfx.0[i as usize] |=
-                            (((png_pixels[img_x + img_y * pitch] + offset as u8 * 16) & 0xFF) as u64) << (j * 8);
+                            (((png_pixels[img_x + img_y * pitch]
+                                + offset as u8 * 16)
+                                & 0xFF) as u64)
+                                << (j * 8);
                     }
                 }
                 tiles.push(gfx);
@@ -473,7 +478,10 @@ fn c_to_stdout(name: &str, data: &[u8]) {
         data
     };
 
-    println!("static const uint8_t {}_bytes[] __attribute__((aligned(4))) = {{", name);
+    println!(
+        "static const uint8_t {}_bytes[] __attribute__((aligned(4))) = {{",
+        name
+    );
     for chunk in out_data.chunks(12) {
         print!("\t");
         for ch in chunk {
@@ -492,9 +500,11 @@ fn c_to_stdout(name: &str, data: &[u8]) {
 }
 
 fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
-    let pattern: Vec<usize> = swizzle.chars()
+    let pattern: Vec<usize> = swizzle
+        .chars()
         .filter(|c| c.is_alphanumeric())
-        .map(|c| c.to_digit(16).unwrap() as usize).collect();
+        .map(|c| c.to_digit(16).unwrap() as usize)
+        .collect();
     let mut counts = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     for idx in &pattern {
         counts[*idx] += 1usize;
@@ -533,7 +543,10 @@ fn bake_4bpp(args: Bake4BPP) -> io::Result<Vec<Character4BPP>> {
         img.tiles
     };
 
-    c_to_stdout(&(args.output.clone() + "_4bpp"), &serialize(out_tiles.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_4bpp"),
+        &serialize(out_tiles.as_slice()),
+    );
     c_to_stdout(&(args.output.clone() + "_pal"), &serialize(&img.palette));
 
     Ok(out_tiles)
@@ -558,10 +571,14 @@ fn bake_8bpp(args: Bake8BPP) -> io::Result<()> {
         img.tiles
     };
 
-    c_to_stdout(&(args.output.clone() + "_8bpp"),
-                &serialize(out_tiles.as_slice()));
-    c_to_stdout(&(args.output.clone() + "_pals"),
-                &serialize(img.palettes.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_8bpp"),
+        &serialize(out_tiles.as_slice()),
+    );
+    c_to_stdout(
+        &(args.output.clone() + "_pals"),
+        &serialize(img.palettes.as_slice()),
+    );
 
     Ok(())
 }
@@ -605,21 +622,30 @@ impl TileSet {
         };
         self.mapping.insert(*character, tile);
         self.original.insert(original, tile);
-        self.mapping.insert(character.flip_horizontal(), Tile {
-            name: idx,
-            horizontal_flip: true,
-            vertical_flip: false,
-        });
-        self.mapping.insert(character.flip_vertical(), Tile {
-            name: idx,
-            horizontal_flip: false,
-            vertical_flip: true,
-        });
-        self.mapping.insert(character.flip_both(), Tile {
-            name: idx,
-            horizontal_flip: true,
-            vertical_flip: true,
-        });
+        self.mapping.insert(
+            character.flip_horizontal(),
+            Tile {
+                name: idx,
+                horizontal_flip: true,
+                vertical_flip: false,
+            },
+        );
+        self.mapping.insert(
+            character.flip_vertical(),
+            Tile {
+                name: idx,
+                horizontal_flip: false,
+                vertical_flip: true,
+            },
+        );
+        self.mapping.insert(
+            character.flip_both(),
+            Tile {
+                name: idx,
+                horizontal_flip: true,
+                vertical_flip: true,
+            },
+        );
     }
 
     pub fn get(&self, original: isize) -> Option<Tile> {
@@ -646,7 +672,9 @@ fn tile_map_with_tile_set(tile_set: &TileSet, map: &[isize]) -> Vec<u16> {
     for index in map {
         let tile = tile_set.get(*index).unwrap();
         assert!(tile.name < 1024);
-        let val = (tile.name as u16) | (tile.horizontal_flip as u16) << 10 | (tile.vertical_flip as u16) << 11;
+        let val = (tile.name as u16)
+            | (tile.horizontal_flip as u16) << 10
+            | (tile.vertical_flip as u16) << 11;
         out.push(val);
     }
     out
@@ -675,7 +703,11 @@ pub const BOTTOM_ARROW_TILE: isize = 25;
 pub const RIGHT_ARROW_TILE: isize = 26;
 pub const LEFT_ARROW_TILE: isize = 27;
 
-fn compute_attribute_map(walk: &[isize], occlude: &[isize], height_map: &[isize]) -> Vec<u8> {
+fn compute_attribute_map(
+    walk: &[isize],
+    occlude: &[isize],
+    height_map: &[isize],
+) -> Vec<u8> {
     let mut out = vec![0u8; 32 * 32];
     for (i, height_tile) in height_map.iter().enumerate() {
         if height_tile < &0 {
@@ -709,7 +741,6 @@ fn compute_attribute_map(walk: &[isize], occlude: &[isize], height_map: &[isize]
     out
 }
 
-
 fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
     let img = Image4BPP::load_png(&args.tile_set);
     let mut tile_set = TileSet::new();
@@ -717,36 +748,60 @@ fn bake_tilemap(args: BakeTileMap) -> io::Result<()> {
         tile_set.add(i as isize, character);
     }
 
-    c_to_stdout(&(args.output.clone() + "_4bpp"), &serialize(tile_set.tiles.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_4bpp"),
+        &serialize(tile_set.tiles.as_slice()),
+    );
     c_to_stdout(&(args.output.clone() + "_pal"), &serialize(&img.palette));
 
-    let tile_map_low = parse_tile_map_csv(
-        std::fs::read_to_string(&(args.input.clone() + "_low.csv"))?);
+    let tile_map_low = parse_tile_map_csv(std::fs::read_to_string(
+        &(args.input.clone() + "_low.csv"),
+    )?);
 
-    let tile_map_high = parse_tile_map_csv(
-        std::fs::read_to_string(&(args.input.clone() + "_high.csv"))?);
+    let tile_map_high = parse_tile_map_csv(std::fs::read_to_string(
+        &(args.input.clone() + "_high.csv"),
+    )?);
 
     let low_tiles = tile_map_with_tile_set(&tile_set, &tile_map_low);
     let high_tiles = tile_map_with_tile_set(&tile_set, &tile_map_high);
 
-    c_to_stdout(&(args.output.clone() + "_low"), &serialize(low_tiles.as_slice()));
-    c_to_stdout(&(args.output.clone() + "_high"), &serialize(high_tiles.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_low"),
+        &serialize(low_tiles.as_slice()),
+    );
+    c_to_stdout(
+        &(args.output.clone() + "_high"),
+        &serialize(high_tiles.as_slice()),
+    );
 
-    let tile_map_height = parse_tile_map_csv(
-        std::fs::read_to_string(&(args.input.clone() + "_height.csv"))?);
+    let tile_map_height = parse_tile_map_csv(std::fs::read_to_string(
+        &(args.input.clone() + "_height.csv"),
+    )?);
     let height_map = compute_height_map(&tile_map_height);
 
-    c_to_stdout(&(args.output.clone() + "_height"), &serialize(height_map.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_height"),
+        &serialize(height_map.as_slice()),
+    );
 
-    let tile_map_walk = parse_tile_map_csv(
-        std::fs::read_to_string(&(args.input.clone() + "_walkable.csv"))?);
+    let tile_map_walk = parse_tile_map_csv(std::fs::read_to_string(
+        &(args.input.clone() + "_walkable.csv"),
+    )?);
 
-    let tile_map_occlude = parse_tile_map_csv(
-        std::fs::read_to_string(&(args.input.clone() + "_occlusion.csv"))?);
+    let tile_map_occlude = parse_tile_map_csv(std::fs::read_to_string(
+        &(args.input.clone() + "_occlusion.csv"),
+    )?);
 
-    let attr_map = compute_attribute_map(&tile_map_walk, &tile_map_occlude, &tile_map_height);
+    let attr_map = compute_attribute_map(
+        &tile_map_walk,
+        &tile_map_occlude,
+        &tile_map_height,
+    );
 
-    c_to_stdout(&(args.output.clone() + "_attributes"), &serialize(attr_map.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_attributes"),
+        &serialize(attr_map.as_slice()),
+    );
 
     Ok(())
 }
@@ -756,7 +811,11 @@ pub const FONT_8X16_SWIZZLE: &str = "0123456789ABCDEF0123456789ABCDEF";
 fn width_of_char(char: &Character4BPP) -> u8 {
     // TODO: This disturbs me, did I mess up endian-ness or something?
     //  re: leading_zeros() not trailing_zeros() ???
-    char.0.iter().map(|l| 8 - (l.leading_zeros() / 4)).max().unwrap() as u8
+    char.0
+        .iter()
+        .map(|l| 8 - (l.leading_zeros() / 4))
+        .max()
+        .unwrap() as u8
 }
 
 fn bake_font(args: BakeFont) -> io::Result<()> {
@@ -769,12 +828,15 @@ fn bake_font(args: BakeFont) -> io::Result<()> {
     let mut widths: Vec<u8> = Vec::with_capacity(tiles.len() / 2);
 
     for i in 0..tiles.len() / 2 {
-        let width = width_of_char(&tiles[i * 2])
-            .max(width_of_char(&tiles[i * 2 + 1]));
+        let width =
+            width_of_char(&tiles[i * 2]).max(width_of_char(&tiles[i * 2 + 1]));
         widths.push(width);
     }
 
-    c_to_stdout(&(args.output.clone() + "_width"), &serialize(widths.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_width"),
+        &serialize(widths.as_slice()),
+    );
 
     Ok(())
 }
@@ -792,9 +854,15 @@ fn bake_background(args: BakeBackground) -> io::Result<()> {
     }
     let tile_map = tile_map_with_tile_set(&tile_set, &map);
 
-    c_to_stdout(&(args.output.clone() + "_4bpp"), &serialize(tile_set.tiles.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_4bpp"),
+        &serialize(tile_set.tiles.as_slice()),
+    );
     c_to_stdout(&(args.output.clone() + "_pal"), &serialize(&img.palette));
-    c_to_stdout(&(args.output.clone() + "_tiles"), &serialize(tile_map.as_slice()));
+    c_to_stdout(
+        &(args.output.clone() + "_tiles"),
+        &serialize(tile_map.as_slice()),
+    );
 
     Ok(())
 }
@@ -807,6 +875,6 @@ fn main() -> io::Result<()> {
         SubCommand::Bake8BPP(args) => bake_8bpp(args),
         SubCommand::BakeTileMap(args) => bake_tilemap(args),
         SubCommand::BakeFont(args) => bake_font(args),
-        SubCommand::BakeBackground(args) => bake_background(args)
+        SubCommand::BakeBackground(args) => bake_background(args),
     }
 }
