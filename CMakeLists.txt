@@ -16,7 +16,7 @@ set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/nano_unit.h include/chickpea/bit_vec.h
         include/game/map.h include/chickpea/vec2.h include/game/sprite.h
         include/game/object_tiles.h include/game/input.h include/game/random.h
-        include/game/screen.h include/game/font.h include/game/text_box.h
+        include/game/game_state.h include/game/font.h include/game/text_box.h
         include/game/resource.h)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")

@@ -2,10 +2,10 @@
 #include "chickpea.h"
 #include "chickpea/nano_unit.h"
 
-uint32_t char_name(uint32_t char_block, struct char_4bpp *nonnull character)
+uint32_t char_name(uint32_t char_block, const struct char_4bpp *nonnull ch)
 {
-	volatile struct char_4bpp *start = char_block_begin(char_block);
-	uint32_t ret = character - start;
+	struct char_4bpp *start = char_block_begin(char_block);
+	uint32_t ret = ch - start;
 	assert(ret < 1024);
 	return ret;
 }

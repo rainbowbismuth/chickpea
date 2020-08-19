@@ -37,6 +37,26 @@ void __aeabi_memcpy(uint8_t *restrict nonnull dest,
 	}
 }
 
+/*
+ * TODO: Use a better implementation.
+ */
+void __aeabi_memclr(uint8_t *nonnull dest, size_t n)
+{
+	for (size_t i = 0; i < n; ++i) {
+		dest[i] = 0;
+	}
+}
+
+/*
+ * TODO: Use a better implementation.
+ */
+void __aeabi_memclr4(uint8_t *nonnull dest, size_t n)
+{
+	for (size_t i = 0; i < n; ++i) {
+		dest[i] = 0;
+	}
+}
+
 #define BG_PALETTE_RAM	0x05000000
 #define OBJ_PALETTE_RAM 0x05000200
 #define VRAM_BEGIN	0x06000000

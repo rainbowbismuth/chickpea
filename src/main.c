@@ -4,10 +4,10 @@
 #include "chickpea.h"
 #include "game/debug_font.h"
 #include "game/font.h"
+#include "game/game_state.h"
 #include "game/input.h"
 #include "game/map.h"
 #include "game/resource.h"
-#include "game/screen.h"
 #include "game/text_box.h"
 
 static volatile bool run_update = true;
@@ -81,6 +81,9 @@ static struct sprite_template portrait_template = {
 	.objects = portrait_objs,
 	.colors_256 = true,
 };
+
+static struct text_config bismuth_config = { 0 };
+static struct text_renderer text_renderer = { 0 };
 
 void move_cursor_pos_bounded(int16_t x, int16_t y)
 {
@@ -180,10 +183,18 @@ void demo_on_vertical_blank(void)
 		write_debug_msg_sprite(&demo_font, &height_msg_template, msg);
 	sprite_ref(height_msg)->enabled = true;
 	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
+
+	if (frame % 10 == 0) {
+		if (text_renderer_at_end(&text_renderer) && frame % 100 == 0) {
+			text_renderer_clear(&text_renderer);
+		}
+		text_renderer_next_char(&text_renderer);
+	}
+
 	run_update = true;
 }
 
-struct screen *nonnull current_screen = &(struct screen){
+struct game_state *nonnull current_screen = &(struct game_state){
 	.update = &demo_update,
 	.on_horizontal_blank = &demo_on_horizontal_blank,
 	.on_vertical_blank = &demo_on_vertical_blank,
@@ -284,7 +295,7 @@ void game_init(void)
 		}
 	}
 
-	struct text_config bismuth_config = {
+	bismuth_config = (struct text_config){
 		.chars = char_block_begin(map_render_params.char_block) + 32,
 		.screen = screen_block_begin(map_render_params.screen_high)
 			+ (32 * 3) + 8,
@@ -313,8 +324,8 @@ void game_init(void)
 	};
 
 	text_box_draw(&text_box);
-	text_render(&bismuth, &bismuth_config, "Portraits, huh?");
-
+	text_renderer_init(&text_renderer, &bismuth, &bismuth_config,
+			   "Letter, by letter,\nI speak!");
 	//	demo_render_tile_highlights(&demo_map, &map_render_params,
 	//&highlights);
 

@@ -242,9 +242,13 @@ struct object_attribute_mem {
 	struct oam_entry entries[128];
 };
 
+struct screen {
+	uint16_t tiles[32][32];
+};
+
 struct char_4bpp *nonnull char_block_begin(uint32_t char_block);
 
-uint32_t char_name(uint32_t char_block, struct char_4bpp *nonnull character);
+uint32_t char_name(uint32_t char_block, const struct char_4bpp *nonnull ch);
 
 struct palette *nonnull bg_palette(uint32_t palette_idx);
 

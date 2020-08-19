@@ -25,7 +25,10 @@ struct text_renderer {
 	struct char_4bpp *nonnull chars;
 	uint16_t *nonnull screen;
 	const char *nonnull message;
-	uint32_t i;
+	const char *nonnull original_message;
+	uint32_t gfx_i;
+	uint32_t clear_idx;
+	uint32_t screen_i;
 };
 
 void text_renderer_init(struct text_renderer *nonnull renderer,
@@ -33,11 +36,15 @@ void text_renderer_init(struct text_renderer *nonnull renderer,
 			const struct text_config *nonnull config,
 			const char *nonnull message);
 
+bool text_renderer_at_end(struct text_renderer *nonnull renderer);
+
 /*
  * Renders the next character in the text_renderer, returns false
  * if there are no more characters to render.
  */
 bool text_renderer_next_char(struct text_renderer *nonnull renderer);
+
+void text_renderer_clear(struct text_renderer *nonnull renderer);
 
 /*
  * Render an entire message.
