@@ -30,7 +30,10 @@ uint16_t reg_bg_controls[4] = { 0 };
 uint16_t reg_bg_scrolls_x[4] = { 0 };
 uint16_t reg_bg_scrolls_y[4] = { 0 };
 
-uint8_t video_ram[0x18000] = { 0 };
+// This alignment on video_ram is required so that we can, for example,
+// take a pointer inside a screen or a char block and figure out where
+// it starts, by masking off bits of the pointer.
+uint8_t video_ram[0x18000] __attribute__((aligned(0x20000))) = { 0 };
 
 struct palette bg_pallete_ram[16] = { { 0 } };
 struct palette obj_pallete_ram[16] = { { 0 } };

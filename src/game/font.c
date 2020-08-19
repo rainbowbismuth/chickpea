@@ -19,21 +19,13 @@ void text_renderer_init(struct text_renderer *nonnull renderer,
 static struct char_4bpp *nonnull
 lookup_char(const struct text_renderer *nonnull renderer, uint32_t ch)
 {
-	if (renderer->font->tall) {
-		return &renderer->font->characters[ch * 2];
-	} else {
-		return &renderer->font->characters[ch];
-	}
+	return &renderer->font->characters[ch << renderer->font->tall];
 }
 
 static struct char_4bpp *nonnull
 out_char(const struct text_renderer *nonnull renderer, uint32_t index)
 {
-	if (renderer->font->tall) {
-		return (struct char_4bpp *)&renderer->chars[index * 2];
-	} else {
-		return (struct char_4bpp *)&renderer->chars[index];
-	}
+	return &renderer->chars[index << renderer->font->tall];
 }
 
 static void add_to_screen(const struct text_renderer *renderer,
@@ -43,9 +35,9 @@ static void add_to_screen(const struct text_renderer *renderer,
 	*screen = PREP(TILE_CHAR, char_name(renderer->config->char_block, ch))
 		| pal;
 	if (renderer->font->tall) {
-		*(screen + 32) =
-			PREP(TILE_CHAR,
-			     char_name(renderer->config->char_block, ch + 1))
+		screen += 32;
+		*screen = PREP(TILE_CHAR,
+			       char_name(renderer->config->char_block, ch + 1))
 			| pal;
 	}
 }
@@ -81,8 +73,7 @@ static void render_normal_char(struct text_renderer *nonnull renderer)
 		struct char_4bpp *clear_ch =
 			out_char(renderer, renderer->clear_idx);
 		cpu_fast_fill(0, clear_ch,
-			      sizeof(*clear_ch)
-				      / (renderer->font->tall ? 2 : 4));
+			      sizeof(*clear_ch) / (4 >> renderer->font->tall));
 		renderer->clear_idx++;
 	}
 
@@ -113,7 +104,7 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 {
 	uint8_t ch = *renderer->message;
 	if (ch == '\n') {
-		renderer->screen += renderer->font->tall ? 64 : 32;
+		renderer->screen += 32 << renderer->font->tall;
 		renderer->screen_i = 0;
 		renderer->gfx_i = (renderer->gfx_i + 8) & ~0x7;
 		renderer->message++;
@@ -123,8 +114,8 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 		return false;
 	} else if (ch == ' ') {
 		// TODO: Remove hardcoded space size.
-		renderer->screen_i += 4;
-		renderer->gfx_i += 4;
+		renderer->screen_i += 8 >> renderer->font->tall;
+		renderer->gfx_i += 8 >> renderer->font->tall;
 		renderer->message++;
 	} else if (ch == '\06') {
 		renderer->message++;
@@ -141,7 +132,10 @@ void text_renderer_clear(struct text_renderer *nonnull renderer)
 	renderer->gfx_i = 0;
 	renderer->clear_idx = 0;
 	renderer->screen_i = 0;
-	cpu_fast_fill(0, renderer->screen, sizeof(struct screen) / 4);
+	cpu_fast_fill(0,
+		      (uint16_t *)((uintptr_t)renderer->screen
+				   & ~(sizeof(struct screen) - 1)),
+		      sizeof(struct screen) / 4);
 }
 
 void text_render(const struct font *nonnull font,

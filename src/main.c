@@ -29,9 +29,12 @@ static struct font bismuth = {
 	.letter_spacing = 1,
 	.tall = true,
 };
+static struct font mono = {
+	.letter_spacing = 0,
+	.tall = false,
+};
 
 extern struct resource fonts_bismuth_font_pal;
-extern struct resource map_tile_cursor_pal;
 
 static struct sprite_object_def height_msg_objs[1] = { {
 	.x_offset = 0,
@@ -82,8 +85,13 @@ static struct sprite_template portrait_template = {
 	.colors_256 = true,
 };
 
+static uint32_t text_select = 0;
+
 static struct text_config bismuth_config = { 0 };
 static struct text_renderer text_renderer = { 0 };
+
+static struct text_config mono_config = { 0 };
+static struct text_renderer mono_text_renderer = { 0 };
 
 void move_cursor_pos_bounded(int16_t x, int16_t y)
 {
@@ -184,11 +192,16 @@ void demo_on_vertical_blank(void)
 	sprite_ref(height_msg)->enabled = true;
 	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
 
+	struct text_renderer *rend = text_select ? &mono_text_renderer
+						 : &text_renderer;
+
 	if (frame % 10 == 0) {
-		if (text_renderer_at_end(&text_renderer) && frame % 100 == 0) {
-			text_renderer_clear(&text_renderer);
+		if (text_renderer_at_end(rend) && frame % 100 == 0) {
+			text_renderer_clear(rend);
+			text_select ^= 1;
+		} else {
+			text_renderer_next_char(rend);
 		}
-		text_renderer_next_char(&text_renderer);
 	}
 
 	run_update = true;
@@ -261,6 +274,10 @@ void game_init(void)
 		(struct char_4bpp *)resource_data(&fonts_bismuth_font_4bpp);
 	bismuth.widths = (uint8_t *)resource_data(&fonts_bismuth_font_width);
 
+	mono.characters =
+		(struct char_4bpp *)resource_data(&fonts_debug_font_4bpp);
+	mono.widths = NULL;
+
 	demo_init();
 
 	cursor = demo_alloc_cursor();
@@ -303,6 +320,8 @@ void game_init(void)
 		.palette = 2
 	};
 
+	mono_config = bismuth_config;
+
 	resource_copy_to_vram(&fonts_bismuth_font_pal, (void *)bg_palette(2));
 	bg_palette(2)->color[0] = color(31, 31, 31);
 
@@ -325,8 +344,15 @@ void game_init(void)
 
 	text_box_draw(&text_box);
 	text_renderer_init(&text_renderer, &bismuth, &bismuth_config,
-			   "Letter, by letter,\nI speak!\06\06\06"
-			   " No cute\nnoises though.\06");
+			   "Letter, by letter,\n"
+			   "I speak!\06\06\06 No cute\n"
+			   "noises yet though.\06");
+	text_renderer_init(&mono_text_renderer, &mono, &mono_config,
+			   "This is a tiny\n"
+			   "monospace font\n"
+			   "and it barely\n"
+			   "fits to be\n"
+			   "honest.\06\06\06");
 
 	//	demo_render_tile_highlights(&demo_map, &map_render_params,
 	//&highlights);

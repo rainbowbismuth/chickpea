@@ -245,6 +245,8 @@ struct object_attribute_mem {
 struct screen {
 	uint16_t tiles[32][32];
 };
+static_assert(sizeof(struct screen) == 2048,
+	      "struct screen shouldn't have padding");
 
 struct char_4bpp *nonnull char_block_begin(uint32_t char_block);
 
