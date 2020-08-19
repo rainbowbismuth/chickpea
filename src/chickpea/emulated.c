@@ -842,15 +842,15 @@ void halt()
 void cpu_fast_set(const void *restrict nonnull src, void *restrict nonnull dst,
 		  size_t word_count)
 {
-	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
-	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)dst & 0x3) == 0 && "must be aligned by 4");
 	assert(word_count % 8 == 0 && "must be multiple of 8 words");
 	memcpy(dst, src, word_count * 4);
 }
 
 void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count)
 {
-	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)dst & 0x3) == 0 && "must be aligned by 4");
 	assert(word_count % 8 == 0 && "must be multiple of 8 words");
 	for (size_t i = 0; i < word_count; ++i) {
 		((uint32_t *)dst)[i] = src;
@@ -895,8 +895,8 @@ static void gba_lz77_decompress(const uint8_t *restrict nonnull src,
 void decompress_lz77_wram(const void *restrict nonnull src,
 			  void *restrict nonnull dst)
 {
-	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
-	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)dst & 0x3) == 0 && "must be aligned by 4");
 	// TODO: Check to make sure dst is outside vram
 	gba_lz77_decompress(src, dst);
 }
@@ -904,8 +904,8 @@ void decompress_lz77_wram(const void *restrict nonnull src,
 void decompress_lz77_vram(const void *restrict nonnull src,
 			  void *restrict nonnull dst)
 {
-	assert(((size_t)src & 0x3) == 0 && "must be aligned by 4");
-	assert(((size_t)dst & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)src & 0x3) == 0 && "must be aligned by 4");
+	assert(((uintptr_t)dst & 0x3) == 0 && "must be aligned by 4");
 	// TODO: Check to make sure dst is in vram
 	gba_lz77_decompress(src, dst);
 }
