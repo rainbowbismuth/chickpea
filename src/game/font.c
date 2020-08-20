@@ -83,8 +83,7 @@ static void render_normal_char(struct text_renderer *nonnull renderer)
 	if (renderer->font->tall) {
 		ch4bpp_bitor_shr(out + 1, ch_gfx + 1, gfx_px_offset);
 	}
-	add_to_screen(renderer, out_char(renderer, gfx_tile),
-		      &renderer->screen[screen_tile]);
+	add_to_screen(renderer, out, &renderer->screen[screen_tile]);
 
 	if (gfx_tile != gfx_end_tile && gfx_px_offset != 0) {
 		gfx_px_offset = 8 - gfx_px_offset;
@@ -93,7 +92,7 @@ static void render_normal_char(struct text_renderer *nonnull renderer)
 		if (renderer->font->tall) {
 			ch4bpp_bitor_shl(out + 1, ch_gfx + 1, gfx_px_offset);
 		}
-		add_to_screen(renderer, out_char(renderer, gfx_end_tile),
+		add_to_screen(renderer, out,
 			      &renderer->screen[screen_end_tile]);
 	}
 	renderer->gfx_px += width + renderer->font->letter_spacing;
