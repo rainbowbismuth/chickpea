@@ -11,9 +11,9 @@ void text_renderer_init(struct text_renderer *nonnull renderer,
 	renderer->config = config;
 	renderer->chars = config->chars;
 	renderer->screen = config->screen;
-	renderer->gfx_i = 0;
-	renderer->clear_idx = 0;
-	renderer->screen_i = 0;
+	renderer->gfx_px = 0;
+	renderer->clear_tile = 0;
+	renderer->screen_px = 0;
 }
 
 static struct char_4bpp *nonnull
@@ -63,41 +63,41 @@ static void render_normal_char(struct text_renderer *nonnull renderer)
 	uint8_t ch = *renderer->message;
 	renderer->message++;
 	uint32_t width = char_width(renderer, ch);
-	uint32_t gfx_idx = renderer->gfx_i / 8;
-	uint32_t screen_idx = renderer->screen_i / 8;
-	uint32_t gfx_end_idx = (renderer->gfx_i + width) / 8;
-	uint32_t screen_end_idx = (renderer->screen_i + width) / 8;
-	uint32_t gfx_offset = renderer->gfx_i % 8;
+	uint32_t gfx_tile = renderer->gfx_px / 8;
+	uint32_t screen_tile = renderer->screen_px / 8;
+	uint32_t gfx_end_tile = (renderer->gfx_px + width) / 8;
+	uint32_t screen_end_tile = (renderer->screen_px + width) / 8;
+	uint32_t gfx_px_offset = renderer->gfx_px % 8;
 
-	while (renderer->clear_idx <= gfx_end_idx) {
+	while (renderer->clear_tile <= gfx_end_tile) {
 		struct char_4bpp *clear_ch =
-			out_char(renderer, renderer->clear_idx);
+			out_char(renderer, renderer->clear_tile);
 		cpu_fast_fill(0, clear_ch,
 			      sizeof(*clear_ch) / (4 >> renderer->font->tall));
-		renderer->clear_idx++;
+		renderer->clear_tile++;
 	}
 
 	struct char_4bpp *ch_gfx = lookup_char(renderer, ch);
-	struct char_4bpp *out = out_char(renderer, gfx_idx);
-	ch4bpp_bitor_shr(out, ch_gfx, gfx_offset);
+	struct char_4bpp *out = out_char(renderer, gfx_tile);
+	ch4bpp_bitor_shr(out, ch_gfx, gfx_px_offset);
 	if (renderer->font->tall) {
-		ch4bpp_bitor_shr(out + 1, ch_gfx + 1, gfx_offset);
+		ch4bpp_bitor_shr(out + 1, ch_gfx + 1, gfx_px_offset);
 	}
-	add_to_screen(renderer, out_char(renderer, gfx_idx),
-		      &renderer->screen[screen_idx]);
+	add_to_screen(renderer, out_char(renderer, gfx_tile),
+		      &renderer->screen[screen_tile]);
 
-	if (gfx_idx != gfx_end_idx && gfx_offset != 0) {
-		gfx_offset = 8 - gfx_offset;
-		out = out_char(renderer, gfx_end_idx);
-		ch4bpp_bitor_shl(out, ch_gfx, gfx_offset);
+	if (gfx_tile != gfx_end_tile && gfx_px_offset != 0) {
+		gfx_px_offset = 8 - gfx_px_offset;
+		out = out_char(renderer, gfx_end_tile);
+		ch4bpp_bitor_shl(out, ch_gfx, gfx_px_offset);
 		if (renderer->font->tall) {
-			ch4bpp_bitor_shl(out + 1, ch_gfx + 1, gfx_offset);
+			ch4bpp_bitor_shl(out + 1, ch_gfx + 1, gfx_px_offset);
 		}
-		add_to_screen(renderer, out_char(renderer, gfx_end_idx),
-			      &renderer->screen[screen_end_idx]);
+		add_to_screen(renderer, out_char(renderer, gfx_end_tile),
+			      &renderer->screen[screen_end_tile]);
 	}
-	renderer->gfx_i += width + renderer->font->letter_spacing;
-	renderer->screen_i += width + renderer->font->letter_spacing;
+	renderer->gfx_px += width + renderer->font->letter_spacing;
+	renderer->screen_px += width + renderer->font->letter_spacing;
 }
 
 bool text_renderer_next_char(struct text_renderer *nonnull renderer)
@@ -105,8 +105,8 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 	uint8_t ch = *renderer->message;
 	if (ch == '\n') {
 		renderer->screen += 32 << renderer->font->tall;
-		renderer->screen_i = 0;
-		renderer->gfx_i = (renderer->gfx_i + 8) & ~0x7;
+		renderer->screen_px = 0;
+		renderer->gfx_px = (renderer->gfx_px + 8) & ~0x7;
 		renderer->message++;
 		ch = *renderer->message;
 	}
@@ -114,8 +114,8 @@ bool text_renderer_next_char(struct text_renderer *nonnull renderer)
 		return false;
 	} else if (ch == ' ') {
 		// TODO: Remove hardcoded space size.
-		renderer->screen_i += 8 >> renderer->font->tall;
-		renderer->gfx_i += 8 >> renderer->font->tall;
+		renderer->screen_px += 8 >> renderer->font->tall;
+		renderer->gfx_px += 8 >> renderer->font->tall;
 		renderer->message++;
 	} else if (ch == '\06') {
 		renderer->message++;
@@ -129,9 +129,9 @@ void text_renderer_clear(struct text_renderer *nonnull renderer)
 {
 	renderer->message = renderer->original_message;
 	renderer->screen = renderer->config->screen;
-	renderer->gfx_i = 0;
-	renderer->clear_idx = 0;
-	renderer->screen_i = 0;
+	renderer->gfx_px = 0;
+	renderer->clear_tile = 0;
+	renderer->screen_px = 0;
 	cpu_fast_fill(0,
 		      (uint16_t *)((uintptr_t)renderer->screen
 				   & ~(sizeof(struct screen) - 1)),

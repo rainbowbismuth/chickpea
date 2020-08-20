@@ -195,8 +195,8 @@ void demo_on_vertical_blank(void)
 	struct text_renderer *rend = text_select ? &mono_text_renderer
 						 : &text_renderer;
 
-	if (frame % 10 == 0) {
-		if (text_renderer_at_end(rend) && frame % 100 == 0) {
+	if (frame % 7 == 0) {
+		if (text_renderer_at_end(rend) && frame % 70 == 0) {
 			text_renderer_clear(rend);
 			text_select ^= 1;
 		} else {
@@ -346,7 +346,7 @@ void game_init(void)
 	text_renderer_init(&text_renderer, &bismuth, &bismuth_config,
 			   "Letter, by letter,\n"
 			   "I speak!\06\06\06 No cute\n"
-			   "noises yet though.\06");
+			   "noises yet though.\06\06\06");
 	text_renderer_init(&mono_text_renderer, &mono, &mono_config,
 			   "This is a tiny\n"
 			   "monospace font\n"

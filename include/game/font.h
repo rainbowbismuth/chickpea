@@ -26,9 +26,9 @@ struct text_renderer {
 	uint16_t *nonnull screen;
 	const char *nonnull message;
 	const char *nonnull original_message;
-	uint32_t gfx_i;
-	uint32_t clear_idx;
-	uint32_t screen_i;
+	uint32_t gfx_px;
+	uint32_t clear_tile;
+	uint32_t screen_px;
 };
 
 void text_renderer_init(struct text_renderer *nonnull renderer,
