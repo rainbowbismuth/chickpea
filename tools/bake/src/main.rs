@@ -870,6 +870,7 @@ fn bake_background(args: BakeBackground) -> io::Result<()> {
 fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
+    println!("#include \"game/resource.h\"\n");
     match opts.sub_cmd {
         SubCommand::Bake4BPP(args) => bake_4bpp(args).map(|_x| ()),
         SubCommand::Bake8BPP(args) => bake_8bpp(args),
