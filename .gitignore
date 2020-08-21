@@ -5,3 +5,4 @@ cmake-build-debug-gba/
 cmake-build-emscripten/
 tools/bake/target/
 .tiled-session
+musl

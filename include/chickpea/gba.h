@@ -23,6 +23,8 @@
 #define assert(cond) (0)
 #endif
 
+_Noreturn void abort(void);
+
 #define REG_DISPCNT  (*((volatile uint16_t *)0x04000000))
 #define REG_DISPSTAT (*((volatile uint16_t *)0x04000004))
 #define REG_VCOUNT   (*((volatile uint16_t *)0x04000006))

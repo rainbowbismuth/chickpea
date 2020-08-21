@@ -5,21 +5,25 @@ project(chickpea C)
 set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/external/lua/include)
 
 file(GLOB BAKED_FILES baked/*.c)
+
+file(GLOB LUA_SRC external/lua/src/*.c)
+file(GLOB LUA_INCLUDE external/lua/include/*.h)
 
 set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c
         src/test_suites.c src/chickpea/nano_unit.c src/chickpea/bit_vec.c
         src/game/map.c src/game/sprite.c src/game/object_tiles.c
         src/game/input.c src/game/random.c src/game/font.c src/game/text_box.c
-        src/game/resource.c ${BAKED_FILES})
+        src/game/resource.c ${BAKED_FILES} ${LUA_SRC})
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/game/debug_font.h
         include/chickpea/nano_unit.h include/chickpea/bit_vec.h
         include/game/map.h include/chickpea/vec2.h include/game/sprite.h
         include/game/object_tiles.h include/game/input.h include/game/random.h
         include/game/game_state.h include/game/font.h include/game/text_box.h
-        include/game/resource.h)
+        include/game/resource.h ${LUA_INCLUDE})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
@@ -37,8 +41,13 @@ if (BUILD_GBA)
         -T${CMAKE_SOURCE_DIR}/src/chickpea/linker.ld")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1")
 
-    set(SRC_FILES ${SRC_FILES} src/chickpea/gba.c)
-    set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h)
+    include_directories(${CMAKE_SOURCE_DIR}/external/musl/include)
+
+    file(GLOB MUSL_SRC external/musl/src/**/*.c)
+    file(GLOB MUSL_INCLUDE external/musl/include)
+
+    set(SRC_FILES ${SRC_FILES} src/chickpea/gba.c ${MUSL_SRC})
+    set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h ${MUSL_INCLUDE})
 
     add_custom_command(
             OUTPUT crt0.o
@@ -47,7 +56,25 @@ if (BUILD_GBA)
             COMMAND ${CHICKPEA_AS} ${CMAKE_SOURCE_DIR}/src/chickpea/crt0.s
             -o crt0.o
     )
-    add_executable(chickpea.elf ${SRC_FILES} ${INCLUDE_FILES} crt0.o)
+    add_custom_command(
+            OUTPUT longjmp.o
+            DEPENDS ${CMAKE_SOURCE_DIR}/external/musl/src/setjmp/longjmp.S
+            BYPRODUCTS longjmp.o
+            COMMAND ${CHICKPEA_AS}
+            ${CMAKE_SOURCE_DIR}/external/musl/src/setjmp/longjmp.S
+            -o longjmp.o
+    )
+    add_custom_command(
+            OUTPUT setjmp.o
+            DEPENDS ${CMAKE_SOURCE_DIR}/external/musl/src/setjmp/setjmp.S
+            BYPRODUCTS setjmp.o
+            COMMAND ${CHICKPEA_AS}
+            ${CMAKE_SOURCE_DIR}/external/musl/src/setjmp/setjmp.S
+            -o setjmp.o
+    )
+
+    add_executable(chickpea.elf ${SRC_FILES} ${INCLUDE_FILES}
+            crt0.o longjmp.o setjmp.o)
     set_target_properties(chickpea.elf
             PROPERTIES
             COMPILE_FLAGS "-Wall -Wextra -nostdlib -target arm-none-eabi\

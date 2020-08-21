@@ -26,6 +26,13 @@ void cpu_fast_fill(uint32_t src, void *nonnull dst, size_t word_count)
 	cpu_fast_set(&src, dst, word_count | (1 << 24));
 }
 
+_Noreturn void abort(void)
+{
+	debug_put_str("aborted\n");
+	while (1) {
+	}
+}
+
 /*
  * TODO: Use a better implementation.
  */
