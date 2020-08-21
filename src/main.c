@@ -9,6 +9,14 @@
 #include "game/map.h"
 #include "game/resource.h"
 #include "game/text_box.h"
+#include "lua/alloc.h"
+
+#include "lauxlib.h"
+#include "lua.h"
+#include "lualib.h"
+
+static struct lua_State *lua = NULL;
+struct resource lua_scripts;
 
 static volatile bool run_update = true;
 static struct vec2 bg_scroll = { 0 };
@@ -356,6 +364,21 @@ void game_init(void)
 
 	//	demo_render_tile_highlights(&demo_map, &map_render_params,
 	//&highlights);
+
+	lua = luaL_newstate();
+	luaL_openlibs(lua);
+	lua_alloc_debug_mem_use();
+	int32_t res = luaL_loadbuffer(lua, resource_data(&lua_scripts),
+				      lua_scripts.length, "");
+	if (res) {
+		debug_put_str("luaL_loadbuffer: ");
+		debug_put_u32(res);
+		debug_put_char('\n');
+		abort();
+	}
+
+	lua_call(lua, 0, 0);
+	lua_alloc_debug_mem_use();
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 

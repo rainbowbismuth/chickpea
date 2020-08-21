@@ -1,7 +1,8 @@
 #ifndef CHICKPEA_EMULATED_H
 #define CHICKPEA_EMULATED_H
 
-#include "assert.h"
+#include <assert.h>
+#include <stdlib.h>
 
 extern uint16_t reg_dispcnt;
 extern uint16_t reg_dispstat;

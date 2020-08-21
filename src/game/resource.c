@@ -7,7 +7,7 @@
  */
 
 #define ARENA_SIZE (64 * 1024)
-static uint8_t arena[ARENA_SIZE] EWRAM = { 0 };
+static uint8_t arena[ARENA_SIZE] EWRAM __attribute__((aligned(16))) = { 0 };
 static uint8_t *top = &arena[ARENA_SIZE];
 
 struct resource_alloc {

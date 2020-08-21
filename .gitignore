@@ -6,3 +6,7 @@ cmake-build-emscripten/
 tools/bake/target/
 .tiled-session
 musl
+scripts/scripts.out
+.o
+tools/lua54/src/lua
+tools/lua54/src/luac

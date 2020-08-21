@@ -9,6 +9,7 @@
 
 #include "lprefix.h"
 
+#include "lua/alloc.h"
 #include <stdarg.h>
 
 #ifndef BUILD_GBA
@@ -57,9 +58,10 @@ static int findfield(lua_State *L, int objidx, int level)
 				lua_pop(L, 1); /* remove value (but keep name)
 						*/
 				return 1;
-			} else if (findfield(L, objidx, level - 1)) { /* try
-									 recursively
-								       */
+			} else if (findfield(L, objidx,
+					     level - 1)) { /* try
+							      recursively
+							    */
 				/* stack: lib_name, lib_table, field_name (top)
 				 */
 				lua_pushliteral(L, "."); /* place '.' between
@@ -559,9 +561,10 @@ static char *prepbuffsize(luaL_Buffer *B, size_t sz, int boxidx)
 		size_t newsize = newbuffsize(B, sz);
 		/* create larger buffer */
 		if (buffonstack(B)) /* buffer already has a box? */
-			newbuff = (char *)resizebox(L, boxidx, newsize); /* resize
-									    it
-									  */
+			newbuff =
+				(char *)resizebox(L, boxidx, newsize); /* resize
+									  it
+									*/
 		else { /* no box yet */
 			lua_pushnil(L); /* reserve slot for final result */
 			newbox(L); /* create a new box */
@@ -1028,20 +1031,21 @@ LUALIB_API void luaL_requiref(lua_State *L, const char *modname,
 //  return lua_tostring(L, -1);
 //}
 
-#ifndef BUILD_GBA
-static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
-{
-	(void)ud;
-	(void)osize; /* not used */
-	if (nsize == 0) {
-		free(ptr);
-		return NULL;
-	} else
-		return realloc(ptr, nsize);
-}
-#endif
+//#ifndef BUILD_GBA
 
-#ifndef BUILD_GBA
+static void *l_alloc(void *ud __attribute__((unused)), void *ptr,
+		     size_t osize __attribute__((unused)), size_t nsize)
+{
+	if (nsize == 0) {
+		lua_alloc_free(ptr);
+		return NULL;
+	} else {
+		return lua_alloc_realloc(ptr, nsize);
+	}
+}
+//#endif
+
+//#ifndef BUILD_GBA
 static int panic(lua_State *L)
 {
 	const char *msg = lua_tostring(L, -1);
@@ -1051,7 +1055,7 @@ static int panic(lua_State *L)
 		"PANIC: unprotected error in call to Lua API (%s)\n", msg);
 	return 0; /* return to Lua to abort */
 }
-#endif
+//#endif
 
 /*
 ** Emit a warning. '*warnstate' means:
@@ -1059,7 +1063,7 @@ static int panic(lua_State *L)
 ** 1 - ready to start a new message;
 ** 2 - previous message is to be continued.
 */
-#ifndef BUILD_GBA
+//#ifndef BUILD_GBA
 static void warnf(void *ud, const char *message, int tocont)
 {
 	int *warnstate = (int *)ud;
@@ -1084,9 +1088,9 @@ static void warnf(void *ud, const char *message, int tocont)
 		*warnstate = 1; /* ready to start a new message */
 	}
 }
-#endif
+//#endif
 
-#ifndef BUILD_GBA
+//#ifndef BUILD_GBA
 LUALIB_API lua_State *luaL_newstate(void)
 {
 	lua_State *L = lua_newstate(l_alloc, NULL);
@@ -1101,7 +1105,7 @@ LUALIB_API lua_State *luaL_newstate(void)
 	}
 	return L;
 }
-#endif
+//#endif
 
 LUALIB_API void luaL_checkversion_(lua_State *L, lua_Number ver, size_t sz)
 {

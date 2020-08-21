@@ -3,6 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 BAKE=tools/bake/target/debug/bake
+LUAC=tools/lua54/src/luac
 
 # Tile swizzle patterns
 CHARACTER="01\
@@ -30,3 +31,5 @@ $BAKE 4bpp -s $CHARACTER -i assets/characters/bjin.png -o characters_bjin > bake
 $BAKE map -i assets/map/demo/map -t assets/map/demo/tileset.png -o map_demo_map > baked/demo_tileset.c
 $BAKE bg -i assets/interface/speech_bubble.png -o interface_speech_bubble > baked/speech_bubble.c
 $BAKE 8bpp -i assets/portraits/Bjin.png -s $PORTRAIT --offset=6 -o portraits_Bjin > baked/portrait_bjin.c
+$LUAC -s -o scripts/scripts.out scripts/*.lua
+$BAKE bin2c -i scripts/scripts.out -o lua_scripts > baked/scripts.c
