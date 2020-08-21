@@ -6,8 +6,10 @@
  * 	Particularly given the 'free everything as once' API.
  */
 
+#define ALIGNMENT  8
 #define ARENA_SIZE (64 * 1024)
-static uint8_t arena[ARENA_SIZE] EWRAM __attribute__((aligned(16))) = { 0 };
+static uint8_t arena[ARENA_SIZE] EWRAM
+	__attribute__((aligned(ALIGNMENT))) = { 0 };
 static uint8_t *top = &arena[ARENA_SIZE];
 
 struct resource_alloc {
@@ -22,7 +24,8 @@ static struct resource_alloc allocs[MAX_ALLOCS] = { 0 };
 
 static void *arena_alloc(uint32_t bytes)
 {
-	top -= (bytes + 3) & ~0x3;
+	top -= bytes;
+	top = (uint8_t *)(((uintptr_t)top) & ~(ALIGNMENT - 1));
 	assert(top >= &arena[0]);
 	return top;
 }
