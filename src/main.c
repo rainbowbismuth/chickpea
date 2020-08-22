@@ -16,7 +16,9 @@
 #include "lualib.h"
 
 static struct lua_State *lua = NULL;
-struct resource lua_scripts;
+static struct lua_State *coro = NULL;
+static bool coro_started = false;
+extern struct resource lua_scripts;
 
 static volatile bool run_update = true;
 static struct vec2 bg_scroll = { 0 };
@@ -115,6 +117,21 @@ void demo_update(void)
 {
 	frame++;
 	input_read();
+
+	if (coro) {
+		int status = lua_status(coro);
+		if (coro_started && status != LUA_YIELD) {
+			goto end_coro;
+		}
+		int n_results = 0;
+		int err = lua_resume(coro, NULL, 0, &n_results);
+		if (err) {
+			debug_put_str(lua_tolstring(coro, -1, NULL));
+		}
+		assert(!n_results);
+		coro_started = true;
+	}
+end_coro:
 
 	if (!input_held(KEYINPUT_BUTTON_B)) {
 		if (input_pressed(KEYINPUT_UP)) {
@@ -377,7 +394,10 @@ void game_init(void)
 		abort();
 	}
 
-	lua_call(lua, 0, 0);
+	lua_call(lua, 0, 1);
+	coro = lua_tothread(lua, -1);
+	assert(coro);
+
 	lua_alloc_debug_mem_use();
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;

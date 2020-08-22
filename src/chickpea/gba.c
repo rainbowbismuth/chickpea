@@ -127,8 +127,11 @@ void debug_put_char(char c)
 	*mgba_debug_output++ = c;
 }
 
-void debug_put_str(const char *nonnull str)
+void debug_put_str(const char *nullable str)
 {
+	if (!str) {
+		return;
+	}
 	while (*str != '\0') {
 		debug_put_char(*str++);
 	}

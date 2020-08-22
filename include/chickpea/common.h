@@ -284,7 +284,7 @@ void write_palette(const struct palette *restrict nonnull src,
 
 void debug_put_char(char c);
 
-void debug_put_str(const char *nonnull str);
+void debug_put_str(const char *nullable str);
 
 void debug_put_u32(uint32_t n);
 

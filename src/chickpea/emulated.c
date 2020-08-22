@@ -916,8 +916,11 @@ void debug_put_char(char c)
 	fputc(c, stdout);
 }
 
-void debug_put_str(const char *nonnull str)
+void debug_put_str(const char *nullable str)
 {
+	if (!str) {
+		return;
+	}
 	fputs(str, stdout);
 }
 

@@ -42,12 +42,17 @@ if (BUILD_GBA)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1")
 
     include_directories(${CMAKE_SOURCE_DIR}/external/musl/include)
+    include_directories(${CMAKE_SOURCE_DIR}/external/printf)
 
     file(GLOB MUSL_SRC external/musl/src/**/*.c)
     file(GLOB MUSL_INCLUDE external/musl/include)
 
-    set(SRC_FILES ${SRC_FILES} src/chickpea/gba.c ${MUSL_SRC})
-    set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h ${MUSL_INCLUDE})
+    set(PRINTF_SRC external/printf/printf.c)
+    set(PRINTF_INCLUDE external/printf/printf.h)
+
+    set(SRC_FILES ${SRC_FILES} src/chickpea/gba.c ${MUSL_SRC} ${PRINTF_SRC})
+    set(INCLUDE_FILES ${INCLUDE_FILES} include/chickpea/gba.h ${MUSL_INCLUDE}
+            ${PRINTF_INCLUDE})
 
     add_custom_command(
             OUTPUT crt0.o

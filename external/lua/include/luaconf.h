@@ -10,6 +10,12 @@
 #include <limits.h>
 #include <stddef.h>
 
+#ifdef BUILD_GBA
+#include "printf.h"
+#else
+#include <stdio.h>
+#endif
+
 /*
 ** ===================================================================
 ** General Configuration File for Lua
@@ -564,12 +570,10 @@
 ** (All uses in Lua have only one format item.)
 */
 //#if !defined(LUA_USE_C89)
-//#define l_sprintf(s,sz,f,i)	snprintf(s,sz,f,i)
+#define l_sprintf(s,sz,f,i)	snprintf(s,sz,f,i)
 //#else
 //#define l_sprintf(s,sz,f,i)	((void)(sz), sprintf(s,f,i))
 //#endif
-
-#define l_sprintf(s, sz, f, i) 0
 
 /*
 @@ lua_strx2number converts a hexadecimal numeral to a number.

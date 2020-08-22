@@ -1,9 +1,16 @@
+local coroutine = coroutine
+local yield = coroutine.yield
 local print = print
-local x = 0
-x = x + 5
 
-if x == 5 then
-    print("Hello, from Lua! x == 5")
-else
-    print("Hello, from Lua! x != 5")
-end
+local co = coroutine.create(function()
+    for i = 0, 10 do
+        if i == 10 then
+            print("Final one, i == 10")
+        end
+        print("Hello, from coroutine! " .. i)
+        yield()
+    end
+end)
+
+print("Coroutine created")
+return co
