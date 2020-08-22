@@ -28,6 +28,7 @@ static sprite_handle cursor = { 0 };
 static sprite_handle pointer = { 0 };
 static sprite_handle soldiers[4] = { 0 };
 static sprite_handle height_msg = { 0 };
+static sprite_handle lua_dbg = { 0 };
 struct map_render_params map_render_params = { .char_block = 3,
 					       .screen_low = 12,
 					       .screen_high = 13 };
@@ -103,6 +104,10 @@ static struct text_renderer text_renderer = { 0 };
 static struct text_config mono_config = { 0 };
 static struct text_renderer mono_text_renderer = { 0 };
 
+static uint32_t start_vcount = 0;
+static uint32_t lua_vcount = 0;
+static bool too_long = false;
+
 void move_cursor_pos_bounded(int16_t x, int16_t y)
 {
 	uint8_t attr = demo_map.attributes->bytes[y][x];
@@ -115,9 +120,9 @@ void move_cursor_pos_bounded(int16_t x, int16_t y)
 
 void demo_update(void)
 {
+	start_vcount = REG_VCOUNT;
 	frame++;
 	input_read();
-
 	if (coro) {
 		int status = lua_status(coro);
 		if (coro_started && status != LUA_YIELD) {
@@ -132,6 +137,9 @@ void demo_update(void)
 		coro_started = true;
 	}
 end_coro:
+	if (frame > 10 && REG_VCOUNT > lua_vcount) {
+		lua_vcount = REG_VCOUNT;
+	}
 
 	if (!input_held(KEYINPUT_BUTTON_B)) {
 		if (input_pressed(KEYINPUT_UP)) {
@@ -177,6 +185,18 @@ end_coro:
 	demo_character_frame(soldiers[3], FACING_WEST, unit_frame);
 
 	sprite_build_oam_buffer();
+
+	if (GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT)) {
+		uint32_t v_count = REG_VCOUNT;
+		debug_put_str("current REG_VCOUNT ");
+		debug_put_u32(v_count);
+		debug_put_char('\n');
+		debug_put_str("start REG_VCOUNT ");
+		debug_put_u32(start_vcount);
+		debug_put_char('\n');
+		debug_put_str("Update taking too long?\n");
+		too_long = true;
+	}
 }
 
 void demo_on_horizontal_blank(void)
@@ -191,12 +211,43 @@ void demo_on_horizontal_blank(void)
 	bg_palette(0)->color[0] = color(((vcount >> 4) & 0b1111) + 16, 15, 25);
 }
 
+static void demo_add_height_msg(void)
+{
+	if (sprite_exists(height_msg)) {
+		sprite_drop(height_msg);
+	}
+	char msg[3] = "0h";
+	msg[0] = '0' + demo_map.height->bytes[cursor_pos.y][cursor_pos.x];
+	height_msg =
+		write_debug_msg_sprite(&demo_font, &height_msg_template, msg);
+	sprite_ref(height_msg)->enabled = true;
+	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
+}
+
+static void demo_add_lua_dbg_msg(void)
+{
+	if (sprite_exists(lua_dbg)) {
+		sprite_drop(lua_dbg);
+	}
+	char msg2[5] = "000 ";
+	uint32_t n = lua_vcount;
+	size_t i;
+	for (i = 2; i != 0 && n >= 10; i--) {
+		msg2[i] = '0' + (n % 10);
+		n /= 10;
+	}
+	msg2[i] = '0' + (n % 10);
+	if (too_long) {
+		msg2[3] = '!';
+	}
+	lua_dbg =
+		write_debug_msg_sprite(&demo_font, &height_msg_template, msg2);
+	sprite_ref(lua_dbg)->enabled = true;
+	sprite_ref(lua_dbg)->pos = (struct vec2){ .x = 25 * 8, .y = 16 };
+}
+
 void demo_on_vertical_blank(void)
 {
-	//	set_bg_scroll_x(BG0, bg_scroll.x);
-	//	set_bg_scroll_y(BG0, bg_scroll.y);
-	//	set_bg_scroll_x(BG1, bg_scroll.x);
-	//	set_bg_scroll_y(BG1, bg_scroll.y);
 	set_bg_scroll_x(BG2, bg_scroll.x);
 	set_bg_scroll_y(BG2, bg_scroll.y);
 	set_bg_scroll_x(BG3, bg_scroll.x);
@@ -207,15 +258,9 @@ void demo_on_vertical_blank(void)
 	sprite_execute_frame_copies();
 	sprite_commit_buffer_to_oam();
 
-	if (sprite_exists(height_msg)) {
-		sprite_drop(height_msg);
-	}
-	char msg[3] = "0h";
-	msg[0] = '0' + demo_map.height->bytes[cursor_pos.y][cursor_pos.x];
-	height_msg =
-		write_debug_msg_sprite(&demo_font, &height_msg_template, msg);
-	sprite_ref(height_msg)->enabled = true;
-	sprite_ref(height_msg)->pos = (struct vec2){ .x = 27 * 8, .y = 8 };
+	//	demo_add_height_msg();
+	//	demo_add_height_msg();
+	demo_add_lua_dbg_msg();
 
 	struct text_renderer *rend = text_select ? &mono_text_renderer
 						 : &text_renderer;
@@ -229,6 +274,20 @@ void demo_on_vertical_blank(void)
 		}
 	}
 
+	//	register uintptr_t stack_ptr asm("r13");
+	//	uintptr_t read_ptr;
+	//	__asm__ volatile("mov %0, %1" : "=r"(read_ptr) :
+	//"r"(stack_ptr)); 	debug_put_str("sp="); 	debug_put_u32(read_ptr);
+	//	debug_put_char('\n');
+
+	if (!GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT)) {
+		debug_put_str("REG_VCOUNT ");
+		debug_put_u32(REG_VCOUNT);
+		debug_put_char('\n');
+		debug_put_str("on_vblank taking too long?\n");
+		too_long = true;
+	}
+
 	run_update = true;
 }
 
@@ -240,16 +299,14 @@ struct game_state *nonnull current_screen = &(struct game_state){
 
 void our_irq_handler(void)
 {
-	if (REG_IF & INT_HORIZONTAL_BLANK
+	uint16_t flags = REG_IF;
+	interrupt_acknowledge(flags);
+	if (flags & INT_HORIZONTAL_BLANK
 	    && current_screen->on_horizontal_blank) {
 		current_screen->on_horizontal_blank();
-		interrupt_acknowledge(INT_HORIZONTAL_BLANK);
-		return;
 	}
-	if (REG_IF & INT_VERTICAL_BLANK && current_screen->on_vertical_blank) {
+	if (flags & INT_VERTICAL_BLANK && current_screen->on_vertical_blank) {
 		current_screen->on_vertical_blank();
-		interrupt_acknowledge(INT_VERTICAL_BLANK);
-		return;
 	}
 }
 
@@ -410,7 +467,8 @@ void game_init(void)
 bool game_update(void)
 {
 	bool updated = false;
-	if (REG_VCOUNT == 0 && run_update && current_screen->update) {
+	if (!GET(DISPSTAT_VERTICAL_BLANK, REG_DISPSTAT) && run_update
+	    && current_screen->update) {
 		current_screen->update();
 		run_update = false;
 		updated = true;

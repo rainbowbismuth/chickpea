@@ -43,7 +43,7 @@ if (BUILD_GBA)
         <OBJECTS> -o <TARGET> -L${DEVKITARM_LIB} -lgcc <LINK_LIBRARIES>")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}\
         -T${CMAKE_SOURCE_DIR}/src/chickpea/linker.ld")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O1")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O2")
 
     include_directories(${CMAKE_SOURCE_DIR}/external/musl/include)
     include_directories(${CMAKE_SOURCE_DIR}/external/printf)

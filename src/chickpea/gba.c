@@ -1,5 +1,6 @@
 #include "chickpea.h"
 #include "chickpea/nano_unit.h"
+#include "string.h"
 
 void halt()
 {
@@ -39,9 +40,7 @@ _Noreturn void abort(void)
 void __aeabi_memcpy(uint8_t *restrict nonnull dest,
 		    const uint8_t *restrict nonnull src, size_t n)
 {
-	for (size_t i = 0; i < n; ++i) {
-		dest[i] = src[i];
-	}
+	memcpy(dest, src, n);
 }
 
 /*

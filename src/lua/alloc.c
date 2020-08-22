@@ -3,7 +3,7 @@
 #include "tlsf.h"
 
 #define ALIGNMENT  8
-#define ARENA_SIZE (64 * 1024)
+#define ARENA_SIZE (32 * 1024)
 static uint8_t arena[ARENA_SIZE] EWRAM
 	__attribute__((aligned(ALIGNMENT))) = { 0 };
 
@@ -16,6 +16,7 @@ void lua_alloc_init(void)
 
 void lua_alloc_free(void *ptr)
 {
+	debug_put_str("lua_alloc_free\n");
 	tlsf_free(allocator, ptr);
 }
 
