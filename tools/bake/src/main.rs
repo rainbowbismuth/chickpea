@@ -407,6 +407,9 @@ enum SubCommand {
 
     #[clap(name = "bg")]
     BakeBackground(BakeBackground),
+
+    #[clap(name = "bin2c")]
+    BakeBin2C(BakeBin2C),
 }
 
 #[derive(Clap)]
@@ -466,6 +469,41 @@ struct BakeBackground {
     output: String,
 }
 
+#[derive(Clap)]
+struct BakeBin2C {
+    #[clap(short = 'i')]
+    input: String,
+
+    #[clap(short = 'o')]
+    output: String,
+}
+
+fn c_to_stdout_raw(name: &str, data: &[u8], length: usize, lz77: bool) {
+    println!(
+        "static const uint8_t {}_bytes[] __attribute__((aligned(4))) = {{",
+        name
+    );
+    for chunk in data.chunks(12) {
+        print!("\t");
+        for ch in chunk {
+            print!("0x{:02X}, ", ch);
+        }
+        println!();
+    }
+    println!("}};");
+    println!();
+    println!("struct resource {} = {{", name);
+    println!("\t.length = {},", length);
+    println!("\t.lz77 = {},", lz77);
+    println!("\t.data = {}_bytes,", name);
+    println!("}};");
+    println!();
+}
+
+fn c_to_stdout_no_compression(name: &str, data: &[u8]) {
+    c_to_stdout_raw(name, data, data.len(), false);
+}
+
 fn c_to_stdout(name: &str, data: &[u8]) {
     let uncompressed_len = data.len();
 
@@ -478,25 +516,7 @@ fn c_to_stdout(name: &str, data: &[u8]) {
         data
     };
 
-    println!(
-        "static const uint8_t {}_bytes[] __attribute__((aligned(4))) = {{",
-        name
-    );
-    for chunk in out_data.chunks(12) {
-        print!("\t");
-        for ch in chunk {
-            print!("0x{:02X}, ", ch);
-        }
-        println!();
-    }
-    println!("}};");
-    println!();
-    println!("struct resource {} = {{", name);
-    println!("\t.length = {},", uncompressed_len);
-    println!("\t.lz77 = {},", lz77_compressed);
-    println!("\t.data = {}_bytes,", name);
-    println!("}};");
-    println!();
+    c_to_stdout_raw(name, out_data, uncompressed_len, lz77_compressed);
 }
 
 fn swizzle_to_pattern(swizzle: String) -> Vec<usize> {
@@ -867,6 +887,12 @@ fn bake_background(args: BakeBackground) -> io::Result<()> {
     Ok(())
 }
 
+fn bake_bin2c(args: BakeBin2C) -> io::Result<()> {
+    let input = std::fs::read(&args.input)?;
+    c_to_stdout_no_compression(&args.output, &input);
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
@@ -877,5 +903,6 @@ fn main() -> io::Result<()> {
         SubCommand::BakeTileMap(args) => bake_tilemap(args),
         SubCommand::BakeFont(args) => bake_font(args),
         SubCommand::BakeBackground(args) => bake_background(args),
+        SubCommand::BakeBin2C(args) => bake_bin2c(args),
     }
 }
