@@ -382,9 +382,9 @@ void game_init(void)
 	//	demo_render_tile_highlights(&demo_map, &map_render_params,
 	//&highlights);
 
+	lua_alloc_init();
 	lua = luaL_newstate();
 	luaL_openlibs(lua);
-	lua_alloc_debug_mem_use();
 	int32_t res = luaL_loadbuffer(lua, resource_data(&lua_scripts),
 				      lua_scripts.length, "");
 	if (res) {
@@ -397,8 +397,6 @@ void game_init(void)
 	lua_call(lua, 0, 1);
 	coro = lua_tothread(lua, -1);
 	assert(coro);
-
-	lua_alloc_debug_mem_use();
 
 	REG_DISPCNT &= ~DISPCNT_FORCED_BLANK;
 

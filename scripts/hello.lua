@@ -3,11 +3,12 @@ local yield = coroutine.yield
 local print = print
 
 local co = coroutine.create(function()
-    for i = 0, 10 do
-        if i == 10 then
-            print("Final one, i == 10")
+    local i = 0
+    while true do
+        if i % 60 == 0 then
+            print("Coro:", i, collectgarbage("count"))
         end
-        print("Hello, from coroutine! " .. i)
+        i = i + 1
         yield()
     end
 end)

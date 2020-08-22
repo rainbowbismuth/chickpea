@@ -6,24 +6,28 @@ set(CMAKE_C_STANDARD 99)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/external/lua/include)
+include_directories(${CMAKE_SOURCE_DIR}/external/tlsf)
 
 file(GLOB BAKED_FILES baked/*.c)
 
 file(GLOB LUA_SRC external/lua/src/*.c)
 file(GLOB LUA_INCLUDE external/lua/include/*.h)
 
+set(TLSF_SRC external/tlsf/tlsf.c)
+set(TLSF_INCLUDE external/tlsf/tlsf.h)
+
 set(SRC_FILES src/main.c src/chickpea/common.c src/game/debug_font.c
         src/test_suites.c src/chickpea/nano_unit.c src/chickpea/bit_vec.c
         src/game/map.c src/game/sprite.c src/game/object_tiles.c
         src/game/input.c src/game/random.c src/game/font.c src/game/text_box.c
-        src/game/resource.c ${BAKED_FILES} ${LUA_SRC} src/lua/alloc.c)
+        src/game/resource.c ${BAKED_FILES} ${LUA_SRC} ${TLSF_SRC} src/lua/alloc.c)
 set(INCLUDE_FILES include/chickpea.h include/chickpea/common.h
         include/chickpea/platform.h include/game/debug_font.h
         include/chickpea/nano_unit.h include/chickpea/bit_vec.h
         include/game/map.h include/chickpea/vec2.h include/game/sprite.h
         include/game/object_tiles.h include/game/input.h include/game/random.h
         include/game/game_state.h include/game/font.h include/game/text_box.h
-        include/game/resource.h ${LUA_INCLUDE} include/lua/alloc.h)
+        include/game/resource.h ${LUA_INCLUDE} ${TLSF_INCLUDE} include/lua/alloc.h)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
