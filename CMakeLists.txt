@@ -25,7 +25,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wstrict-aliasing")
 
 if (BUILD_GBA)
     set(DEVKITARM /opt/devkitpro/devkitARM/bin)
-    set(DEVKITARM_LIB /opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/10.1.0/)
+    set(DEVKITARM_LIB /opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/10.2.0/)
     set(DEVKITPRO /opt/devkitpro/tools/bin)
     set(CHICKPEA_AS ${DEVKITARM}/arm-none-eabi-as)
 endif ()
